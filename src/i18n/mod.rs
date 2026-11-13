@@ -236,6 +236,12 @@ pub enum UiKey {
     UpdateUpToDateTooltip,
     UpdateAvailableHint,
     UpdateUnavailableTooltip,
+
+    // Community Feedback & Project Support
+    FeedbackBtn,
+    FeedbackTooltip,
+    SupportBtn,
+    SupportTooltip,
 }
 
 /// Returns the localized UI string for `key` in `lang`. Zero Unicode emojis; clean Latin + symbols only.
@@ -260,6 +266,14 @@ pub fn t(lang: Language, key: UiKey) -> &'static str {
         (UpdateAvailableHint, _) => "¡Nueva versión disponible en GitHub Releases! Click para abrir y descargar.",
         (UpdateUnavailableTooltip, EnUs) => "Release feed unreachable (offline or private repo). Click to retry.",
         (UpdateUnavailableTooltip, _) => "No se pudo consultar Releases (sin conexión o repo privado). Click para reintentar.",
+        (FeedbackBtn, EnUs) => "Feedback",
+        (FeedbackBtn, _) => "Feedback",
+        (FeedbackTooltip, EnUs) => "Report a bug, suggest a farm/recipe, or leave comments on GitHub.",
+        (FeedbackTooltip, _) => "Reportar un error, sugerir granjas/recetas o dejar comentarios en GitHub.",
+        (SupportBtn, EnUs) => "Support",
+        (SupportBtn, _) => "Apoyar",
+        (SupportTooltip, EnUs) => "100% free & ad-free. If the app helped you, you can buy me a coffee on Ko-fi.",
+        (SupportTooltip, _) => "100% gratis y sin anuncios. Si la app te sirvió, podés invitarme un café en Ko-fi.",
         (SearchTrigger, EnUs) => "Search (Ctrl+F)",
         (SearchTrigger, _) => "Buscar (Ctrl+F)",
         (SearchPlaceholder, EnUs) => "Search gear, recipes, farms, glitches, tips...",
@@ -748,6 +762,10 @@ mod tests {
             UiKey::UpdateUpToDateTooltip,
             UiKey::UpdateAvailableHint,
             UiKey::UpdateUnavailableTooltip,
+            UiKey::FeedbackBtn,
+            UiKey::FeedbackTooltip,
+            UiKey::SupportBtn,
+            UiKey::SupportTooltip,
         ];
         for lang in Language::all() {
             for k in keys {

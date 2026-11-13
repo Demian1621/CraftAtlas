@@ -192,6 +192,7 @@ pub fn render_top_chrome(
                     }
 
                     render_app_version_pill(ui, ctx, state, palette, lang, audio);
+                    render_community_pills(ui, ctx, palette, atlas, lang, audio);
 
                     // Middle drag & double-click maximize strip + Right-aligned Min/Max/Close controls
                     let remaining_w = (ui.available_width() - 96.0).max(24.0);
@@ -533,6 +534,113 @@ fn render_app_version_pill(
         audio.play(SoundCue::Click);
         state.updater.trigger_check();
     }
+}
+
+/// Returns `true` when the desktop window is focused and not minimized (so background animation pauses cleanly).
+pub fn is_window_active(ctx: &egui::Context) -> bool {
+    ctx.input(|i| {
+        i.viewport().focused.unwrap_or(true) && !i.viewport().minimized.unwrap_or(false)
+    })
+}
+
+fn render_community_pills(
+    ui: &mut egui::Ui,
+    ctx: &egui::Context,
+    palette: McPalette,
+    atlas: &ItemAtlas,
+    lang: crate::data::models::Language,
+    audio: &AudioEngine,
+) {
+    use crate::updater::{is_safe_https_url, FEEDBACK_URL, KOFI_URL};
+
+    if header_icon_pill(
+        ui,
+        palette,
+        atlas,
+        "writable_book",
+        t(lang, UiKey::FeedbackBtn),
+        palette.text_primary,
+        palette.border_subtle,
+    )
+    .on_hover_text(t(lang, UiKey::FeedbackTooltip))
+    .clicked()
+    {
+        audio.play(SoundCue::Click);
+        if is_safe_https_url(FEEDBACK_URL) {
+            ctx.open_url(egui::OpenUrl::new_tab(FEEDBACK_URL));
+        }
+    }
+
+    if header_icon_pill(
+        ui,
+        palette,
+        atlas,
+        "emerald",
+        t(lang, UiKey::SupportBtn),
+        palette.accent_primary,
+        palette.accent_primary.gamma_multiply(0.65),
+    )
+    .on_hover_text(t(lang, UiKey::SupportTooltip))
+    .clicked()
+    {
+        audio.play(SoundCue::Click);
+        if is_safe_https_url(KOFI_URL) {
+            ctx.open_url(egui::OpenUrl::new_tab(KOFI_URL));
+        }
+    }
+}
+
+fn header_icon_pill(
+    ui: &mut egui::Ui,
+    palette: McPalette,
+    atlas: &ItemAtlas,
+    icon_id: &str,
+    label: &str,
+    text_color: Color32,
+    border_color: Color32,
+) -> egui::Response {
+    let galley = ui.painter().layout_no_wrap(
+        label.to_string(),
+        egui::FontId::proportional(10.5),
+        text_color,
+    );
+    let desired_w = (galley.size().x + 28.0).max(56.0);
+    let (rect, resp) = ui.allocate_exact_size(Vec2::new(desired_w, 21.0), Sense::click());
+    if ui.is_rect_visible(rect) {
+        let bg = if resp.hovered() {
+            palette.bg_card_hover
+        } else {
+            Color32::from_rgba_unmultiplied(
+                palette.bg_card.r(),
+                palette.bg_card.g(),
+                palette.bg_card.b(),
+                155,
+            )
+        };
+        let stroke_col = if resp.hovered() {
+            text_color
+        } else {
+            border_color
+        };
+        ui.painter().rect(
+            rect,
+            CornerRadius::same(5),
+            bg,
+            Stroke::new(1.0_f32, stroke_col),
+            egui::StrokeKind::Inside,
+        );
+        let icon_rect = egui::Rect::from_center_size(
+            Pos2::new(rect.left() + 11.0, rect.center().y),
+            Vec2::splat(13.0),
+        );
+        atlas.paint(ui.painter(), icon_rect, icon_id, Color32::WHITE);
+        ui.painter().galley(
+            Pos2::new(rect.left() + 21.0, rect.center().y - galley.size().y * 0.5),
+            galley,
+            text_color,
+        );
+    }
+    resp
 }
 
 #[derive(Clone)]

@@ -751,13 +751,15 @@ fn render_gear_detail(
             let _ = anvil_frame;
         });
 
-    if state.anvil_anim.hammer_timer > 0.0 || state.anvil_anim.flash_timer > 0.0 {
-        ui.ctx().request_repaint();
+    if crate::ui::chrome::is_window_active(ui.ctx()) {
+        if state.anvil_anim.hammer_timer > 0.0 || state.anvil_anim.flash_timer > 0.0 {
+            ui.ctx().request_repaint();
+        }
+        // Keep glint shimmer flowing smoothly at ~30 FPS while window is active
+        ui.ctx().request_repaint_after(std::time::Duration::from_millis(33));
     }
-    // Keep glint shimmer flowing smoothly
     let _ = Pos2::ZERO;
     let _ = Rect::NOTHING;
-    ui.ctx().request_repaint_after(std::time::Duration::from_millis(33));
 }
 
 fn render_info_box(

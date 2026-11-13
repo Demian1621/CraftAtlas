@@ -27,6 +27,22 @@ impl SoundCue {
             SoundCue::Toast => "toast",
         }
     }
+
+    /// Per-cue gain multiplier so harsh strikes stay balanced relative to UI clicks.
+    pub fn volume_scale(self) -> f32 {
+        match self {
+            // Anvil strike .ogg has intense metallic peaks; linear 0.24 (~ -12.4 dB)
+            // cuts perceived loudness cleanly below UI clicks and XP chimes.
+            SoundCue::AnvilUse => 0.24,
+            SoundCue::LevelUp => 0.60,
+            _ => 1.0,
+        }
+    }
+}
+
+/// Computes final playback volume for `cue` given master `volume` in `[0.0, 1.0]`.
+pub fn effective_cue_volume(volume: f32, cue: SoundCue) -> f32 {
+    (volume.clamp(0.0, 1.0) * cue.volume_scale()).clamp(0.0, 1.0)
 }
 
 struct AudioCmd {
@@ -80,7 +96,7 @@ fn audio_worker_loop(rx: mpsc::Receiver<AudioCmd>, sound_paths: HashMap<String, 
         let Ok(sink) = Sink::try_new(&handle) else {
             continue;
         };
-        sink.set_volume(cmd.volume.clamp(0.0, 1.0));
+        sink.set_volume(effective_cue_volume(cmd.volume, cmd.cue));
 
         let played_ogg = if let Some(path) = sound_paths.get(cmd.cue.key()) {
             if let Ok(file) = File::open(path) {
@@ -137,4 +153,22 @@ fn synth_cue(cue: SoundCue) -> SamplesBuffer<f32> {
     }
 
     SamplesBuffer::new(1, sr, out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn anvil_and_levelup_sounds_are_attenuated() {
+        let click = effective_cue_volume(0.8, SoundCue::Click);
+        let anvil = effective_cue_volume(0.8, SoundCue::AnvilUse);
+        let levelup = effective_cue_volume(0.8, SoundCue::LevelUp);
+        assert!((click - 0.8).abs() < 1e-6);
+        assert!((anvil - 0.192).abs() < 1e-6);
+        assert!((levelup - 0.48).abs() < 1e-6);
+        assert!((anvil / click - 0.24).abs() < 1e-6);
+        assert_eq!(effective_cue_volume(1.5, SoundCue::AnvilUse), 0.24);
+        assert_eq!(effective_cue_volume(-0.2, SoundCue::AnvilUse), 0.0);
+    }
 }

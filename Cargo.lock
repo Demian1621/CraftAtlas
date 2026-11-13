@@ -1949,7 +1949,7 @@ dependencies = [
 
 [[package]]
 name = "minecraft-companion"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "cc",
  "eframe",

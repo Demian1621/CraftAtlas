@@ -44,6 +44,7 @@ struct MinecraftCompanionApp {
     audio: AudioEngine,
     particles: ParticleSystem,
     toasts: ToastQueue,
+    anim_time: f64,
 }
 
 impl MinecraftCompanionApp {
@@ -91,13 +92,21 @@ impl MinecraftCompanionApp {
             audio,
             particles: ParticleSystem::new(),
             toasts: ToastQueue::default(),
+            anim_time: 0.0,
         }
     }
 }
 
 impl eframe::App for MinecraftCompanionApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let (dt, time) = ctx.input(|i| (i.unstable_dt.clamp(0.001, 0.08), i.time));
+        let active = ui::chrome::is_window_active(ctx);
+        let raw_dt = ctx.input(|i| i.unstable_dt.clamp(0.001, 0.08));
+        let dt = if active { raw_dt } else { 0.0 };
+        if active {
+            self.anim_time += raw_dt as f64;
+        }
+        let time = self.anim_time;
+
         self.audio.enabled = self.state.prefs.audio_enabled;
         self.audio.volume = self.state.prefs.audio_volume;
         self.state.updater.poll();
@@ -121,12 +130,17 @@ impl eframe::App for MinecraftCompanionApp {
             dt,
         );
 
-        if self.state.tab_anim_t < 1.0 {
+        if !active {
+            // Pause background panorama/particles cleanly when unfocused or minimized (~0% idle CPU).
+            if matches!(self.state.updater.status(), updater::UpdateStatus::Checking) {
+                ctx.request_repaint_after(Duration::from_millis(500));
+            }
+        } else if self.state.tab_anim_t < 1.0 {
             self.state.tab_anim_t = (self.state.tab_anim_t + dt * 4.5).min(1.0);
             ctx.request_repaint();
         } else {
-            // Smooth ~40 FPS subtle scenic panorama / ambient particle refresh
-            ctx.request_repaint_after(Duration::from_millis(24));
+            // Smooth 30 FPS scenic panorama / ambient particle refresh while window is active
+            ctx.request_repaint_after(Duration::from_millis(33));
         }
 
         render_top_chrome(

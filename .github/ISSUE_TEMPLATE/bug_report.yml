@@ -1,0 +1,37 @@
+name: "🐛 Reportar un Bug / Report a Bug"
+description: "Algo no funciona o una estructura/receta no coincide"
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Gracias por reportar un problema / Thanks for reporting an issue."
+  - type: dropdown
+    id: os
+    attributes:
+      label: "Sistema operativo / Operating System"
+      options:
+        - Windows (x86_64)
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Linux (AppImage)
+        - Linux (.deb / Ubuntu / Debian / Mint)
+        - Linux (.rpm / Fedora / openSUSE)
+        - Linux (.tar.gz / Arch / Otro)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: "Versión de la app / App Version"
+      placeholder: "v1.0.2"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: "Qué pasó y cómo reproducirlo / What happened & steps to reproduce"
+      description: "Si es en el Mapa de Semilla, incluí la semilla, dimensión y coordenadas X/Z aproximadas."
+      placeholder: "Semilla: ..., Coordenadas: X=..., Z=..., Bioma/Estructura esperada: ..."
+    validations:
+      required: true

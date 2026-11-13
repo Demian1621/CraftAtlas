@@ -189,7 +189,7 @@ pub fn render(
         .get(state.recipe_variant_idx)
         .and_then(|&idx| recipes.recipes.get(idx))
         .is_some_and(|r| r.slots.iter().any(|s| s.starts_with('#')));
-    if has_tags {
+    if has_tags && crate::ui::chrome::is_window_active(ui.ctx()) {
         ui.ctx().request_repaint_after(std::time::Duration::from_millis(250));
     }
 }

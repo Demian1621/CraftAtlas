@@ -1,13 +1,13 @@
 <div align="center">
 
-# Minecraft Companion (`v1.0.1`)
+# Minecraft Companion (`v1.0.2`)
 
 **The native desktop co-pilot for technical survival in Minecraft Java (`26.3`) — built in Rust + C, 100% offline-ready, cross-platform across Windows, macOS, and Linux.**
 
 [![CI](https://github.com/Demian1621/minecraft-companion/actions/workflows/ci.yml/badge.svg)](https://github.com/Demian1621/minecraft-companion/actions/workflows/ci.yml)
 [![Release](https://github.com/Demian1621/minecraft-companion/actions/workflows/release.yml/badge.svg)](https://github.com/Demian1621/minecraft-companion/actions/workflows/release.yml)
 
-[English](#-built-for-players-tired-of-14-browser-tabs) · [Versión en Español](README.md) · [Security](SECURITY.md) · [Releases](https://github.com/Demian1621/minecraft-companion/releases)
+[English](#-built-for-players-tired-of-14-browser-tabs) · [Versión en Español](README.md) · [Security](SECURITY.md) · [Releases](https://github.com/Demian1621/minecraft-companion/releases) · [Feedback](https://github.com/Demian1621/minecraft-companion/issues/new/choose) · [Support on Ko-fi](https://ko-fi.com/titusdb)
 
 </div>
 
@@ -21,7 +21,7 @@ If you play technical survival or min-max a long-term Java world, you know the d
 
 ---
 
-## 🧭 What's inside v1.0.1
+## 🧭 What's inside v1.0.2
 
 ### 1. 🗺️ Native Seed Map Explorer (`cubiomes` Engine)
 - **Overworld, Nether & The End** with high-speed biome rendering, 3D-shaded topographic terrain style, chunk grid, and **Slime Chunk** overlays.
@@ -59,7 +59,7 @@ Grab the latest build for your platform on **[Releases](https://github.com/Demia
 - Download the portable **`.exe`** (single executable, run directly) or the **`.zip`** bundle.
 
 ### 🍎 macOS (Universal Binary: Apple Silicon M1–M4 + Intel)
-1. Download **`minecraft-companion-v1.0.1-macos-universal.dmg`**.
+1. Download **`minecraft-companion-v1.0.2-macos-universal.dmg`**.
 2. Drag **Minecraft Companion.app** into **Applications**.
 3. **First launch note (Gatekeeper)**: Since this build uses an ad-hoc signature without a paid Apple Developer certificate, right-click (**Control + Click → Open → Open**) on the first launch, or run once in Terminal:
    ```bash
@@ -70,8 +70,8 @@ Grab the latest build for your platform on **[Releases](https://github.com/Demia
 | Package | Target Distros | Install / Run |
 | --- | --- | --- |
 | **`.AppImage`** *(Universal)* | Ubuntu, Fedora, Arch, Mint, Pop!_OS, openSUSE, SteamOS | `chmod +x minecraft-companion*.AppImage && ./minecraft-companion*.AppImage` |
-| **`.deb`** | Ubuntu, Debian, Linux Mint, Pop!_OS | `sudo apt install ./minecraft-companion_1.0.1_amd64.deb` |
-| **`.rpm`** | Fedora, RHEL, Rocky Linux, openSUSE | `sudo dnf install ./minecraft-companion-1.0.1-1.x86_64.rpm` |
+| **`.deb`** | Ubuntu, Debian, Linux Mint, Pop!_OS | `sudo apt install ./minecraft-companion_1.0.2_amd64.deb` |
+| **`.rpm`** | Fedora, RHEL, Rocky Linux, openSUSE | `sudo dnf install ./minecraft-companion-1.0.2-1.x86_64.rpm` |
 | **`.tar.gz`** *(Portable)* | Arch Linux, Manjaro, NixOS, generic | Extract and run `./minecraft-companion` or `./install-user.sh` |
 
 > **Checksum verification**: Every GitHub Release includes `SHA256SUMS.txt` so you can verify binaries cleanly (see [SECURITY.md](SECURITY.md)).
@@ -94,9 +94,25 @@ cargo build --release --locked
 
 ---
 
+## ⚡ What's New in `v1.0.2`
+
+- **~0% Background CPU While Playing:** Switching windows (Alt+Tab to Minecraft) or minimizing automatically pauses the 360° panorama, ambient particles, and enchantment shimmer loops; active animation runs at ~30 FPS (`33 ms`) for better laptop battery life and thermals.
+- **Top-Bar Feedback & Support Links:** Direct shortcuts to submit bug reports / feature ideas on GitHub and an optional Ko-fi support link.
+
+---
+
+## 💬 Feedback & Supporting the Project
+
+Minecraft Companion is **100% free, ad-free, and has zero paywalled features**. Everything is unlocked for everyone.
+
+- **Found a bug or have an idea?** Use [GitHub Issues](https://github.com/Demian1621/minecraft-companion/issues/new/choose) or join [GitHub Discussions](https://github.com/Demian1621/minecraft-companion/discussions).
+- **Want to buy me a coffee? (Optional):** You can support ongoing development on [Ko-fi (`https://ko-fi.com/titusdb`)](https://ko-fi.com/titusdb) or via the **Support** button in the app's top bar.
+
+---
+
 ## 🚀 Future Roadmap
 
-`v1.0.1` ships with TLS-hardened background release detection against **GitHub Releases** (and parses release asset SHA-256 digests). Upcoming `v1.1+` releases will add **verified in-app binary auto-update installation** alongside expanded Minecraft version support.
+`v1.0.2` ships with TLS-hardened background release detection against **GitHub Releases** (and parses release asset SHA-256 digests). Upcoming `v1.1+` releases will add **verified in-app binary auto-update installation** alongside expanded Minecraft version support.
 
 ---
 

@@ -1,13 +1,13 @@
 <div align="center">
 
-# Minecraft Companion (`v1.0.1`)
+# Minecraft Companion (`v1.0.2`)
 
 **La navaja suiza de escritorio para sobrevivir, optimizar y romper límites en Minecraft Java (`26.3`) — nativa en Rust + C, 100% offline y multiplataforma.**
 
 [![CI](https://github.com/Demian1621/minecraft-companion/actions/workflows/ci.yml/badge.svg)](https://github.com/Demian1621/minecraft-companion/actions/workflows/ci.yml)
 [![Release](https://github.com/Demian1621/minecraft-companion/actions/workflows/release.yml/badge.svg)](https://github.com/Demian1621/minecraft-companion/actions/workflows/release.yml)
 
-[Español](#-por-qué-existe-minecraft-companion) · [English Version](README.en.md) · [Seguridad](SECURITY.md) · [Releases](https://github.com/Demian1621/minecraft-companion/releases)
+[Español](#-por-qué-existe-minecraft-companion) · [English Version](README.en.md) · [Seguridad](SECURITY.md) · [Releases](https://github.com/Demian1621/minecraft-companion/releases) · [Feedback](https://github.com/Demian1621/minecraft-companion/issues/new/choose) · [Apoyar en Ko-fi](https://ko-fi.com/titusdb)
 
 </div>
 
@@ -21,7 +21,7 @@ Cualquiera que juegue Minecraft técnico o survival avanzado conoce la rutina de
 
 ---
 
-## 🧭 Qué incluye la v1.0.1
+## 🧭 Qué incluye la v1.0.2
 
 ### 1. 🗺️ Mapa de Semilla Nativo (`cubiomes` C Engine)
 - **Overworld, Nether y End** con renderizado nativo de biomas, terreno 3D topográfico y **Slime Chunks**.
@@ -60,7 +60,7 @@ Descarga el instalador o ejecutable de tu sistema desde la sección de **[Releas
 - **`.zip`**: descomprime y ejecuta `minecraft-companion.exe`.
 
 ### 🍎 macOS (Universal: Apple Silicon M1/M2/M3/M4 + Intel)
-1. Descarga **`minecraft-companion-v1.0.1-macos-universal.dmg`** (o el `.zip`).
+1. Descarga **`minecraft-companion-v1.0.2-macos-universal.dmg`** (o el `.zip`).
 2. Arrastra **Minecraft Companion.app** a tu carpeta **Aplicaciones**.
 3. **Nota de primera apertura (Gatekeeper)**: como esta release aún no cuenta con firma paga de Apple Developer, si macOS muestra aviso de desarrollador no identificado, haz **clic derecho (o Ctrl + clic) → Abrir → Abrir**, o ejecuta una sola vez en Terminal:
    ```bash
@@ -70,9 +70,9 @@ Descarga el instalador o ejecutable de tu sistema desde la sección de **[Releas
 ### 🐧 Linux (Todas las distros)
 | Formato | Distros recomendadas | Cómo usar |
 | --- | --- | --- |
-| **`.AppImage`** *(Universal)* | Ubuntu, Fedora, Arch, Mint, Pop!_OS, openSUSE, SteamOS | `chmod +x minecraft-companion-v1.0.1-linux-x86_64.AppImage && ./minecraft-companion-v1.0.1-linux-x86_64.AppImage` |
-| **`.deb`** | Ubuntu, Debian, Linux Mint, Pop!_OS, Zorin | `sudo apt install ./minecraft-companion_1.0.1_amd64.deb` |
-| **`.rpm`** | Fedora, RHEL, Rocky, openSUSE | `sudo dnf install ./minecraft-companion-1.0.1-1.x86_64.rpm` |
+| **`.AppImage`** *(Universal)* | Ubuntu, Fedora, Arch, Mint, Pop!_OS, openSUSE, SteamOS | `chmod +x minecraft-companion-v1.0.2-linux-x86_64.AppImage && ./minecraft-companion-v1.0.2-linux-x86_64.AppImage` |
+| **`.deb`** | Ubuntu, Debian, Linux Mint, Pop!_OS, Zorin | `sudo apt install ./minecraft-companion_1.0.2_amd64.deb` |
+| **`.rpm`** | Fedora, RHEL, Rocky, openSUSE | `sudo dnf install ./minecraft-companion-1.0.2-1.x86_64.rpm` |
 | **`.tar.gz`** *(Portable)* | Arch Linux, Manjaro, NixOS, genérico | Extrae y ejecuta `./minecraft-companion` o `./install-user.sh` |
 
 > **Nota Linux y verificación SHA-256**: en Linux requiere librerías gráficas estándar (`OpenGL` / `Wayland` o `X11`) y audio `ALSA`. Podés verificar la integridad de cualquier descarga comparando su hash con `SHA256SUMS.txt` (ver [SECURITY.md](SECURITY.md)).
@@ -96,9 +96,25 @@ cargo build --release --locked
 
 ---
 
+## ⚡ Novedades de `v1.0.2`
+
+- **~0% de CPU en segundo plano mientras jugás:** Al cambiar de ventana (Alt+Tab a Minecraft) o minimizar la app, se pausan automáticamente el panorama 360°, partículas y destellos animados; en uso activo corre a ~30 FPS (`33 ms`) para cuidar batería y temperatura en laptops.
+- **Botones de Feedback y Apoyo en la barra superior:** Acceso directo a reportar errores o sugerir mejoras en GitHub, y enlace opcional a Ko-fi.
+
+---
+
+## 💬 Feedback y apoyo al proyecto
+
+Minecraft Companion es **100% gratis, sin anuncios y sin funciones bloqueadas detrás de pagos**. Todo está disponible desde el primer día.
+
+- **¿Encontraste un bug o querés proponer una idea?** Abrí un reporte o sugerencia desde [GitHub Issues](https://github.com/Demian1621/minecraft-companion/issues/new/choose) o sumate a las [GitHub Discussions](https://github.com/Demian1621/minecraft-companion/discussions).
+- **¿Te ahorró tiempo y querés invitar un café? (Opcional):** Podés apoyar el proyecto en [Ko-fi (`https://ko-fi.com/titusdb`)](https://ko-fi.com/titusdb) o usar el botón **Apoyar** en la barra superior de la app.
+
+---
+
 ## 🚀 Actualizaciones futuras (Roadmap v1.x)
 
-La arquitectura `v1.x` ya incluye verificación asíncrona endurecida por TLS 1.2+ contra **GitHub Releases** (`v1.0.1` en la barra superior). En próximas versiones (`v1.1.0+`) evolucionará a **descarga e instalación automática in-app con verificación SHA-256**, además de ampliar versiones históricas del registro de Minecraft.
+La arquitectura `v1.x` ya incluye verificación asíncrona endurecida por TLS 1.2+ contra **GitHub Releases** (`v1.0.2` en la barra superior). En próximas versiones (`v1.1.0+`) evolucionará a **descarga e instalación automática in-app con verificación SHA-256**, además de ampliar versiones históricas del registro de Minecraft.
 
 ---
 

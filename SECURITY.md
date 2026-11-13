@@ -21,11 +21,11 @@ Cada Release incluye `SHA256SUMS.txt`. Podés comprobar la integridad exacta del
 
 - **Windows (PowerShell)**:
   ```powershell
-  Get-FileHash .\minecraft-companion-v1.0.1-windows-x86_64.exe -Algorithm SHA256
+  Get-FileHash .\minecraft-companion-v1.0.2-windows-x86_64.exe -Algorithm SHA256
   ```
 - **macOS**:
   ```bash
-  shasum -a 256 minecraft-companion-v1.0.1-macos-universal.dmg
+  shasum -a 256 minecraft-companion-v1.0.2-macos-universal.dmg
   ```
 - **Linux**:
   ```bash

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Comentarios / Comunidad (Discussions)
+    url: https://github.com/Demian1621/minecraft-companion/discussions
+    about: Dudas generales, sugerencias rápidas, feedback o semillas para compartir con otros jugadores.
+  - name: Apoyar el proyecto (Ko-fi)
+    url: https://ko-fi.com/titusdb
+    about: Apoyo opcional para el desarrollo y futuras mejoras multiplataforma.

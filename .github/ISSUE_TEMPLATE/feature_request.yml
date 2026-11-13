@@ -1,0 +1,23 @@
+name: "💡 Sugerir Idea o Granja / Feature Request"
+description: "Proponer nuevas granjas, mejoras visuales o funciones"
+title: "[Idea] "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: module
+    attributes:
+      label: "Módulo / Module"
+      options:
+        - Mapa de Semilla / Seed Map
+        - Equipamiento God & Yunque
+        - Crafteos JEI & Alquimia
+        - Granjas & Creadores
+        - Dupes & Glitches
+        - Pro Tips / UI / Otro
+  - type: textarea
+    id: idea
+    attributes:
+      label: "Tu sugerencia / Your suggestion"
+      placeholder: "Contanos qué te gustaría agregar o mejorar..."
+    validations:
+      required: true

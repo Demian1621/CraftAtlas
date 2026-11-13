@@ -11,6 +11,9 @@ use std::os::windows::process::CommandExt;
 pub const CURRENT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const GITHUB_REPO: &str = "Demian1621/minecraft-companion";
 pub const RELEASES_PAGE_URL: &str = "https://github.com/Demian1621/minecraft-companion/releases";
+pub const FEEDBACK_URL: &str =
+    "https://github.com/Demian1621/minecraft-companion/issues/new/choose";
+pub const KOFI_URL: &str = "https://ko-fi.com/titusdb";
 const RELEASES_ALLOWED_PREFIX: &str =
     "https://github.com/Demian1621/minecraft-companion/releases/";
 const ASSET_DOWNLOAD_PREFIX: &str =

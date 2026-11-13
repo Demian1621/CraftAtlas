@@ -1,6 +1,6 @@
 [package]
 name = "minecraft-companion"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 description = "Cross-platform desktop companion for Minecraft Java Edition: Biomes & Seed Map explorer, Anvil God Gear optimizer, JEI Recipes & Crafting Tree, Technical Farms & Creators."
 license = "MIT"
