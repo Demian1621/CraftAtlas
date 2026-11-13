@@ -493,7 +493,9 @@ fn render_app_version_pill(
         };
         if resp.on_hover_text(tooltip).clicked() {
             audio.play(SoundCue::Click);
-            ctx.open_url(egui::OpenUrl::new_tab(url));
+            if crate::updater::is_safe_https_url(&url) {
+                ctx.open_url(egui::OpenUrl::new_tab(url));
+            }
         }
         return;
     }

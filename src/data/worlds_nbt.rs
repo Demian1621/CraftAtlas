@@ -120,13 +120,25 @@ pub fn minecraft_root_dir() -> Option<PathBuf> {
     discover_minecraft_roots().into_iter().next()
 }
 
-/// Parses a single gzip-compressed `level.dat` NBT byte slice cleanly without panicking.
+/// Safety caps against malformed or decompression-bomb `level.dat` inputs.
+const MAX_LEVEL_DAT_COMPRESSED_BYTES: u64 = 16 * 1024 * 1024;
+const MAX_LEVEL_DAT_UNCOMPRESSED_BYTES: u64 = 32 * 1024 * 1024;
+const MAX_ASSET_INDEX_BYTES: u64 = 32 * 1024 * 1024;
+
+/// Parses a single gzip-compressed `level.dat` NBT byte slice cleanly with bounded decompression.
 pub fn parse_level_dat_bytes(bytes: &[u8], folder_name: &str) -> Result<DetectedWorld, String> {
-    let mut decoder = GzDecoder::new(bytes);
+    if (bytes.len() as u64) > MAX_LEVEL_DAT_COMPRESSED_BYTES {
+        return Err("level.dat compressed payload exceeds safety limit".to_string());
+    }
+    let decoder = GzDecoder::new(bytes);
     let mut uncompressed = Vec::new();
     decoder
+        .take(MAX_LEVEL_DAT_UNCOMPRESSED_BYTES + 1)
         .read_to_end(&mut uncompressed)
         .map_err(|e| format!("Gzip decode failed: {}", e))?;
+    if (uncompressed.len() as u64) > MAX_LEVEL_DAT_UNCOMPRESSED_BYTES {
+        return Err("level.dat uncompressed NBT exceeds safety limit".to_string());
+    }
 
     let root: RootNbt = fastnbt::from_bytes(&uncompressed)
         .map_err(|e| format!("NBT parse failed: {}", e))?;
@@ -193,11 +205,15 @@ pub fn scan_local_worlds() -> Vec<DetectedWorld> {
         if !level_dat.exists() {
             continue;
         }
-        let Ok(mut file) = File::open(&level_dat) else {
+        let Ok(file) = File::open(&level_dat) else {
             continue;
         };
         let mut buf = Vec::new();
-        if file.read_to_end(&mut buf).is_err() {
+        if file
+            .take(MAX_LEVEL_DAT_COMPRESSED_BYTES + 1)
+            .read_to_end(&mut buf)
+            .is_err()
+        {
             continue;
         }
         let folder = entry.file_name().to_string_lossy().to_string();
@@ -298,6 +314,9 @@ pub fn find_minecraft_sound_paths() -> HashMap<String, PathBuf> {
     ];
 
     for (_, idx_path) in index_files {
+        if idx_path.metadata().map(|m| m.len()).unwrap_or(u64::MAX) > MAX_ASSET_INDEX_BYTES {
+            continue;
+        }
         let Ok(txt) = fs::read_to_string(&idx_path) else {
             continue;
         };
@@ -309,7 +328,7 @@ pub fn find_minecraft_sound_paths() -> HashMap<String, PathBuf> {
                 continue;
             }
             if let Some(obj) = parsed.objects.get(*key) {
-                if obj.hash.len() >= 2 {
+                if is_valid_sha1_hex(&obj.hash) {
                     let p = objects_dir.join(&obj.hash[..2]).join(&obj.hash);
                     if p.exists() {
                         resolved.insert((*alias).to_string(), p);
@@ -322,6 +341,10 @@ pub fn find_minecraft_sound_paths() -> HashMap<String, PathBuf> {
         }
     }
     resolved
+}
+
+fn is_valid_sha1_hex(hash: &str) -> bool {
+    hash.len() == 40 && hash.bytes().all(|b| b.is_ascii_hexdigit())
 }
 
 #[cfg(test)]
@@ -371,5 +394,19 @@ mod tests {
         let parsed = parse_level_dat_bytes(&gz_bytes, "WorldFolder").expect("parse level.dat");
         assert_eq!(parsed.level_name, "Technical 26.3");
         assert_eq!(parsed.seed, -42198374129834i64);
+    }
+
+    #[test]
+    fn rejects_oversized_gzip_level_dat_and_traversal_hashes() {
+        assert!(!is_valid_sha1_hex("../../Windows/System32/cmd.exe"));
+        assert!(!is_valid_sha1_hex("áé"));
+        assert!(is_valid_sha1_hex("0123456789abcdef0123456789abcdef01234567"));
+
+        let huge_payload = vec![b'A'; (MAX_LEVEL_DAT_UNCOMPRESSED_BYTES as usize) + 1024];
+        let mut gz = GzEncoder::new(Vec::new(), Compression::fast());
+        gz.write_all(&huge_payload).expect("compress zeros");
+        let bomb = gz.finish().expect("finish bomb");
+        let err = parse_level_dat_bytes(&bomb, "BombWorld").unwrap_err();
+        assert!(err.contains("safety limit"));
     }
 }

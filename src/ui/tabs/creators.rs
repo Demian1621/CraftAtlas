@@ -72,7 +72,9 @@ pub fn render_creator_action_buttons(
     .stroke(Stroke::new(1.0_f32, accent));
 
     if ui.add(open_btn).clicked() {
-        ui.ctx().open_url(egui::OpenUrl::new_tab(&creator.url));
+        if crate::updater::is_safe_https_url(&creator.url) {
+            ui.ctx().open_url(egui::OpenUrl::new_tab(&creator.url));
+        }
         audio.play(SoundCue::Click);
     }
 
@@ -264,7 +266,9 @@ pub fn render_tutorial_search_bar(
                 .stroke(Stroke::new(1.0_f32, palette.accent_primary));
 
                 if ui.add(search_btn).clicked() {
-                    ui.ctx().open_url(egui::OpenUrl::new_tab(search_url));
+                    if crate::updater::is_safe_https_url(search_url) {
+                        ui.ctx().open_url(egui::OpenUrl::new_tab(search_url));
+                    }
                     audio.play(SoundCue::Click);
                 }
 

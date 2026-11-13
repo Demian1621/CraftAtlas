@@ -5,6 +5,11 @@ VERSION="${1:?Usage: build-packages.sh <version_without_v> [bin_path] [out_dir]}
 BIN_PATH="${2:-target/release/minecraft-companion}"
 OUT_DIR="${3:-dist/linux}"
 
+if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+  echo "ERROR: invalid version string: $VERSION" >&2
+  exit 1
+fi
+
 if [[ ! -f "$BIN_PATH" ]]; then
   echo "ERROR: binary not found at $BIN_PATH" >&2
   exit 1
@@ -135,8 +140,10 @@ EOF
 chmod +x "$APPDIR/AppRun"
 
 APPIMAGETOOL="$WORK_DIR/appimagetool.AppImage"
-curl -fsSL -o "$APPIMAGETOOL" \
-  "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+APPIMAGETOOL_URL="https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage"
+APPIMAGETOOL_SHA256="ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0"
+curl -fsSL --proto '=https' --proto-redir '=https' --tlsv1.2 -o "$APPIMAGETOOL" "$APPIMAGETOOL_URL"
+printf '%s  %s\n' "$APPIMAGETOOL_SHA256" "$APPIMAGETOOL" | sha256sum -c -
 chmod +x "$APPIMAGETOOL"
 ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 "$APPIMAGETOOL" \
   "$APPDIR" "$OUT_DIR/minecraft-companion-v${VERSION}-linux-x86_64.AppImage"

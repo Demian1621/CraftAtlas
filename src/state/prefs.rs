@@ -174,10 +174,13 @@ impl UserPrefs {
     }
 
     pub fn load() -> Self {
+        const MAX_PREFS_BYTES: u64 = 2 * 1024 * 1024;
         if let Some(path) = Self::prefs_path() {
-            if let Ok(text) = fs::read_to_string(&path) {
-                if let Ok(parsed) = serde_json::from_str::<UserPrefs>(&text) {
-                    return parsed;
+            if path.metadata().map(|m| m.len()).unwrap_or(u64::MAX) <= MAX_PREFS_BYTES {
+                if let Ok(text) = fs::read_to_string(&path) {
+                    if let Ok(parsed) = serde_json::from_str::<UserPrefs>(&text) {
+                        return parsed;
+                    }
                 }
             }
         }
@@ -190,7 +193,17 @@ impl UserPrefs {
                 let _ = fs::create_dir_all(parent);
             }
             if let Ok(json) = serde_json::to_string_pretty(self) {
-                let _ = fs::write(path, json);
+                let tmp_path = path.with_extension("json.tmp");
+                if fs::write(&tmp_path, json).is_ok() {
+                    #[cfg(unix)]
+                    {
+                        use std::os::unix::fs::PermissionsExt;
+                        let _ = fs::set_permissions(&tmp_path, fs::Permissions::from_mode(0o600));
+                    }
+                    if fs::rename(&tmp_path, &path).is_err() {
+                        let _ = fs::remove_file(&tmp_path);
+                    }
+                }
             }
         }
     }
