@@ -1,0 +1,22 @@
+{
+  "default_version": "26.3",
+  "versions": [
+    {
+      "id": "26.3",
+      "label": "Java 26.3",
+      "subtitle": {
+        "es_mx": "Wilderness Bound",
+        "es_es": "Wilderness Bound",
+        "en_us": "Wilderness Bound"
+      },
+      "cubiomes_mc": "26.3",
+      "highlights": [
+        {
+          "es_mx": "Catálogo completo JEI (26.3), explorador Cubiomes nativo, Yunque God, granjas y mecánicas actualizadas a 26.3.",
+          "es_es": "Catálogo completo JEI (26.3), explorador Cubiomes nativo, Yunque God, granjas y mecánicas actualizadas a 26.3.",
+          "en_us": "Complete 26.3 JEI catalog, native Cubiomes seed map, God Anvil optimizer, farms, and verified 26.3 mechanics."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+/target/
+/tools/*/target/
+/dist/
+*.log
+*.tmp
+nul
+verification_*.png
+*.AppImage
+*.deb
+*.rpm
+*.dmg
+*.icns
+/data/worlds.json

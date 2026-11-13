@@ -1,0 +1,27 @@
+[package]
+name = "minecraft-companion"
+version = "1.0.0"
+edition = "2021"
+description = "Cross-platform desktop companion for Minecraft Java Edition: Biomes & Seed Map explorer, Anvil God Gear optimizer, JEI Recipes & Crafting Tree, Technical Farms & Creators."
+license = "MIT"
+repository = "https://github.com/Demian1621/minecraft-companion"
+readme = "README.md"
+
+[dependencies]
+eframe = "0.31"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+simple-easing = "1"
+fastnbt = "2"
+flate2 = "1"
+rodio = { version = "0.20", default-features = false, features = ["vorbis"] }
+
+[build-dependencies]
+cc = "1"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

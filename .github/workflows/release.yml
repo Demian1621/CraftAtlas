@@ -1,0 +1,216 @@
+name: Release Multi-Platform
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      version: ${{ steps.meta.outputs.version }}
+    steps:
+      - name: Resolve tag and semver
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  windows:
+    name: Windows (x86_64)
+    needs: prepare
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build release binary
+        run: cargo build --release --locked
+
+      - name: Package Windows artifacts
+        shell: pwsh
+        run: |
+          $ver = "${{ needs.prepare.outputs.version }}"
+          New-Item -ItemType Directory -Force -Path dist/windows | Out-Null
+          Copy-Item target/release/minecraft-companion.exe "dist/windows/minecraft-companion-v$ver-windows-x86_64.exe"
+          $zipStage = "dist/windows/stage"
+          New-Item -ItemType Directory -Force -Path $zipStage | Out-Null
+          Copy-Item target/release/minecraft-companion.exe "$zipStage/minecraft-companion.exe"
+          Copy-Item README.md "$zipStage/README.md"
+          if (Test-Path README.en.md) { Copy-Item README.en.md "$zipStage/README.en.md" }
+          Compress-Archive -Path "$zipStage/*" -DestinationPath "dist/windows/minecraft-companion-v$ver-windows-x86_64.zip" -Force
+          Remove-Item -Recurse -Force $zipStage
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: |
+            dist/windows/*.exe
+            dist/windows/*.zip
+
+  macos:
+    name: macOS (Universal arm64 + x86_64)
+    needs: prepare
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build Apple Silicon & Intel binaries
+        run: |
+          cargo build --release --locked --target aarch64-apple-darwin
+          cargo build --release --locked --target x86_64-apple-darwin
+
+      - name: Create Universal .app & .dmg
+        run: |
+          VER="${{ needs.prepare.outputs.version }}"
+          APP_NAME="Minecraft Companion.app"
+          mkdir -p dist/macos/dmg_stage
+          APP_DIR="dist/macos/dmg_stage/$APP_NAME"
+          mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
+
+          lipo -create \
+            target/aarch64-apple-darwin/release/minecraft-companion \
+            target/x86_64-apple-darwin/release/minecraft-companion \
+            -output "$APP_DIR/Contents/MacOS/minecraft-companion"
+          chmod +x "$APP_DIR/Contents/MacOS/minecraft-companion"
+
+          cp packaging/macos/Info.plist "$APP_DIR/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VER}" "$APP_DIR/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${VER}" "$APP_DIR/Contents/Info.plist"
+
+          ICONSET="dist/macos/AppIcon.iconset"
+          mkdir -p "$ICONSET"
+          for sz in 16 32 128 256 512; do
+            sips -s format png -z $sz $sz assets/custom_app_icon.png --out "$ICONSET/icon_${sz}x${sz}.png" >/dev/null
+            sz2=$((sz * 2))
+            sips -s format png -z $sz2 $sz2 assets/custom_app_icon.png --out "$ICONSET/icon_${sz}x${sz}@2x.png" >/dev/null
+          done
+          iconutil -c icns "$ICONSET" -o "$APP_DIR/Contents/Resources/AppIcon.icns"
+          rm -rf "$ICONSET"
+
+          # Ad-hoc codesign required so Apple Silicon allows execution of Universal bundle
+          codesign --force --deep --sign - "$APP_DIR"
+
+          ln -s /Applications dist/macos/dmg_stage/Applications
+          hdiutil create \
+            -volname "Minecraft Companion v${VER}" \
+            -srcfolder dist/macos/dmg_stage \
+            -ov -format UDZO \
+            "dist/macos/minecraft-companion-v${VER}-macos-universal.dmg"
+
+          ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" \
+            "dist/macos/minecraft-companion-v${VER}-macos-universal-app.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifacts
+          path: |
+            dist/macos/*.dmg
+            dist/macos/*.zip
+
+  linux:
+    name: Linux (AppImage, deb, rpm, tar.gz)
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux build & packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libasound2-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libwayland-dev \
+            libgl1-mesa-dev \
+            libxcursor-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libx11-dev \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            rpm \
+            desktop-file-utils \
+            imagemagick \
+            file
+
+      - name: Build release binary
+        run: cargo build --release --locked
+
+      - name: Package AppImage, .deb, .rpm, .tar.gz
+        run: |
+          chmod +x packaging/linux/build-packages.sh
+          ./packaging/linux/build-packages.sh "${{ needs.prepare.outputs.version }}" target/release/minecraft-companion dist/linux
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifacts
+          path: dist/linux/*
+
+  release:
+    name: Publish GitHub Release
+    needs: [ prepare, windows, macos, linux ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist_all
+
+      - name: Flatten release assets & compute SHA256SUMS
+        run: |
+          mkdir -p release_assets
+          find dist_all -type f -exec mv -t release_assets {} +
+          (cd release_assets && sha256sum * > SHA256SUMS.txt)
+          ls -lh release_assets
+
+      - name: Prepare Release Notes
+        run: |
+          TAG="${{ needs.prepare.outputs.tag }}"
+          if [ -f "docs/RELEASE_${TAG}.md" ]; then
+            cp "docs/RELEASE_${TAG}.md" release_notes.md
+          else
+            printf "## Minecraft Companion %s\n\nCross-platform technical companion for Minecraft Java Edition (Windows, macOS Universal, Linux AppImage / .deb / .rpm / .tar.gz).\n\nSee [README.md](README.md) (ES) or [README.en.md](README.en.md) (EN).\n" "$TAG" > release_notes.md
+          fi
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: Minecraft Companion ${{ needs.prepare.outputs.tag }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: release_assets/*
