@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=CraftAtlas
+GenericName=Minecraft Technical Atlas & Companion
+GenericName[es]=Atlas y Compañero Técnico de Minecraft
+Comment=Seed map explorer, enchanted books, anvil god-gear optimizer, JEI crafting tree, and technical farms for Minecraft Java Edition
+Comment[es]=Explorador de semillas y biomas, libros encantados, optimizador de yunque, crafteos JEI y granjas técnicas para Minecraft Java
+Exec=craft-atlas
+Icon=craft-atlas
+Terminal=false
+Categories=Game;Utility;
+StartupNotify=true
+StartupWMClass=craft-atlas

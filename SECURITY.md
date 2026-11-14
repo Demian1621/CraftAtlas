@@ -1,10 +1,10 @@
 # Security Policy / Política de Seguridad
 
-## 🛡️ Garantías de diseño de Minecraft Companion
+## 🛡️ Garantías de diseño de CraftAtlas
 
 - **Ejecución local y sin telemetría**: la aplicación funciona completamente en local; las únicas conexiones salientes son:
-  1. Comprobación en segundo plano de nuevas versiones vía HTTPS (`TLS 1.2+`) hacia `https://api.github.com/repos/Demian1621/minecraft-companion/releases/latest`.
-  2. Enlaces explícitos abiertos a pedido del usuario (`https://www.youtube.com/...`, `https://www.bilibili.com/...` o `https://github.com/Demian1621/minecraft-companion/releases/...`).
+  1. Comprobación en segundo plano de nuevas versiones vía HTTPS (`TLS 1.2+`) hacia `https://api.github.com/repos/Demian1621/CraftAtlas/releases/latest`.
+  2. Enlaces explícitos abiertos a pedido del usuario (`https://www.youtube.com/...`, `https://www.bilibili.com/...` o `https://github.com/Demian1621/CraftAtlas/releases/...`).
 - **Validación estricta**:
   - Ninguna URL sin esquema `https://` válido puede abrirse en el navegador.
   - En Windows, la consulta de Releases invoca exclusivamente `%SystemRoot%\System32\curl.exe` para evitar secuestro de binario desde `PATH` o carpeta de descargas.
@@ -21,11 +21,11 @@ Cada Release incluye `SHA256SUMS.txt`. Podés comprobar la integridad exacta del
 
 - **Windows (PowerShell)**:
   ```powershell
-  Get-FileHash .\minecraft-companion-v1.0.2-windows-x86_64.exe -Algorithm SHA256
+  Get-FileHash .\craft-atlas-v1.1.0-windows-x86_64.exe -Algorithm SHA256
   ```
 - **macOS**:
   ```bash
-  shasum -a 256 minecraft-companion-v1.0.2-macos-universal.dmg
+  shasum -a 256 craft-atlas-v1.1.0-macos-universal.dmg
   ```
 - **Linux**:
   ```bash

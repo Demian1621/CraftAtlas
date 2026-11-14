@@ -11,7 +11,7 @@
 - **Modo activo optimizado a ~30 FPS:** Con la ventana enfocada y visible, las animaciones de fondo ahora corren a ~30 FPS (`33 ms` por frame en lugar de ~42 FPS / `24 ms`), manteniendo una fluidez visual limpia con menor uso de CPU y batería en laptops.
 
 ### 💬 Feedback de la comunidad y Apoyo opcional
-- **Botón de Feedback en la barra superior:** Acceso directo desde la app a los formularios de GitHub para reportar bugs o proponer ideas y mejoras ([Issues](https://github.com/Demian1621/minecraft-companion/issues/new/choose) / [Discussions](https://github.com/Demian1621/minecraft-companion/discussions)).
+- **Botón de Feedback en la barra superior:** Acceso directo desde la app a los formularios de GitHub para reportar bugs o proponer ideas y mejoras ([Issues](https://github.com/Demian1621/CraftAtlas/issues/new/choose) / [Discussions](https://github.com/Demian1621/CraftAtlas/discussions)).
 - **Botón discreto de Apoyar / Ko-fi (`https://ko-fi.com/titusdb`):** Para quienes quieran invitar un café o apoyar el desarrollo de forma 100% voluntaria.
 - **Gratis para siempre:** Minecraft Companion es **100% gratis, sin anuncios y sin funciones bloqueadas detrás de pagos**.
 - **Balance de audio:** Se redujo significativamente el volumen del sonido metálico del yunque (y un 40% el sonido de completar forja) para mantenerlo parejo y agradable frente a los clicks de la interfaz.
@@ -25,7 +25,7 @@
 - **30 FPS Active Background Cap:** While the window is focused and visible, continuous background animations now target ~30 FPS (`33 ms` intervals instead of ~42 FPS / `24 ms`), reducing power draw on laptops while keeping transitions responsive.
 
 ### 💬 Community Feedback & Optional Support
-- **Top-Bar Feedback Button:** One-click access to structured GitHub bug report and feature request templates ([Issues](https://github.com/Demian1621/minecraft-companion/issues/new/choose) / [Discussions](https://github.com/Demian1621/minecraft-companion/discussions)).
+- **Top-Bar Feedback Button:** One-click access to structured GitHub bug report and feature request templates ([Issues](https://github.com/Demian1621/CraftAtlas/issues/new/choose) / [Discussions](https://github.com/Demian1621/CraftAtlas/discussions)).
 - **Optional Support Button (`https://ko-fi.com/titusdb`):** A discreet Ko-fi link for anyone who wants to voluntarily support ongoing development.
 - **100% Free Forever:** Minecraft Companion is completely **free, ad-free, and has zero paywalled features**.
 - **Balanced Anvil Sound:** Substantially lowered anvil forge strike loudness (and attenuated forge-complete fanfare by 40%) so it sits comfortably alongside UI clicks.

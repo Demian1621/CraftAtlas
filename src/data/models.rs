@@ -196,6 +196,176 @@ impl TechCreator {
     }
 }
 
+/// Sources through which an Enchanted Book can be acquired in vanilla Minecraft Java Edition.
+#[derive(Debug, Clone, Deserialize)]
+pub struct EnchantBookSources {
+    pub enchanting_table: bool,
+    pub librarian_villager: bool,
+    pub fishing: bool,
+    pub piglin_bartering: bool,
+    #[serde(default)]
+    pub loot_chests: Vec<LocalizedText>,
+}
+
+/// Encyclopedia entry for every vanilla Enchanted Book, its sources, incompatibilities, and optimal strategy.
+#[derive(Debug, Clone, Deserialize)]
+pub struct EnchantBookEntry {
+    pub id: String,
+    pub category_key: String,
+    #[allow(dead_code)]
+    pub icon: String,
+    pub name: LocalizedText,
+    pub max_level: String,
+    pub max_level_num: u8,
+    pub anvil_multiplier: u8,
+    pub is_treasure: bool,
+    pub is_curse: bool,
+    pub applies_to: LocalizedText,
+    pub incompatible_with: LocalizedText,
+    pub effect: LocalizedText,
+    pub sources: EnchantBookSources,
+    pub best_method: LocalizedText,
+}
+
+const ARMOR_ALL_ICONS: &[(&str, &str, &str)] = &[
+    ("netherite_helmet", "Casco", "Helmet"),
+    ("netherite_chestplate", "Pechera", "Chestplate"),
+    ("netherite_leggings", "Pantalones", "Leggings"),
+    ("netherite_boots", "Botas", "Boots"),
+    ("turtle_helmet", "Caparazón de tortuga", "Turtle Shell"),
+];
+const HELMET_ICONS: &[(&str, &str, &str)] = &[
+    ("netherite_helmet", "Casco", "Helmet"),
+    ("turtle_helmet", "Caparazón de tortuga", "Turtle Shell"),
+];
+const BOOTS_ICONS: &[(&str, &str, &str)] = &[("netherite_boots", "Botas", "Boots")];
+const LEGGINGS_ICONS: &[(&str, &str, &str)] = &[("netherite_leggings", "Pantalones", "Leggings")];
+const SWORD_ONLY_ICONS: &[(&str, &str, &str)] = &[("netherite_sword", "Espada", "Sword")];
+const SWORD_SPEAR_ICONS: &[(&str, &str, &str)] = &[
+    ("netherite_sword", "Espada", "Sword"),
+    ("netherite_spear", "Lanza", "Spear"),
+];
+const SWORD_AXE_SPEAR_ICONS: &[(&str, &str, &str)] = &[
+    ("netherite_sword", "Espada", "Sword"),
+    ("netherite_axe", "Hacha", "Axe"),
+    ("netherite_spear", "Lanza", "Spear"),
+];
+const MELEE_HEAVY_ICONS: &[(&str, &str, &str)] = &[
+    ("netherite_sword", "Espada", "Sword"),
+    ("netherite_axe", "Hacha", "Axe"),
+    ("netherite_spear", "Lanza", "Spear"),
+    ("mace", "Maza", "Mace"),
+];
+const SWORD_SPEAR_MACE_ICONS: &[(&str, &str, &str)] = &[
+    ("netherite_sword", "Espada", "Sword"),
+    ("netherite_spear", "Lanza", "Spear"),
+    ("mace", "Maza", "Mace"),
+];
+const MACE_ONLY_ICONS: &[(&str, &str, &str)] = &[("mace", "Maza", "Mace")];
+const SPEAR_ONLY_ICONS: &[(&str, &str, &str)] = &[("netherite_spear", "Lanza", "Spear")];
+const BOW_ICONS: &[(&str, &str, &str)] = &[("bow", "Arco", "Bow")];
+const CROSSBOW_ICONS: &[(&str, &str, &str)] = &[("crossbow", "Ballesta", "Crossbow")];
+const TRIDENT_ICONS: &[(&str, &str, &str)] = &[("trident", "Tridente", "Trident")];
+const ROD_ICONS: &[(&str, &str, &str)] = &[("fishing_rod", "Caña de pescar", "Fishing Rod")];
+const TOOLS_CORE_ICONS: &[(&str, &str, &str)] = &[
+    ("netherite_pickaxe", "Pico", "Pickaxe"),
+    ("netherite_shovel", "Pala", "Shovel"),
+    ("netherite_axe", "Hacha", "Axe"),
+    ("netherite_hoe", "Azada", "Hoe"),
+];
+const TOOLS_SHEARS_ICONS: &[(&str, &str, &str)] = &[
+    ("netherite_pickaxe", "Pico", "Pickaxe"),
+    ("netherite_shovel", "Pala", "Shovel"),
+    ("netherite_axe", "Hacha", "Axe"),
+    ("netherite_hoe", "Azada", "Hoe"),
+    ("shears", "Tijeras", "Shears"),
+];
+const UNBREAKING_ICONS: &[(&str, &str, &str)] = &[
+    ("netherite_chestplate", "Armadura", "Armor"),
+    ("netherite_pickaxe", "Herramientas", "Tools"),
+    ("netherite_sword", "Espada", "Sword"),
+    ("netherite_spear", "Lanza", "Spear"),
+    ("mace", "Maza", "Mace"),
+    ("bow", "Arco / Ballesta", "Bow / Crossbow"),
+    ("elytra", "Élitros", "Elytra"),
+    ("shield", "Escudo", "Shield"),
+    ("shears", "Tijeras", "Shears"),
+    ("flint_and_steel", "Mechero", "Flint & Steel"),
+    ("brush", "Pincel", "Brush"),
+];
+const MENDING_ICONS: &[(&str, &str, &str)] = &[
+    ("netherite_chestplate", "Armadura", "Armor"),
+    ("netherite_pickaxe", "Herramientas", "Tools"),
+    ("netherite_sword", "Espada", "Sword"),
+    ("netherite_spear", "Lanza", "Spear"),
+    ("mace", "Maza", "Mace"),
+    ("bow", "Arco", "Bow"),
+    ("trident", "Tridente", "Trident"),
+    ("fishing_rod", "Caña", "Fishing Rod"),
+    ("elytra", "Élitros", "Elytra"),
+    ("shield", "Escudo", "Shield"),
+];
+const BINDING_ICONS: &[(&str, &str, &str)] = &[
+    ("netherite_helmet", "Casco", "Helmet"),
+    ("netherite_chestplate", "Pechera", "Chestplate"),
+    ("netherite_leggings", "Pantalones", "Leggings"),
+    ("netherite_boots", "Botas", "Boots"),
+    ("elytra", "Élitros", "Elytra"),
+    ("carved_pumpkin", "Calabaza tallada", "Carved Pumpkin"),
+];
+const VANISHING_ICONS: &[(&str, &str, &str)] = &[
+    ("netherite_chestplate", "Armadura", "Armor"),
+    ("netherite_sword", "Armas", "Weapons"),
+    ("netherite_pickaxe", "Herramientas", "Tools"),
+    ("bow", "Arco", "Bow"),
+    ("elytra", "Élitros", "Elytra"),
+    ("compass", "Brújula", "Compass"),
+];
+
+impl EnchantBookEntry {
+    pub fn matches_filter(&self, filter: &str) -> bool {
+        match filter {
+            "all" => true,
+            "no_villager" => !self.sources.librarian_villager,
+            "treasure" => self.is_treasure,
+            _ => self.category_key == filter,
+        }
+    }
+
+    pub fn anvil_max_level_cost(&self) -> u32 {
+        (self.anvil_multiplier as u32) * (self.max_level_num.max(1) as u32)
+    }
+
+    /// Returns atlas sprite IDs + localized labels for the items this enchantment applies to.
+    pub fn applicable_item_icons(&self) -> &'static [(&'static str, &'static str, &'static str)] {
+        match self.id.as_str() {
+            "protection" | "fire_protection" | "blast_protection" | "projectile_protection"
+            | "thorns" => ARMOR_ALL_ICONS,
+            "respiration" | "aqua_affinity" => HELMET_ICONS,
+            "feather_falling" | "depth_strider" | "frost_walker" | "soul_speed" => BOOTS_ICONS,
+            "swift_sneak" => LEGGINGS_ICONS,
+            "sharpness" => SWORD_AXE_SPEAR_ICONS,
+            "smite" | "bane_of_arthropods" => MELEE_HEAVY_ICONS,
+            "knockback" | "looting" => SWORD_SPEAR_ICONS,
+            "fire_aspect" => SWORD_SPEAR_MACE_ICONS,
+            "sweeping_edge" => SWORD_ONLY_ICONS,
+            "density" | "breach" | "wind_burst" => MACE_ONLY_ICONS,
+            "lunge" => SPEAR_ONLY_ICONS,
+            "power" | "punch" | "flame" | "infinity" => BOW_ICONS,
+            "multishot" | "quick_charge" | "piercing" => CROSSBOW_ICONS,
+            "loyalty" | "impaling" | "riptide" | "channeling" => TRIDENT_ICONS,
+            "efficiency" | "silk_touch" => TOOLS_SHEARS_ICONS,
+            "fortune" => TOOLS_CORE_ICONS,
+            "luck_of_the_sea" | "lure" => ROD_ICONS,
+            "unbreaking" => UNBREAKING_ICONS,
+            "mending" => MENDING_ICONS,
+            "binding_curse" => BINDING_ICONS,
+            "vanishing_curse" => VANISHING_ICONS,
+            _ => &[("enchanted_book", "Ítem compatible", "Compatible item")],
+        }
+    }
+}
+
 /// Root guide database bundled cleanly with extensible version filtering.
 #[derive(Debug, Clone, Deserialize)]
 #[allow(dead_code)]
@@ -207,6 +377,8 @@ pub struct Database {
     pub pro_tips: Vec<ProTip>,
     #[serde(default)]
     pub creators: Vec<TechCreator>,
+    #[serde(default)]
+    pub enchant_books: Vec<EnchantBookEntry>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -676,5 +848,67 @@ mod tests {
 
         let (q3, _) = build_youtube_tutorial_search("enlace de portales 1:8 nether minecraft", "26.3");
         assert_eq!(q3, "enlace de portales 1:8 nether minecraft 26.3");
+    }
+
+    #[test]
+    fn enchant_books_cover_all_43_java_enchants_with_valid_sources_and_i18n() {
+        use crate::data::loader::load_database;
+        use std::collections::HashSet;
+
+        let db = load_database().expect("database + enchant_books must load cleanly");
+        assert_eq!(
+            db.enchant_books.len(),
+            43,
+            "Expected all 43 vanilla Java 26.3 enchantments"
+        );
+
+        let mut seen = HashSet::new();
+        let mut non_villager = Vec::new();
+        for b in &db.enchant_books {
+            assert!(seen.insert(b.id.clone()), "Duplicate book id: {}", b.id);
+            assert!(
+                matches!(
+                    b.category_key.as_str(),
+                    "armor" | "melee" | "ranged" | "tool" | "universal"
+                ),
+                "Invalid category_key '{}' on book '{}'",
+                b.category_key,
+                b.id
+            );
+            assert!(b.max_level_num >= 1 && b.max_level_num <= 5);
+            for txt in [
+                &b.name,
+                &b.applies_to,
+                &b.incompatible_with,
+                &b.effect,
+                &b.best_method,
+            ] {
+                for s in [&txt.es_mx, &txt.es_es, &txt.en_us] {
+                    assert!(!s.trim().is_empty(), "Empty localized string on book '{}'", b.id);
+                    assert!(
+                        !s.chars().any(|c| (c as u32) >= 0x1F300),
+                        "Forbidden emoji char in book '{}': {}",
+                        b.id,
+                        s
+                    );
+                }
+            }
+            if !b.sources.librarian_villager {
+                non_villager.push(b.id.as_str());
+            }
+            let item_icons = b.applicable_item_icons();
+            assert!(!item_icons.is_empty(), "Missing applicable icons for {}", b.id);
+            assert_ne!(
+                item_icons[0].0, "enchanted_book",
+                "Book '{}' fell back instead of mapping specific item icons",
+                b.id
+            );
+        }
+        non_villager.sort();
+        assert_eq!(
+            non_villager,
+            vec!["soul_speed", "swift_sneak", "wind_burst"],
+            "Expected exact 3 non-villager enchanted books"
+        );
     }
 }

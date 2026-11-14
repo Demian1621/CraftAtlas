@@ -5,23 +5,28 @@ use std::collections::BTreeMap;
 use crate::anim::ToastQueue;
 use crate::assets::ItemAtlas;
 use crate::audio::{AudioEngine, SoundCue};
-use crate::data::models::{Database, DupeItem, Language, TechCreator, VersionRegistry};
+use crate::data::models::{DupeItem, Language, TechCreator};
 use crate::i18n::{t, UiKey};
 use crate::state::AppState;
 use crate::ui::chrome::render_inline_tab_search;
 use crate::ui::tabs::creators;
-use crate::ui::theme::{adaptive_sidebar_width, filter_chip, paint_mc_slot, McPalette};
+use crate::ui::theme::{adaptive_sidebar_width, filter_chip, paint_mc_slot, McPalette, SlotStyle};
+use crate::ui::RenderContext;
 
 pub fn render(
     ui: &mut egui::Ui,
     state: &mut AppState,
-    db: &Database,
-    versions: &VersionRegistry,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
+    rcx: &RenderContext<'_>,
     toasts: &mut ToastQueue,
 ) {
+    let RenderContext {
+        db,
+        versions,
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
     let lang = state.prefs.language;
     let active_ver = versions
         .resolve_valid_id(&state.prefs.selected_version)
@@ -305,10 +310,7 @@ fn render_dupe_sidebar(
                                 palette,
                                 atlas,
                                 Some(&dupe.icon),
-                                1,
-                                selected,
-                                false,
-                                None,
+                                SlotStyle::selected(selected),
                             );
                             ui.vertical(|ui| {
                                 ui.add(

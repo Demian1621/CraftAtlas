@@ -2,11 +2,11 @@ use eframe::egui::{self, Align, Color32, CornerRadius, CursorIcon, Layout, Margi
 
 use crate::assets::ItemAtlas;
 use crate::audio::{AudioEngine, SoundCue};
-use crate::data::models::{Database, Language, VersionRegistry};
-use crate::data::recipes::RecipeDatabase;
+use crate::data::models::{Language, VersionRegistry};
 use crate::i18n::{t, UiKey};
 use crate::state::{AppState, AppTab, RecipeViewMode, ThemeId};
-use crate::ui::theme::{filter_chip, paint_mc_slot, McPalette};
+use crate::ui::theme::{filter_chip, paint_mc_slot, McPalette, SlotStyle};
+use crate::ui::RenderContext;
 
 /// Handles frameless window edge/corner resize strips and draws a sharp 1px outer border when restored.
 pub fn render_borderless_window_frame(ctx: &egui::Context, palette: McPalette) {
@@ -646,6 +646,7 @@ fn header_icon_pill(
 #[derive(Clone)]
 enum PaletteTarget {
     Gear(String),
+    EnchantBook(String),
     Recipe(String),
     Farm(String),
     Dupe(String),
@@ -661,16 +662,15 @@ struct PaletteHit {
 }
 
 /// Centered floating Universal Command Palette (opened via Ctrl+F or top Search button).
-pub fn render_search_palette(
-    ctx: &egui::Context,
-    state: &mut AppState,
-    versions: &VersionRegistry,
-    db: &Database,
-    recipes: &RecipeDatabase,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
-) {
+pub fn render_search_palette(ctx: &egui::Context, state: &mut AppState, rcx: &RenderContext<'_>) {
+    let RenderContext {
+        versions,
+        db,
+        recipes,
+        palette,
+        atlas,
+        audio,
+    } = *rcx;
     if !state.search_palette_open {
         return;
     }
@@ -722,6 +722,38 @@ pub fn render_search_palette(
         }
         if hits.len() >= 10 && q.is_empty() {
             break;
+        }
+    }
+
+    let mut book_added = 0usize;
+    for book in &db.enchant_books {
+        let matched = if q.is_empty() {
+            matches!(
+                book.id.as_str(),
+                "mending" | "swift_sneak" | "wind_burst" | "soul_speed"
+            )
+        } else {
+            book.name.matches(&q)
+                || book.id.to_lowercase().contains(&q)
+                || book.applies_to.matches(&q)
+                || book.effect.matches(&q)
+                || (!book.sources.librarian_villager
+                    && (q.contains("aldean")
+                        || q.contains("villager")
+                        || q.contains("librarian")))
+        };
+        if matched {
+            hits.push(PaletteHit {
+                icon: "enchanted_book".to_string(),
+                title: book.name.get(lang).to_string(),
+                module_label: t(lang, UiKey::BooksViewBtn),
+                accent: palette.accent_enchant,
+                target: PaletteTarget::EnchantBook(book.id.clone()),
+            });
+            book_added += 1;
+            if book_added >= 10 {
+                break;
+            }
         }
     }
 
@@ -998,7 +1030,13 @@ pub fn render_search_palette(
         state.search_query.clear();
         match target {
             PaletteTarget::Gear(id) => {
+                state.gear_books_view = false;
                 state.selected_gear_id = id;
+                state.switch_tab(AppTab::Gear);
+            }
+            PaletteTarget::EnchantBook(id) => {
+                state.selected_book_id = id;
+                state.gear_books_view = true;
                 state.switch_tab(AppTab::Gear);
             }
             PaletteTarget::Recipe(id) => {
@@ -1038,31 +1076,29 @@ pub fn render_inline_tab_search(
             egui::TextEdit::singleline(&mut state.search_query)
                 .hint_text(t(lang, UiKey::LocalFilterHint)),
         );
-        if !state.search_query.is_empty() {
-            if ui
+        if !state.search_query.is_empty()
+            && ui
                 .button(RichText::new("×").color(palette.text_muted))
                 .on_hover_text(t(lang, UiKey::ClearSearch))
                 .clicked()
-            {
-                state.search_query.clear();
-                audio.play(SoundCue::Click);
-            }
+        {
+            state.search_query.clear();
+            audio.play(SoundCue::Click);
         }
     });
     ui.add_space(4.0);
 }
 
 /// Renders collapsible Pinned Favorites Rail (shown when `prefs.favorites_open` and window width allows).
-pub fn render_favorites_rail(
-    ctx: &egui::Context,
-    state: &mut AppState,
-    versions: &VersionRegistry,
-    db: &Database,
-    recipes: &RecipeDatabase,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
-) {
+pub fn render_favorites_rail(ctx: &egui::Context, state: &mut AppState, rcx: &RenderContext<'_>) {
+    let RenderContext {
+        versions,
+        db,
+        recipes,
+        palette,
+        atlas,
+        audio,
+    } = *rcx;
     if !state.prefs.favorites_open || ctx.screen_rect().width() < 860.0 {
         return;
     }
@@ -1130,11 +1166,12 @@ pub fn render_favorites_rail(
                                 palette,
                                 atlas,
                                 Some(id),
-                                1,
-                                state.active_tab == AppTab::Recipes
-                                    && state.selected_recipe_item == *id,
-                                sresp.hovered(),
-                                None,
+                                SlotStyle {
+                                    selected: state.active_tab == AppTab::Recipes
+                                        && state.selected_recipe_item == *id,
+                                    hovered: sresp.hovered(),
+                                    ..Default::default()
+                                },
                             );
                             if sresp.clicked() {
                                 state.open_recipe_item(id, RecipeViewMode::RecipesFor);
@@ -1198,6 +1235,7 @@ pub fn render_favorites_rail(
                                     )
                                     .clicked()
                                 {
+                                    state.gear_books_view = false;
                                     state.selected_gear_id = g.id.clone();
                                     state.switch_tab(AppTab::Gear);
                                     audio.play(SoundCue::Click);

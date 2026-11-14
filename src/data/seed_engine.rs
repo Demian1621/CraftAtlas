@@ -100,7 +100,7 @@ impl StructureKind {
             StructureKind::SlimeChunk => "slime_ball",
             StructureKind::Village => "bell",
             StructureKind::TrialChambers => "ominous_trial_key",
-            StructureKind::AncientCity => "sculk_shrieker_top",
+            StructureKind::AncientCity => "warden_head",
             StructureKind::Stronghold => "ender_eye",
             StructureKind::Monument => "prismarine_shard",
             StructureKind::Mansion => "totem_of_undying",
@@ -230,6 +230,7 @@ pub struct LayerToggles {
     pub end_gateways: bool,
     pub grid_chunks: bool,
     pub waypoints: bool,
+    pub player_marker: bool,
 }
 
 impl Default for LayerToggles {
@@ -252,6 +253,7 @@ impl Default for LayerToggles {
             end_gateways: true,
             grid_chunks: true,
             waypoints: true,
+            player_marker: true,
         }
     }
 }
@@ -1145,19 +1147,23 @@ mod tests {
 
     #[test]
     fn mansions_not_starved_by_crowded_overworld_scans() {
-        let mut all_toggles = LayerToggles::default();
-        all_toggles.outposts = true;
-        all_toggles.temples = true;
-        all_toggles.ruined_portals = true;
+        let all_toggles = LayerToggles {
+            outposts: true,
+            temples: true,
+            ruined_portals: true,
+            ..Default::default()
+        };
 
-        let mut mansions_only = LayerToggles::default();
-        mansions_only.villages = false;
-        mansions_only.trial_chambers = false;
-        mansions_only.ancient_cities = false;
-        mansions_only.monuments = false;
-        mansions_only.outposts = false;
-        mansions_only.temples = false;
-        mansions_only.ruined_portals = false;
+        let mansions_only = LayerToggles {
+            villages: false,
+            trial_chambers: false,
+            ancient_cities: false,
+            monuments: false,
+            outposts: false,
+            temples: false,
+            ruined_portals: false,
+            ..Default::default()
+        };
 
         let mut total_mansions = 0usize;
         for seed in 1i64..=5 {

@@ -6,27 +6,38 @@ use crate::assets::ItemAtlas;
 use crate::audio::{AudioEngine, SoundCue};
 use crate::data::models::Language;
 use crate::data::seed_engine::{
-    is_slime_chunk, parse_seed_input, Dimension, MapStyle, SeedMapEngine, StructureKind,
-    StructureMarker, TILE_PX,
+    is_slime_chunk, parse_seed_input, Dimension, LayerToggles, MapStyle, SeedMapEngine,
+    StructureKind, StructureMarker, TILE_PX,
 };
+use crate::data::worlds_nbt::{format_relative_time_ms, DetectedWorld};
 use crate::i18n::{t, UiKey};
-use crate::state::{AppState, MapContextMenuState, WAYPOINT_ICON_PRESETS};
-use crate::ui::theme::{
-    filter_chip, paint_mc_frame, paint_mc_slot, show_mc_tooltip_at, McPalette,
+use crate::state::{
+    AppState, MapContextMenuState, SavedSeedEntry, SeedBookTab, SeedHistoryEntry, SeedSidebarTab,
+    WAYPOINT_ICON_PRESETS,
 };
+use crate::ui::theme::{
+    filter_chip, paint_mc_frame, paint_mc_slot, show_mc_tooltip_at, McPalette, SlotStyle,
+};
+use crate::ui::RenderContext;
 
 /// Renders the native Cubiomes Seed Map Explorer across Overworld, Nether, and The End.
 pub fn render(
     ui: &mut egui::Ui,
     state: &mut AppState,
     engine: &mut SeedMapEngine,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
+    rcx: &RenderContext<'_>,
     toasts: &mut ToastQueue,
     dt: f32,
 ) {
+    let RenderContext {
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
     let lang = state.prefs.language;
+    handle_dropped_skin_png(ui.ctx(), state, audio, toasts, lang);
+    let _ = state.ensure_player_face_tex(ui.ctx());
 
     // Upload newly completed Cubiomes tiles from background thread
     if engine.poll_tiles(ui.ctx()) || engine.has_in_flight() {
@@ -45,7 +56,7 @@ pub fn render(
         ui.ctx().request_repaint();
     }
 
-    // 1. Top Control Strip: Seed Input + Random + Local Saves + Dimensions + Map Style
+    // 1. Top Control Strip: Seed Input + Dimensions + Map Style + Clean World/Server Switcher
     egui::Frame::new()
         .fill(palette.bg_panel)
         .stroke(Stroke::new(1.0_f32, palette.border_subtle))
@@ -63,10 +74,36 @@ pub fn render(
                         .size(12.5)
                         .color(palette.accent_gold),
                 );
-                let te = ui.add_sized([185.0, 24.0], egui::TextEdit::singleline(&mut state.seed_input));
+                let te =
+                    ui.add_sized([175.0, 24.0], egui::TextEdit::singleline(&mut state.seed_input));
                 let enter_pressed = te.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
                 if enter_pressed || ui.button(t(lang, UiKey::GoBtn)).clicked() {
                     apply_seed_from_input(state, engine);
+                    audio.play(SoundCue::Click);
+                }
+
+                let cur_saved = state.is_seed_saved(engine.seed, state.prefs.large_biomes);
+                let save_btn_txt = if cur_saved {
+                    RichText::new(t(lang, UiKey::SeedSavedBtnBadge))
+                        .size(11.5)
+                        .color(palette.accent_gold)
+                } else {
+                    RichText::new(t(lang, UiKey::SaveSeedBtn))
+                        .size(11.5)
+                        .color(palette.accent_primary)
+                };
+                if ui.button(save_btn_txt).clicked() {
+                    state.save_seed_open = !state.save_seed_open;
+                    if state.save_seed_open {
+                        if let Some(w) = state.active_world_for_seed(engine.seed) {
+                            if state.save_seed_name.trim().is_empty() {
+                                state.save_seed_name = w.level_name.clone();
+                            }
+                            state.save_seed_is_server = false;
+                        } else {
+                            state.save_seed_is_server = true;
+                        }
+                    }
                     audio.play(SoundCue::Click);
                 }
 
@@ -76,16 +113,32 @@ pub fn render(
                         .map(|d| d.as_nanos() as u64)
                         .unwrap_or(987654321);
                     let mixed = (nanos ^ (nanos << 21) ^ 0x517cc1b727220a95) as i64;
-                    state.seed_input = mixed.to_string();
-                    apply_seed_from_input(state, engine);
+                    state.selected_world_folder = None;
+                    state.is_server_seed_active = false;
+                    let src_lbl = if matches!(lang, Language::EnUs) {
+                        "Random"
+                    } else {
+                        "Aleatorio"
+                    };
+                    state.commit_seed_change(
+                        engine,
+                        &mixed.to_string(),
+                        mixed,
+                        state.prefs.large_biomes,
+                        src_lbl,
+                    );
                     audio.play(SoundCue::Click);
                 }
 
                 let mut lb = state.prefs.large_biomes;
                 if ui.checkbox(&mut lb, t(lang, UiKey::LargeBiomesToggle)).changed() {
-                    state.prefs.large_biomes = lb;
-                    state.prefs.save();
-                    engine.set_seed(engine.seed, lb);
+                    let src_lbl = if state.is_server_seed_active {
+                        "Server"
+                    } else {
+                        "Manual"
+                    };
+                    let cur_txt = state.seed_input.clone();
+                    state.commit_seed_change(engine, &cur_txt, engine.seed, lb, src_lbl);
                     audio.play(SoundCue::Click);
                 }
 
@@ -121,53 +174,93 @@ pub fn render(
                 }
             });
 
-            // Local .minecraft/saves strip (one-click seed load!)
-            if !state.local_worlds.is_empty() {
+            // Inline Quick-Save Seed Strip (ideal for Server SMP seeds)
+            if state.save_seed_open {
                 ui.add_space(4.0);
                 ui.horizontal_wrapped(|ui| {
-                    ui.label(
-                        RichText::new(format!("{}:", t(lang, UiKey::LocalSavesHeader)))
-                            .size(11.0)
-                            .color(palette.text_muted),
+                    ui.spacing_mut().item_spacing = Vec2::new(6.0, 4.0);
+                    ui.add(atlas.ui_image("ender_eye", 15.0));
+                    let name_te = ui.add_sized(
+                        [180.0, 22.0],
+                        egui::TextEdit::singleline(&mut state.save_seed_name)
+                            .hint_text(t(lang, UiKey::SeedSaveNameHint)),
                     );
-                    let mut pick_world: Option<(i64, Option<[f64; 3]>)> = None;
-                    for w in state.local_worlds.iter().take(6) {
-                        let selected = w.seed == engine.seed;
-                        if filter_chip(
-                            ui,
-                            palette,
-                            atlas,
-                            Some("grass_block"),
-                            &format!("{} ({})", w.level_name, w.seed),
-                            selected,
-                        )
-                        .clicked()
-                        {
-                            pick_world = Some((w.seed, w.player_pos));
-                        }
+                    ui.checkbox(&mut state.save_seed_is_server, t(lang, UiKey::SeedIsServerToggle));
+                    let confirm_enter =
+                        name_te.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
+                    if confirm_enter || ui.button(t(lang, UiKey::SeedSaveConfirmBtn)).clicked() {
+                        save_active_seed_bookmark(state, engine, audio, toasts, lang);
+                        state.save_seed_open = false;
                     }
-                    if let Some((seed, ppos)) = pick_world {
-                        state.seed_input = seed.to_string();
-                        state.prefs.last_seed = state.seed_input.clone();
-                        state.prefs.save();
-                        engine.set_seed(seed, state.prefs.large_biomes);
-                        if let Some(pos) = ppos {
-                            state.jump_map_to(pos[0], pos[2]);
-                        }
-                        audio.play(SoundCue::XpOrb);
+                    if ui.small_button("x").clicked() {
+                        state.save_seed_open = false;
                     }
                 });
             }
+
+            // Tidy World / Saved Server Picker + Quick Actions (never wraps/overflows across edges)
+            ui.add_space(4.0);
+            ui.horizontal_wrapped(|ui| {
+                ui.spacing_mut().item_spacing = Vec2::new(6.0, 4.0);
+                render_world_seed_combobox(ui, state, engine, palette, atlas, audio, lang);
+
+                if ui
+                    .add(
+                        egui::Button::new(
+                            RichText::new(t(lang, UiKey::PlayerReloadWorldsBtn))
+                                .size(11.0)
+                                .color(palette.accent_primary),
+                        )
+                        .corner_radius(CornerRadius::same(4)),
+                    )
+                    .clicked()
+                {
+                    let count = state.reload_local_worlds();
+                    audio.play(SoundCue::Click);
+                    toasts.push(
+                        t(lang, UiKey::PlayerReloadedToastTitle),
+                        if matches!(lang, Language::EnUs) {
+                            format!("Detected {} local worlds", count)
+                        } else {
+                            format!("{} mundos locales detectados", count)
+                        },
+                        "compass",
+                        palette.accent_primary,
+                    );
+                }
+
+                let worlds_active = state.seed_sidebar_tab == SeedSidebarTab::Worlds;
+                let worlds_badge = state.prefs.saved_seeds.len() + state.local_worlds.len();
+                let shortcut_lbl = if worlds_badge > 0 {
+                    format!("{} ({})", t(lang, UiKey::SeedManageWorldsShortcut), worlds_badge)
+                } else {
+                    t(lang, UiKey::SeedManageWorldsShortcut).to_string()
+                };
+                if filter_chip(
+                    ui,
+                    palette,
+                    atlas,
+                    Some("ender_eye"),
+                    &shortcut_lbl,
+                    worlds_active,
+                )
+                .clicked()
+                {
+                    state.seed_sidebar_tab = SeedSidebarTab::Worlds;
+                    audio.play(SoundCue::Click);
+                }
+            });
         });
 
     ui.add_space(6.0);
 
-    // 2. Main Split Workspace: Adaptive Sidebar (Left/Collapsible) + Interactive Viewport
+    // 2. Main Split Workspace: Adaptive Sidebar (Left) + Interactive Viewport
     let total_w = ui.available_width();
     if total_w >= 860.0 {
+        let sidebar_w = if total_w >= 1100.0 { 296.0 } else { 272.0 };
         ui.horizontal_top(|ui| {
             ui.allocate_ui_with_layout(
-                Vec2::new(260.0, ui.available_height()),
+                Vec2::new(sidebar_w, ui.available_height()),
                 egui::Layout::top_down(egui::Align::Min),
                 |ui| {
                     render_map_sidebar(ui, state, engine, palette, atlas, audio, toasts, lang);
@@ -178,18 +271,18 @@ pub fn render(
                 Vec2::new(ui.available_width(), ui.available_height()),
                 egui::Layout::top_down(egui::Align::Min),
                 |ui| {
-                    render_map_viewport(ui, state, engine, palette, atlas, audio, toasts, lang);
+                    render_map_viewport(ui, state, engine, rcx, toasts);
                 },
             );
         });
     } else {
-        // Narrow mode: Viewport on top (takes main vertical room) + collapsible tools strip underneath
+        // Narrow mode: Viewport on top + tabbed sidebar underneath
         let map_h = (ui.available_height() * 0.62).max(260.0);
         ui.allocate_ui_with_layout(
             Vec2::new(ui.available_width(), map_h),
             egui::Layout::top_down(egui::Align::Min),
             |ui| {
-                render_map_viewport(ui, state, engine, palette, atlas, audio, toasts, lang);
+                render_map_viewport(ui, state, engine, rcx, toasts);
             },
         );
         ui.add_space(6.0);
@@ -198,13 +291,626 @@ pub fn render(
 }
 
 fn apply_seed_from_input(state: &mut AppState, engine: &mut SeedMapEngine) {
-    let parsed = parse_seed_input(&state.seed_input);
-    state.prefs.last_seed = state.seed_input.clone();
-    state.prefs.save();
-    engine.set_seed(parsed, state.prefs.large_biomes);
+    let raw = state.seed_input.clone();
+    let parsed = parse_seed_input(&raw);
+    state.selected_world_folder = None;
+    state.is_server_seed_active = false;
+    state.commit_seed_change(engine, &raw, parsed, state.prefs.large_biomes, "Manual");
 }
 
+fn save_active_seed_bookmark(
+    state: &mut AppState,
+    engine: &mut SeedMapEngine,
+    audio: &AudioEngine,
+    toasts: &mut ToastQueue,
+    lang: Language,
+) {
+    let raw_seed = state.seed_input.clone();
+    let parsed = parse_seed_input(&raw_seed);
+    let lb = state.prefs.large_biomes;
+    if parsed != engine.seed {
+        let src_lbl = if state.save_seed_is_server {
+            "Server"
+        } else {
+            "Manual"
+        };
+        state.commit_seed_change(engine, &raw_seed, parsed, lb, src_lbl);
+    }
+    let name_draft = state.save_seed_name.clone();
+    let is_srv = state.save_seed_is_server;
+    let saved = state.save_seed_bookmark(&name_draft, &raw_seed, parsed, lb, is_srv);
+    state.is_server_seed_active = is_srv;
+    state.save_seed_name.clear();
+    audio.play(SoundCue::XpOrb);
+    toasts.push(
+        t(lang, UiKey::SeedSavedToastTitle),
+        format!("{} ({})", saved.name, saved.seed_text),
+        if is_srv { "ender_eye" } else { "filled_map" },
+        palette_gold_fallback(),
+    );
+}
+
+fn palette_gold_fallback() -> Color32 {
+    Color32::from_rgb(248, 198, 72)
+}
+
+fn activate_local_world(
+    state: &mut AppState,
+    engine: &mut SeedMapEngine,
+    world: &DetectedWorld,
+    audio: &AudioEngine,
+) {
+    state.selected_world_folder = Some(world.folder_name.clone());
+    state.is_server_seed_active = false;
+    state.commit_seed_change(
+        engine,
+        &world.seed.to_string(),
+        world.seed,
+        state.prefs.large_biomes,
+        &world.level_name,
+    );
+    state.map_dim = world.player_dimension();
+    if let Some(pos) = world.player_pos {
+        state.jump_map_to(pos[0], pos[2]);
+    }
+    audio.play(SoundCue::XpOrb);
+}
+
+fn activate_saved_seed(
+    state: &mut AppState,
+    engine: &mut SeedMapEngine,
+    entry: &SavedSeedEntry,
+    audio: &AudioEngine,
+) {
+    state.selected_world_folder = None;
+    state.is_server_seed_active = entry.is_server;
+    state.commit_seed_change(
+        engine,
+        &entry.seed_text,
+        entry.seed,
+        entry.large_biomes,
+        &entry.name,
+    );
+    audio.play(SoundCue::XpOrb);
+}
+
+fn render_world_seed_combobox(
+    ui: &mut egui::Ui,
+    state: &mut AppState,
+    engine: &mut SeedMapEngine,
+    palette: McPalette,
+    atlas: &ItemAtlas,
+    audio: &AudioEngine,
+    lang: Language,
+) {
+    let lb = state.prefs.large_biomes;
+    let active_saved = state
+        .prefs
+        .saved_seeds
+        .iter()
+        .find(|s| {
+            s.seed == engine.seed
+                && s.large_biomes == lb
+                && (!s.is_server || state.is_server_seed_active)
+        })
+        .cloned();
+    let active_local = if !state.is_server_seed_active {
+        state.active_world_for_seed(engine.seed).cloned()
+    } else {
+        None
+    };
+
+    let selected_text = if let Some(s) = &active_saved {
+        let tag = if s.is_server {
+            t(lang, UiKey::SeedServerBadge)
+        } else {
+            t(lang, UiKey::SeedSavedTab)
+        };
+        RichText::new(format!("[{}] {}", tag, s.name))
+            .size(11.5)
+            .strong()
+            .color(palette.accent_gold)
+    } else if let Some(w) = &active_local {
+        RichText::new(format!("{} • {}", w.level_name, w.last_played_label(lang)))
+            .size(11.5)
+            .color(palette.accent_primary)
+    } else {
+        RichText::new(t(lang, UiKey::WorldPickerPlaceholder))
+            .size(11.5)
+            .color(palette.text_muted)
+    };
+
+    let saved_list = state.prefs.saved_seeds.clone();
+    let worlds_list = state.local_worlds.clone();
+    let hist_list: Vec<SeedHistoryEntry> =
+        state.prefs.seed_history.iter().take(6).cloned().collect();
+
+    let mut pick_saved: Option<SavedSeedEntry> = None;
+    let mut pick_world: Option<DetectedWorld> = None;
+    let mut pick_hist: Option<SeedHistoryEntry> = None;
+
+    egui::ComboBox::from_id_salt("seed_world_combo")
+        .selected_text(selected_text)
+        .width(245.0)
+        .show_ui(ui, |ui| {
+            ui.set_min_width(285.0);
+
+            if !saved_list.is_empty() {
+                ui.label(
+                    RichText::new(t(lang, UiKey::SeedSavedTab))
+                        .strong()
+                        .size(11.0)
+                        .color(palette.accent_gold),
+                );
+                for s in &saved_list {
+                    let is_sel = s.seed == engine.seed
+                        && s.large_biomes == lb
+                        && (!s.is_server || state.is_server_seed_active);
+                    let icon = if s.is_server { "ender_eye" } else { "filled_map" };
+                    ui.horizontal(|ui| {
+                        ui.add(atlas.ui_image(icon, 14.0));
+                        let tag = if s.is_server {
+                            format!(" [{}]", t(lang, UiKey::SeedServerBadge))
+                        } else {
+                            String::new()
+                        };
+                        if ui
+                            .selectable_label(is_sel, format!("{}{}  ({})", s.name, tag, s.seed_text))
+                            .clicked()
+                        {
+                            pick_saved = Some(s.clone());
+                        }
+                    });
+                }
+            }
+
+            if !worlds_list.is_empty() {
+                if !saved_list.is_empty() {
+                    ui.separator();
+                }
+                ui.label(
+                    RichText::new(t(lang, UiKey::LocalSavesHeader))
+                        .strong()
+                        .size(11.0)
+                        .color(palette.accent_primary),
+                );
+                for w in &worlds_list {
+                    let is_folder_match = state
+                        .selected_world_folder
+                        .as_deref()
+                        .is_some_and(|f| f == w.folder_name);
+                    let is_sel = !state.is_server_seed_active
+                        && w.seed == engine.seed
+                        && (state.selected_world_folder.is_none() || is_folder_match);
+                    ui.horizontal(|ui| {
+                        ui.add(atlas.ui_image("grass_block", 14.0));
+                        let lbl = format!("{}  ({})", w.level_name, w.last_played_label(lang));
+                        if ui.selectable_label(is_sel, lbl).clicked() {
+                            pick_world = Some(w.clone());
+                        }
+                    });
+                }
+            }
+
+            if !hist_list.is_empty() {
+                if !saved_list.is_empty() || !worlds_list.is_empty() {
+                    ui.separator();
+                }
+                ui.label(
+                    RichText::new(t(lang, UiKey::SeedHistoryTab))
+                        .strong()
+                        .size(11.0)
+                        .color(palette.text_muted),
+                );
+                for h in &hist_list {
+                    let is_sel = h.seed == engine.seed && h.large_biomes == lb;
+                    if ui
+                        .selectable_label(
+                            is_sel,
+                            format!("{}  •  {}", h.seed_text, h.source_label),
+                        )
+                        .clicked()
+                    {
+                        pick_hist = Some(h.clone());
+                    }
+                }
+            }
+
+            if saved_list.is_empty() && worlds_list.is_empty() && hist_list.is_empty() {
+                ui.label(
+                    RichText::new(t(lang, UiKey::NoLocalSaves))
+                        .size(11.0)
+                        .color(palette.text_muted),
+                );
+            }
+        });
+
+    if let Some(s) = pick_saved {
+        activate_saved_seed(state, engine, &s, audio);
+    } else if let Some(w) = pick_world {
+        activate_local_world(state, engine, &w, audio);
+    } else if let Some(h) = pick_hist {
+        state.selected_world_folder = None;
+        state.is_server_seed_active = false;
+        state.commit_seed_change(engine, &h.seed_text, h.seed, h.large_biomes, &h.source_label);
+        audio.play(SoundCue::Click);
+    }
+}
+
+fn sidebar_tab_button(
+    ui: &mut egui::Ui,
+    palette: McPalette,
+    atlas: &ItemAtlas,
+    icon_id: &str,
+    label: &str,
+    selected: bool,
+) -> egui::Response {
+    let desired = Vec2::new(ui.available_width(), 28.0);
+    let (rect, resp) = ui.allocate_exact_size(desired, egui::Sense::click());
+    if ui.is_rect_visible(rect) {
+        let fill = if selected {
+            Color32::from_rgba_unmultiplied(
+                palette.accent_primary.r(),
+                palette.accent_primary.g(),
+                palette.accent_primary.b(),
+                42,
+            )
+        } else if resp.hovered() {
+            palette.bg_card_hover
+        } else {
+            palette.bg_panel
+        };
+        let stroke = if selected {
+            Stroke::new(1.4_f32, palette.accent_primary)
+        } else {
+            Stroke::new(1.0_f32, palette.border_subtle)
+        };
+        ui.painter()
+            .rect(rect, CornerRadius::same(5), fill, stroke, egui::StrokeKind::Inside);
+        let text_col = if selected {
+            Color32::WHITE
+        } else {
+            palette.text_muted
+        };
+        let galley = ui.painter().layout_no_wrap(
+            label.to_string(),
+            egui::FontId::proportional(10.5),
+            text_col,
+        );
+        let icon_sz = 13.0;
+        let gap = 3.5;
+        let content_w = icon_sz + gap + galley.size().x;
+        let start_x = (rect.center().x - content_w * 0.5).max(rect.left() + 4.0);
+        let icon_rect = Rect::from_min_size(
+            Pos2::new(start_x, rect.center().y - icon_sz * 0.5),
+            Vec2::splat(icon_sz),
+        );
+        atlas.paint(ui.painter(), icon_rect, icon_id, Color32::WHITE);
+        ui.painter().galley(
+            Pos2::new(start_x + icon_sz + gap, rect.center().y - galley.size().y * 0.5),
+            galley,
+            text_col,
+        );
+    }
+    resp.on_hover_cursor(egui::CursorIcon::PointingHand)
+}
+
+#[allow(clippy::too_many_arguments)]
 fn render_map_sidebar(
+    ui: &mut egui::Ui,
+    state: &mut AppState,
+    engine: &mut SeedMapEngine,
+    palette: McPalette,
+    atlas: &ItemAtlas,
+    audio: &AudioEngine,
+    toasts: &mut ToastQueue,
+    lang: Language,
+) {
+    let wp_count = state
+        .prefs
+        .waypoints
+        .iter()
+        .filter(|w| w.seed == engine.seed)
+        .count();
+    let wp_lbl = if wp_count > 0 {
+        format!("{} ({})", t(lang, UiKey::SidebarTabWaypoints), wp_count)
+    } else {
+        t(lang, UiKey::SidebarTabWaypoints).to_string()
+    };
+
+    // Pinned Segmented Sidebar Sub-Tabs (never scroll offscreen; Waypoints come FIRST)
+    ui.columns(3, |cols| {
+        if sidebar_tab_button(
+            &mut cols[0],
+            palette,
+            atlas,
+            "red_bed",
+            &wp_lbl,
+            state.seed_sidebar_tab == SeedSidebarTab::Waypoints,
+        )
+        .clicked()
+        {
+            state.seed_sidebar_tab = SeedSidebarTab::Waypoints;
+            audio.play(SoundCue::Click);
+        }
+        if sidebar_tab_button(
+            &mut cols[1],
+            palette,
+            atlas,
+            "grass_block",
+            t(lang, UiKey::SidebarTabLayers),
+            state.seed_sidebar_tab == SeedSidebarTab::Layers,
+        )
+        .clicked()
+        {
+            state.seed_sidebar_tab = SeedSidebarTab::Layers;
+            audio.play(SoundCue::Click);
+        }
+        if sidebar_tab_button(
+            &mut cols[2],
+            palette,
+            atlas,
+            "ender_eye",
+            t(lang, UiKey::SidebarTabWorlds),
+            state.seed_sidebar_tab == SeedSidebarTab::Worlds,
+        )
+        .clicked()
+        {
+            state.seed_sidebar_tab = SeedSidebarTab::Worlds;
+            audio.play(SoundCue::Click);
+        }
+    });
+
+    ui.add_space(6.0);
+
+    egui::ScrollArea::vertical()
+        .id_salt("seed_map_side_scroll")
+        .auto_shrink([false, false])
+        .show(ui, |ui| match state.seed_sidebar_tab {
+            SeedSidebarTab::Waypoints => {
+                render_waypoints_sidebar_card(
+                    ui, state, engine, palette, atlas, audio, toasts, lang, wp_count,
+                );
+                ui.add_space(7.0);
+                render_quick_nav_sidebar_card(
+                    ui, state, engine, palette, atlas, audio, toasts, lang,
+                );
+                ui.add_space(7.0);
+                render_compact_player_strip(ui, state, engine, palette, audio, toasts, lang);
+            }
+            SeedSidebarTab::Layers => {
+                render_layers_sidebar_tab(ui, state, palette, atlas, audio, lang);
+            }
+            SeedSidebarTab::Worlds => {
+                render_player_skin_sidebar_card(ui, state, engine, palette, audio, toasts, lang);
+                ui.add_space(7.0);
+                render_saved_seeds_history_card(
+                    ui, state, engine, palette, atlas, audio, toasts, lang,
+                );
+                ui.add_space(7.0);
+                render_local_worlds_sidebar_card(ui, state, engine, palette, atlas, audio, lang);
+            }
+        });
+}
+
+#[allow(clippy::too_many_arguments)]
+fn render_waypoints_sidebar_card(
+    ui: &mut egui::Ui,
+    state: &mut AppState,
+    engine: &SeedMapEngine,
+    palette: McPalette,
+    atlas: &ItemAtlas,
+    audio: &AudioEngine,
+    toasts: &mut ToastQueue,
+    lang: Language,
+    wp_count: usize,
+) {
+    egui::Frame::new()
+        .fill(palette.bg_panel)
+        .stroke(Stroke::new(1.0_f32, palette.border_subtle))
+        .corner_radius(CornerRadius::same(6))
+        .inner_margin(Margin::same(10))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.horizontal(|ui| {
+                ui.add(atlas.ui_image("red_bed", 15.0));
+                ui.label(
+                    RichText::new(t(lang, UiKey::WaypointsHeader))
+                        .strong()
+                        .size(12.0)
+                        .color(palette.accent_gold),
+                );
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    ui.label(
+                        RichText::new(format!("({})", wp_count))
+                            .size(11.0)
+                            .color(palette.text_muted),
+                    );
+                });
+            });
+
+            ui.add_space(5.0);
+            ui.horizontal(|ui| {
+                let input_w = (ui.available_width() - 34.0).max(120.0);
+                let te = ui.add_sized(
+                    [input_w, 23.0],
+                    egui::TextEdit::singleline(&mut state.new_waypoint_name)
+                        .hint_text(t(lang, UiKey::WaypointNameHint)),
+                );
+                let add_enter = te.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
+                let add_btn = ui
+                    .add_sized(
+                        [28.0, 23.0],
+                        egui::Button::new(RichText::new("+").strong().color(palette.accent_primary)),
+                    )
+                    .on_hover_text(t(lang, UiKey::AddWaypointBtn));
+                if add_enter || add_btn.clicked() {
+                    let cx = state.map_center_x.round() as i32;
+                    let cz = state.map_center_z.round() as i32;
+                    let def = format!("({}, {})", cx, cz);
+                    state.add_waypoint(engine.seed, cx, cz, &def);
+                    audio.play(SoundCue::Click);
+                    toasts.push(
+                        t(lang, UiKey::ToastWaypointAddedTitle),
+                        def,
+                        &state.new_waypoint_icon,
+                        palette.accent_primary,
+                    );
+                }
+            });
+
+            ui.add_space(6.0);
+            // Symmetric 6x2 preset slot grid (eliminates orphaned trailing row)
+            for chunk in WAYPOINT_ICON_PRESETS.chunks(6) {
+                let row_w = chunk.len() as f32 * 24.0 + (chunk.len().saturating_sub(1)) as f32 * 6.0;
+                let left_pad = ((ui.available_width() - row_w) * 0.5).max(0.0);
+                ui.horizontal(|ui| {
+                    ui.spacing_mut().item_spacing = Vec2::new(6.0, 4.0);
+                    ui.add_space(left_pad);
+                    for (icon_id, es_lbl, en_lbl) in chunk {
+                        let active = state.new_waypoint_icon == *icon_id;
+                        let (sr, sresp) =
+                            ui.allocate_exact_size(Vec2::splat(24.0), egui::Sense::click());
+                        paint_mc_slot(
+                            ui.painter(),
+                            sr,
+                            palette,
+                            atlas,
+                            Some(icon_id),
+                            SlotStyle {
+                                selected: active,
+                                hovered: sresp.hovered(),
+                                ..Default::default()
+                            },
+                        );
+                        let tip = if matches!(lang, Language::EnUs) {
+                            *en_lbl
+                        } else {
+                            *es_lbl
+                        };
+                        if sresp.on_hover_text(tip).clicked() {
+                            state.new_waypoint_icon = (*icon_id).to_string();
+                            audio.play(SoundCue::Click);
+                        }
+                    }
+                });
+                ui.add_space(3.0);
+            }
+
+            ui.separator();
+
+            let wps: Vec<_> = state
+                .prefs
+                .waypoints
+                .iter()
+                .filter(|w| w.seed == engine.seed)
+                .cloned()
+                .collect();
+            if wps.is_empty() {
+                ui.add(
+                    egui::Label::new(
+                        RichText::new(t(lang, UiKey::SeedEmptyWaypointsHint))
+                            .size(10.5)
+                            .color(palette.text_muted),
+                    )
+                    .wrap(),
+                );
+            } else {
+                let mut jump_to: Option<(i32, i32, Dimension)> = None;
+                let mut copy_wp_tp: Option<(String, Dimension, i32, i32)> = None;
+                let mut remove_id: Option<u64> = None;
+
+                egui::ScrollArea::vertical()
+                    .id_salt("waypoints_card_list_scroll")
+                    .max_height(180.0)
+                    .auto_shrink([false, true])
+                    .show(ui, |ui| {
+                        for wp in &wps {
+                            ui.horizontal(|ui| {
+                                ui.spacing_mut().interact_size.y = 22.0;
+                                ui.add(atlas.ui_image(&wp.icon, 16.0));
+                                if ui
+                                    .add(
+                                        egui::Button::new(
+                                            RichText::new(&wp.name)
+                                                .size(11.5)
+                                                .strong()
+                                                .color(palette.text_primary),
+                                        )
+                                        .frame(false)
+                                        .truncate(),
+                                    )
+                                    .on_hover_text(format!("({}, {})", wp.x, wp.z))
+                                    .clicked()
+                                {
+                                    jump_to = Some((wp.x, wp.z, wp.dimension()));
+                                }
+                                ui.label(
+                                    RichText::new(format!("({},{})", wp.x, wp.z))
+                                        .monospace()
+                                        .size(10.0)
+                                        .color(palette.text_muted),
+                                );
+                                ui.with_layout(
+                                    egui::Layout::right_to_left(egui::Align::Center),
+                                    |ui| {
+                                        if ui.small_button("x").clicked() {
+                                            remove_id = Some(wp.id);
+                                        }
+                                        if ui
+                                            .small_button("/tp")
+                                            .on_hover_text(t(lang, UiKey::CopyTpBtn))
+                                            .clicked()
+                                        {
+                                            copy_wp_tp = Some((
+                                                wp.name.clone(),
+                                                wp.dimension(),
+                                                wp.x,
+                                                wp.z,
+                                            ));
+                                        }
+                                    },
+                                );
+                            });
+                        }
+                    });
+
+                if let Some((wname, dim, x, z)) = copy_wp_tp {
+                    let cmd = format_tp_command(dim, x, z);
+                    ui.ctx().copy_text(cmd.clone());
+                    audio.play(SoundCue::Toast);
+                    toasts.push(
+                        t(lang, UiKey::CopiedTpTitle),
+                        format!("{}: {}", wname, cmd),
+                        "compass",
+                        palette.accent_primary,
+                    );
+                }
+                if let Some((x, z, d)) = jump_to {
+                    state.map_dim = d;
+                    state.jump_map_to(x as f64, z as f64);
+                    audio.play(SoundCue::Click);
+                }
+                if let Some(id) = remove_id {
+                    state.remove_waypoint(id);
+                    audio.play(SoundCue::Click);
+                }
+            }
+
+            ui.add_space(4.0);
+            ui.add(
+                egui::Label::new(
+                    RichText::new(t(lang, UiKey::MapControlsHint))
+                        .size(9.5)
+                        .color(palette.text_muted),
+                )
+                .wrap(),
+            );
+        });
+}
+
+#[allow(clippy::too_many_arguments)]
+fn render_quick_nav_sidebar_card(
     ui: &mut egui::Ui,
     state: &mut AppState,
     engine: &SeedMapEngine,
@@ -214,487 +920,692 @@ fn render_map_sidebar(
     toasts: &mut ToastQueue,
     lang: Language,
 ) {
-    egui::ScrollArea::vertical()
-        .id_salt("seed_map_side_scroll")
-        .auto_shrink([false, false])
+    egui::Frame::new()
+        .fill(palette.bg_panel)
+        .stroke(Stroke::new(1.0_f32, palette.border_subtle))
+        .corner_radius(CornerRadius::same(6))
+        .inner_margin(Margin::same(10))
         .show(ui, |ui| {
-            // Go To Coordinates + Quick Navigation
-            egui::Frame::new()
-                .fill(palette.bg_panel)
-                .stroke(Stroke::new(1.0_f32, palette.border_subtle))
-                .corner_radius(CornerRadius::same(6))
-                .inner_margin(Margin::same(10))
-                .show(ui, |ui| {
-                    ui.set_width(ui.available_width());
-                    ui.label(
-                        RichText::new(t(lang, UiKey::GoToCoordsTitle))
-                            .strong()
-                            .size(12.0)
-                            .color(palette.accent_gold),
-                    );
-                    ui.add_space(4.0);
-                    ui.horizontal(|ui| {
-                        ui.label("X:");
-                        ui.add_sized([68.0, 22.0], egui::TextEdit::singleline(&mut state.goto_x_input));
-                        ui.label("Z:");
-                        ui.add_sized([68.0, 22.0], egui::TextEdit::singleline(&mut state.goto_z_input));
-                        if ui.button(t(lang, UiKey::GoBtn)).clicked() {
-                            if let (Ok(x), Ok(z)) = (
-                                state.goto_x_input.trim().parse::<f64>(),
-                                state.goto_z_input.trim().parse::<f64>(),
-                            ) {
-                                state.jump_map_to(x, z);
-                                audio.play(SoundCue::Click);
-                            }
-                        }
-                    });
-                    ui.add_space(6.0);
-                    ui.horizontal_wrapped(|ui| {
-                        if ui.button(t(lang, UiKey::JumpSpawnBtn)).clicked() {
-                            let sp = engine.spawn_point();
-                            if state.map_dim != Dimension::Overworld {
-                                state.switch_map_dimension(Dimension::Overworld);
-                            }
-                            state.jump_map_to(sp.0 as f64, sp.1 as f64);
+            ui.set_width(ui.available_width());
+            ui.label(
+                RichText::new(t(lang, UiKey::GoToCoordsTitle))
+                    .strong()
+                    .size(11.5)
+                    .color(palette.accent_gold),
+            );
+            ui.add_space(4.0);
+
+            ui.horizontal(|ui| {
+                ui.label("X:");
+                ui.add_sized([58.0, 22.0], egui::TextEdit::singleline(&mut state.goto_x_input));
+                ui.label("Z:");
+                ui.add_sized([58.0, 22.0], egui::TextEdit::singleline(&mut state.goto_z_input));
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if ui.button(t(lang, UiKey::GoBtn)).clicked() {
+                        if let (Ok(x), Ok(z)) = (
+                            state.goto_x_input.trim().parse::<f64>(),
+                            state.goto_z_input.trim().parse::<f64>(),
+                        ) {
+                            state.jump_map_to(x, z);
                             audio.play(SoundCue::Click);
-                        }
-                        if ui.button(t(lang, UiKey::JumpStrongholdBtn)).clicked() {
-                            if let Some(nearest) = engine.strongholds().iter().min_by_key(|s| {
-                                let dx = (s.x as f64 - state.map_center_x) as i64;
-                                let dz = (s.z as f64 - state.map_center_z) as i64;
-                                dx * dx + dz * dz
-                            }) {
-                                if state.map_dim != Dimension::Overworld {
-                                    state.switch_map_dimension(Dimension::Overworld);
-                                }
-                                state.jump_map_to(nearest.x as f64, nearest.z as f64);
-                                audio.play(SoundCue::Click);
-                            }
-                        }
-                        if ui.button(t(lang, UiKey::PanResetBtn)).clicked() {
-                            state.jump_map_to(0.0, 0.0);
-                            audio.play(SoundCue::Click);
-                        }
-                    });
-
-                    ui.add_space(6.0);
-                    ui.horizontal_wrapped(|ui| {
-                        ui.checkbox(&mut state.nether_sync_enabled, t(lang, UiKey::NetherSyncToggle))
-                            .on_hover_ui(|ui| {
-                                render_tool_tooltip(
-                                    ui,
-                                    palette,
-                                    t(lang, UiKey::TooltipNetherSyncTitle),
-                                    t(lang, UiKey::TooltipNetherSyncDesc),
-                                );
-                            });
-                        let ruler_resp = filter_chip(
-                            ui,
-                            palette,
-                            atlas,
-                            Some("iron_sword"),
-                            t(lang, UiKey::RulerModeBtn),
-                            state.ruler_active,
-                        )
-                        .on_hover_ui(|ui| {
-                            render_tool_tooltip(
-                                ui,
-                                palette,
-                                t(lang, UiKey::TooltipRulerTitle),
-                                t(lang, UiKey::TooltipRulerDesc),
-                            );
-                        });
-                        if ruler_resp.clicked() {
-                            state.ruler_active = !state.ruler_active;
-                            if !state.ruler_active {
-                                state.ruler_p1 = None;
-                                state.ruler_p2 = None;
-                            }
-                            audio.play(SoundCue::Click);
-                        }
-                        let export_resp = filter_chip(
-                            ui,
-                            palette,
-                            atlas,
-                            Some("spyglass"),
-                            t(lang, UiKey::ExportPngBtn),
-                            false,
-                        )
-                        .on_hover_ui(|ui| {
-                            render_tool_tooltip(
-                                ui,
-                                palette,
-                                t(lang, UiKey::TooltipExportPngTitle),
-                                t(lang, UiKey::TooltipExportPngDesc),
-                            );
-                        });
-                        if export_resp.clicked() {
-                            if let Some(path) = default_export_png_path(engine.seed, state.map_dim) {
-                                let scale = pick_cubiomes_scale(state.map_blocks_per_px);
-                                if engine
-                                    .export_map_png(
-                                        &path,
-                                        state.map_dim,
-                                        state.map_style,
-                                        state.map_center_x.round() as i32,
-                                        state.map_center_z.round() as i32,
-                                        scale,
-                                    )
-                                    .is_ok()
-                                {
-                                    state.last_export_path = Some(path.clone());
-                                    audio.play(SoundCue::Toast);
-                                    toasts.push(
-                                        t(lang, UiKey::ToastMapExportTitle),
-                                        path.file_name()
-                                            .map(|n| n.to_string_lossy().into_owned())
-                                            .unwrap_or_default(),
-                                        "filled_map",
-                                        palette.accent_xp,
-                                    );
-                                }
-                            }
-                        }
-                    });
-                });
-
-            ui.add_space(8.0);
-
-            // Structure & Overlay Layer Toggles with Crisp Icons
-            egui::Frame::new()
-                .fill(palette.bg_panel)
-                .stroke(Stroke::new(1.0_f32, palette.border_subtle))
-                .corner_radius(CornerRadius::same(6))
-                .inner_margin(Margin::same(10))
-                .show(ui, |ui| {
-                    ui.set_width(ui.available_width());
-                    ui.label(
-                        RichText::new(t(lang, UiKey::LayersHeader))
-                            .strong()
-                            .size(12.0)
-                            .color(palette.accent_gold),
-                    );
-                    ui.add_space(4.0);
-
-                    layer_toggle_row(
-                        ui,
-                        atlas,
-                        "grass_block",
-                        t(lang, UiKey::LayerBiomes),
-                        &mut state.map_layers.biomes,
-                        palette,
-                    );
-                    layer_toggle_row(
-                        ui,
-                        atlas,
-                        "slime_ball",
-                        t(lang, UiKey::LayerSlimeChunks),
-                        &mut state.map_layers.slime_chunks,
-                        palette,
-                    );
-                    layer_toggle_row(
-                        ui,
-                        atlas,
-                        "scaffolding",
-                        t(lang, UiKey::LayerGridChunks),
-                        &mut state.map_layers.grid_chunks,
-                        palette,
-                    );
-                    layer_toggle_row(
-                        ui,
-                        atlas,
-                        "beacon",
-                        t(lang, UiKey::LayerWaypoints),
-                        &mut state.map_layers.waypoints,
-                        palette,
-                    );
-
-                    ui.separator();
-
-                    match state.map_dim {
-                        Dimension::Overworld => {
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::Village.icon_id(),
-                                StructureKind::Village.label(lang),
-                                &mut state.map_layers.villages,
-                                palette,
-                            );
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::TrialChambers.icon_id(),
-                                StructureKind::TrialChambers.label(lang),
-                                &mut state.map_layers.trial_chambers,
-                                palette,
-                            );
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::AncientCity.icon_id(),
-                                StructureKind::AncientCity.label(lang),
-                                &mut state.map_layers.ancient_cities,
-                                palette,
-                            );
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::Stronghold.icon_id(),
-                                StructureKind::Stronghold.label(lang),
-                                &mut state.map_layers.strongholds,
-                                palette,
-                            );
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::Monument.icon_id(),
-                                StructureKind::Monument.label(lang),
-                                &mut state.map_layers.monuments,
-                                palette,
-                            );
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::Mansion.icon_id(),
-                                StructureKind::Mansion.label(lang),
-                                &mut state.map_layers.mansions,
-                                palette,
-                            );
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::Outpost.icon_id(),
-                                StructureKind::Outpost.label(lang),
-                                &mut state.map_layers.outposts,
-                                palette,
-                            );
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::DesertPyramid.icon_id(),
-                                "Templos / Ruinas",
-                                &mut state.map_layers.temples,
-                                palette,
-                            );
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::RuinedPortal.icon_id(),
-                                StructureKind::RuinedPortal.label(lang),
-                                &mut state.map_layers.ruined_portals,
-                                palette,
-                            );
-                        }
-                        Dimension::Nether => {
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::Fortress.icon_id(),
-                                StructureKind::Fortress.label(lang),
-                                &mut state.map_layers.fortresses,
-                                palette,
-                            );
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::Bastion.icon_id(),
-                                StructureKind::Bastion.label(lang),
-                                &mut state.map_layers.bastions,
-                                palette,
-                            );
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::RuinedPortal.icon_id(),
-                                StructureKind::RuinedPortal.label(lang),
-                                &mut state.map_layers.ruined_portals,
-                                palette,
-                            );
-                        }
-                        Dimension::TheEnd => {
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::EndShip.icon_id(),
-                                StructureKind::EndShip.label(lang),
-                                &mut state.map_layers.end_cities,
-                                palette,
-                            );
-                            layer_toggle_row(
-                                ui,
-                                atlas,
-                                StructureKind::EndGateway.icon_id(),
-                                StructureKind::EndGateway.label(lang),
-                                &mut state.map_layers.end_gateways,
-                                palette,
-                            );
                         }
                     }
                 });
+            });
 
-            ui.add_space(8.0);
+            ui.add_space(6.0);
+            ui.columns(3, |cols| {
+                let spawn_btn = cols[0]
+                    .add_sized(
+                        [cols[0].available_width(), 22.0],
+                        egui::Button::new(RichText::new("Spawn").size(11.0)),
+                    )
+                    .on_hover_text(t(lang, UiKey::JumpSpawnBtn));
+                if spawn_btn.clicked() {
+                    let sp = engine.spawn_point();
+                    if state.map_dim != Dimension::Overworld {
+                        state.switch_map_dimension(Dimension::Overworld);
+                    }
+                    state.jump_map_to(sp.0 as f64, sp.1 as f64);
+                    audio.play(SoundCue::Click);
+                }
 
-            // Seed Waypoints Manager
-            egui::Frame::new()
-                .fill(palette.bg_panel)
-                .stroke(Stroke::new(1.0_f32, palette.border_subtle))
-                .corner_radius(CornerRadius::same(6))
-                .inner_margin(Margin::same(10))
-                .show(ui, |ui| {
-                    ui.set_width(ui.available_width());
-                    ui.label(
-                        RichText::new(t(lang, UiKey::WaypointsHeader))
-                            .strong()
-                            .size(12.0)
-                            .color(palette.accent_gold),
-                    );
-                    ui.add_space(4.0);
-                    ui.horizontal(|ui| {
-                        ui.add_sized(
-                            [135.0, 22.0],
-                            egui::TextEdit::singleline(&mut state.new_waypoint_name)
-                                .hint_text(t(lang, UiKey::WaypointNameHint)),
+                let sh_btn = cols[1]
+                    .add_sized(
+                        [cols[1].available_width(), 22.0],
+                        egui::Button::new(RichText::new("Stronghold").size(11.0)),
+                    )
+                    .on_hover_text(t(lang, UiKey::JumpStrongholdBtn));
+                if sh_btn.clicked() {
+                    if let Some(nearest) = engine.strongholds().iter().min_by_key(|s| {
+                        let dx = (s.x as f64 - state.map_center_x) as i64;
+                        let dz = (s.z as f64 - state.map_center_z) as i64;
+                        dx * dx + dz * dz
+                    }) {
+                        if state.map_dim != Dimension::Overworld {
+                            state.switch_map_dimension(Dimension::Overworld);
+                        }
+                        state.jump_map_to(nearest.x as f64, nearest.z as f64);
+                        audio.play(SoundCue::Click);
+                    }
+                }
+
+                let zero_btn = cols[2]
+                    .add_sized(
+                        [cols[2].available_width(), 22.0],
+                        egui::Button::new(RichText::new("(0, 0)").size(11.0)),
+                    )
+                    .on_hover_text(t(lang, UiKey::PanResetBtn));
+                if zero_btn.clicked() {
+                    state.jump_map_to(0.0, 0.0);
+                    audio.play(SoundCue::Click);
+                }
+            });
+
+            ui.add_space(6.0);
+            ui.horizontal_wrapped(|ui| {
+                ui.spacing_mut().item_spacing = Vec2::new(6.0, 4.0);
+                ui.checkbox(&mut state.nether_sync_enabled, t(lang, UiKey::NetherSyncToggle))
+                    .on_hover_ui(|ui| {
+                        render_tool_tooltip(
+                            ui,
+                            palette,
+                            t(lang, UiKey::TooltipNetherSyncTitle),
+                            t(lang, UiKey::TooltipNetherSyncDesc),
                         );
-                        if ui.button("+").clicked() {
-                            let cx = state.map_center_x.round() as i32;
-                            let cz = state.map_center_z.round() as i32;
-                            let def = format!("({}, {})", cx, cz);
-                            state.add_waypoint(engine.seed, cx, cz, &def);
-                            audio.play(SoundCue::Click);
-                            toasts.push(
-                                t(lang, UiKey::ToastWaypointAddedTitle),
-                                def,
-                                &state.new_waypoint_icon,
-                                palette.accent_primary,
-                            );
-                        }
                     });
-                    ui.add_space(4.0);
-                    ui.horizontal_wrapped(|ui| {
-                        ui.spacing_mut().item_spacing = Vec2::new(3.0, 3.0);
-                        for (icon_id, es_lbl, en_lbl) in WAYPOINT_ICON_PRESETS {
-                            let active = state.new_waypoint_icon == icon_id;
-                            let (sr, sresp) =
-                                ui.allocate_exact_size(Vec2::splat(22.0), egui::Sense::click());
-                            paint_mc_slot(
-                                ui.painter(),
-                                sr,
-                                palette,
-                                atlas,
-                                Some(icon_id),
-                                1,
-                                active,
-                                sresp.hovered(),
-                                None,
-                            );
-                            let tip = if matches!(lang, Language::EnUs) { en_lbl } else { es_lbl };
-                            if sresp.on_hover_text(tip).clicked() {
-                                state.new_waypoint_icon = icon_id.to_string();
-                                audio.play(SoundCue::Click);
-                            }
-                        }
-                    });
-                    ui.add_space(2.0);
-                    ui.label(
-                        RichText::new(t(lang, UiKey::MapControlsHint))
-                            .size(10.0)
-                            .color(palette.text_muted),
+
+                let ruler_resp = filter_chip(
+                    ui,
+                    palette,
+                    atlas,
+                    Some("iron_sword"),
+                    t(lang, UiKey::RulerModeBtn),
+                    state.ruler_active,
+                )
+                .on_hover_ui(|ui| {
+                    render_tool_tooltip(
+                        ui,
+                        palette,
+                        t(lang, UiKey::TooltipRulerTitle),
+                        t(lang, UiKey::TooltipRulerDesc),
                     );
-                    ui.add_space(4.0);
-                    let wps: Vec<_> = state
-                        .prefs
-                        .waypoints
-                        .iter()
-                        .filter(|w| w.seed == engine.seed)
-                        .cloned()
-                        .collect();
-                    let mut jump_to: Option<(i32, i32, Dimension)> = None;
-                    let mut copy_wp_tp: Option<(String, Dimension, i32, i32)> = None;
-                    let mut remove_id: Option<u64> = None;
-                    for wp in &wps {
-                        ui.horizontal(|ui| {
-                            ui.spacing_mut().interact_size.y = 20.0;
-                            ui.add(atlas.ui_image(&wp.icon, 15.0));
-                            if ui
-                                .add(
-                                    egui::Button::new(
-                                        RichText::new(format!(
-                                            "{} ({}, {})",
-                                            wp.name, wp.x, wp.z
-                                        ))
-                                        .size(11.0)
-                                        .color(palette.text_primary),
-                                    )
-                                    .frame(false)
-                                    .truncate(),
-                                )
-                                .clicked()
-                            {
-                                jump_to = Some((wp.x, wp.z, wp.dimension()));
-                            }
-                            if ui
-                                .small_button("/tp")
-                                .on_hover_text(t(lang, UiKey::CopyTpBtn))
-                                .clicked()
-                            {
-                                copy_wp_tp = Some((wp.name.clone(), wp.dimension(), wp.x, wp.z));
-                            }
-                            if ui.small_button("x").clicked() {
-                                remove_id = Some(wp.id);
-                            }
-                        });
+                });
+                if ruler_resp.clicked() {
+                    state.ruler_active = !state.ruler_active;
+                    if !state.ruler_active {
+                        state.ruler_p1 = None;
+                        state.ruler_p2 = None;
                     }
-                    if let Some((wname, dim, x, z)) = copy_wp_tp {
-                        let cmd = format_tp_command(dim, x, z);
+                    audio.play(SoundCue::Click);
+                }
+
+                let export_resp = filter_chip(
+                    ui,
+                    palette,
+                    atlas,
+                    Some("spyglass"),
+                    t(lang, UiKey::ExportPngBtn),
+                    false,
+                )
+                .on_hover_ui(|ui| {
+                    render_tool_tooltip(
+                        ui,
+                        palette,
+                        t(lang, UiKey::TooltipExportPngTitle),
+                        t(lang, UiKey::TooltipExportPngDesc),
+                    );
+                });
+                if export_resp.clicked() {
+                    if let Some(path) = default_export_png_path(engine.seed, state.map_dim) {
+                        let scale = pick_cubiomes_scale(state.map_blocks_per_px);
+                        if engine
+                            .export_map_png(
+                                &path,
+                                state.map_dim,
+                                state.map_style,
+                                state.map_center_x.round() as i32,
+                                state.map_center_z.round() as i32,
+                                scale,
+                            )
+                            .is_ok()
+                        {
+                            state.last_export_path = Some(path.clone());
+                            audio.play(SoundCue::Toast);
+                            toasts.push(
+                                t(lang, UiKey::ToastMapExportTitle),
+                                path.file_name()
+                                    .map(|n| n.to_string_lossy().into_owned())
+                                    .unwrap_or_default(),
+                                "filled_map",
+                                palette.accent_xp,
+                            );
+                        }
+                    }
+                }
+            });
+        });
+}
+
+fn render_compact_player_strip(
+    ui: &mut egui::Ui,
+    state: &mut AppState,
+    engine: &SeedMapEngine,
+    palette: McPalette,
+    audio: &AudioEngine,
+    toasts: &mut ToastQueue,
+    lang: Language,
+) {
+    let active_info: Option<(String, Option<[f64; 3]>, Dimension, String)> =
+        state.active_world_for_seed(engine.seed).map(|w| {
+            (
+                w.level_name.clone(),
+                w.player_pos,
+                w.player_dimension(),
+                w.last_played_label(lang),
+            )
+        });
+    let face_tex_id = state.ensure_player_face_tex(ui.ctx()).id();
+
+    egui::Frame::new()
+        .fill(palette.bg_panel)
+        .stroke(Stroke::new(1.0_f32, palette.border_subtle))
+        .corner_radius(CornerRadius::same(6))
+        .inner_margin(Margin::symmetric(10, 8))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.horizontal(|ui| {
+                let (face_rect, _) =
+                    ui.allocate_exact_size(Vec2::splat(26.0), egui::Sense::hover());
+                ui.painter().rect_stroke(
+                    face_rect.expand(1.2),
+                    CornerRadius::same(4),
+                    Stroke::new(1.2_f32, palette.accent_gold),
+                    egui::StrokeKind::Outside,
+                );
+                ui.painter().image(
+                    face_tex_id,
+                    face_rect,
+                    Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
+                    Color32::WHITE,
+                );
+                ui.add_space(4.0);
+                ui.vertical(|ui| {
+                    ui.spacing_mut().item_spacing.y = 1.0;
+                    if let Some((wname, maybe_pos, pdim, last_lbl)) = &active_info {
+                        ui.label(
+                            RichText::new(format!("{} • {}", wname, last_lbl))
+                                .strong()
+                                .size(11.0)
+                                .color(palette.text_primary),
+                        );
+                        if let Some(pos) = maybe_pos {
+                            ui.label(
+                                RichText::new(format!(
+                                    "{}: {} / {} / {} (no vivo)",
+                                    pdim.label(lang),
+                                    pos[0].round() as i32,
+                                    pos[1].round() as i32,
+                                    pos[2].round() as i32,
+                                ))
+                                .monospace()
+                                .size(9.5)
+                                .color(palette.accent_primary),
+                            );
+                        } else {
+                            ui.label(
+                                RichText::new(t(lang, UiKey::PlayerNotLiveBadge))
+                                    .size(9.5)
+                                    .color(palette.text_muted),
+                            );
+                        }
+                    } else if state.is_server_seed_active {
+                        ui.label(
+                            RichText::new(t(lang, UiKey::SeedServerModeNote))
+                                .size(10.5)
+                                .color(palette.accent_primary),
+                        );
+                    } else {
+                        ui.label(
+                            RichText::new(t(lang, UiKey::PlayerMarkerTitle))
+                                .size(10.5)
+                                .color(palette.text_muted),
+                        );
+                    }
+                });
+            });
+
+            ui.add_space(4.0);
+            ui.horizontal(|ui| {
+                if let Some((_, Some(pos), pdim, _)) = active_info {
+                    if ui.small_button(t(lang, UiKey::PlayerJumpBtn)).clicked() {
+                        state.map_dim = pdim;
+                        state.jump_map_to(pos[0], pos[2]);
+                        audio.play(SoundCue::Click);
+                    }
+                    if ui.small_button("/tp").clicked() {
+                        let cmd = format_tp_xyz(
+                            pdim,
+                            pos[0].round() as i32,
+                            Some(pos[1].round() as i32),
+                            pos[2].round() as i32,
+                        );
                         ui.ctx().copy_text(cmd.clone());
                         audio.play(SoundCue::Toast);
                         toasts.push(
                             t(lang, UiKey::CopiedTpTitle),
-                            format!("{}: {}", wname, cmd),
+                            cmd,
                             "compass",
-                            palette.accent_primary,
+                            palette.accent_gold,
                         );
                     }
-                    if let Some((x, z, d)) = jump_to {
-                        state.map_dim = d;
-                        state.jump_map_to(x as f64, z as f64);
-                        audio.play(SoundCue::Click);
-                    }
-                    if let Some(id) = remove_id {
-                        state.remove_waypoint(id);
+                }
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if ui.small_button(t(lang, UiKey::SeedChangeSkinShortcut)).clicked() {
+                        state.seed_sidebar_tab = SeedSidebarTab::Worlds;
                         audio.play(SoundCue::Click);
                     }
                 });
+            });
         });
 }
 
-fn layer_toggle_row(
+fn render_layers_sidebar_tab(
+    ui: &mut egui::Ui,
+    state: &mut AppState,
+    palette: McPalette,
+    atlas: &ItemAtlas,
+    audio: &AudioEngine,
+    lang: Language,
+) {
+    // Quick Layer Presets
+    ui.columns(3, |cols| {
+        if cols[0]
+            .add_sized(
+                [cols[0].available_width(), 24.0],
+                egui::Button::new(RichText::new(t(lang, UiKey::LayersPresetAll)).size(11.0)),
+            )
+            .clicked()
+        {
+            state.map_layers = LayerToggles::default();
+            audio.play(SoundCue::Click);
+        }
+        if cols[1]
+            .add_sized(
+                [cols[1].available_width(), 24.0],
+                egui::Button::new(RichText::new(t(lang, UiKey::LayersPresetCore)).size(11.0)),
+            )
+            .clicked()
+        {
+            state.map_layers = LayerToggles {
+                biomes: true,
+                grid_chunks: true,
+                waypoints: true,
+                player_marker: true,
+                villages: true,
+                trial_chambers: true,
+                ancient_cities: true,
+                strongholds: true,
+                fortresses: true,
+                bastions: true,
+                end_cities: true,
+                slime_chunks: false,
+                monuments: false,
+                mansions: false,
+                outposts: false,
+                temples: false,
+                ruined_portals: false,
+                end_gateways: false,
+            };
+            audio.play(SoundCue::Click);
+        }
+        if cols[2]
+            .add_sized(
+                [cols[2].available_width(), 24.0],
+                egui::Button::new(RichText::new(t(lang, UiKey::LayersPresetNone)).size(11.0)),
+            )
+            .clicked()
+        {
+            state.map_layers = LayerToggles {
+                biomes: true,
+                grid_chunks: true,
+                waypoints: true,
+                player_marker: true,
+                slime_chunks: false,
+                villages: false,
+                trial_chambers: false,
+                ancient_cities: false,
+                strongholds: false,
+                monuments: false,
+                mansions: false,
+                outposts: false,
+                temples: false,
+                ruined_portals: false,
+                fortresses: false,
+                bastions: false,
+                end_cities: false,
+                end_gateways: false,
+            };
+            audio.play(SoundCue::Click);
+        }
+    });
+
+    ui.add_space(7.0);
+
+    // Card 1: Map & Overlay Toggles (clean 2-column grid)
+    egui::Frame::new()
+        .fill(palette.bg_panel)
+        .stroke(Stroke::new(1.0_f32, palette.border_subtle))
+        .corner_radius(CornerRadius::same(6))
+        .inner_margin(Margin::same(10))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.label(
+                RichText::new(t(lang, UiKey::LayersTerrainHeader))
+                    .strong()
+                    .size(12.0)
+                    .color(palette.accent_gold),
+            );
+            ui.add_space(6.0);
+
+            ui.columns(2, |cols| {
+                layer_tile_toggle(
+                    &mut cols[0],
+                    atlas,
+                    "grass_block",
+                    if matches!(lang, Language::EnUs) { "Biomes" } else { "Biomas" },
+                    t(lang, UiKey::LayerBiomes),
+                    &mut state.map_layers.biomes,
+                    palette,
+                );
+                layer_tile_toggle(
+                    &mut cols[1],
+                    atlas,
+                    "slime_ball",
+                    t(lang, UiKey::LayerSlimeChunks),
+                    t(lang, UiKey::LayerSlimeChunks),
+                    &mut state.map_layers.slime_chunks,
+                    palette,
+                );
+            });
+            ui.add_space(4.0);
+            ui.columns(2, |cols| {
+                layer_tile_toggle(
+                    &mut cols[0],
+                    atlas,
+                    "scaffolding",
+                    if matches!(lang, Language::EnUs) { "Chunk Grid" } else { "Grilla" },
+                    t(lang, UiKey::LayerGridChunks),
+                    &mut state.map_layers.grid_chunks,
+                    palette,
+                );
+                layer_tile_toggle(
+                    &mut cols[1],
+                    atlas,
+                    "beacon",
+                    t(lang, UiKey::LayerWaypoints),
+                    t(lang, UiKey::LayerWaypoints),
+                    &mut state.map_layers.waypoints,
+                    palette,
+                );
+            });
+            ui.add_space(4.0);
+            ui.columns(2, |cols| {
+                layer_tile_toggle(
+                    &mut cols[0],
+                    atlas,
+                    "compass",
+                    if matches!(lang, Language::EnUs) { "Player" } else { "Tu Jugador" },
+                    t(lang, UiKey::PlayerLayerLabel),
+                    &mut state.map_layers.player_marker,
+                    palette,
+                );
+            });
+        });
+
+    ui.add_space(7.0);
+
+    // Card 2: Dimension Structures (clean 2-column grid)
+    egui::Frame::new()
+        .fill(palette.bg_panel)
+        .stroke(Stroke::new(1.0_f32, palette.border_subtle))
+        .corner_radius(CornerRadius::same(6))
+        .inner_margin(Margin::same(10))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.label(
+                RichText::new(t(lang, UiKey::LayersStructuresHeader))
+                    .strong()
+                    .size(12.0)
+                    .color(palette.accent_gold),
+            );
+            ui.add_space(6.0);
+
+            match state.map_dim {
+                Dimension::Overworld => {
+                    ui.columns(2, |cols| {
+                        layer_tile_toggle(
+                            &mut cols[0],
+                            atlas,
+                            StructureKind::Village.icon_id(),
+                            StructureKind::Village.label(lang),
+                            StructureKind::Village.label(lang),
+                            &mut state.map_layers.villages,
+                            palette,
+                        );
+                        layer_tile_toggle(
+                            &mut cols[1],
+                            atlas,
+                            StructureKind::TrialChambers.icon_id(),
+                            if matches!(lang, Language::EnUs) { "Trials" } else { "Desafío" },
+                            StructureKind::TrialChambers.label(lang),
+                            &mut state.map_layers.trial_chambers,
+                            palette,
+                        );
+                    });
+                    ui.add_space(4.0);
+                    ui.columns(2, |cols| {
+                        layer_tile_toggle(
+                            &mut cols[0],
+                            atlas,
+                            StructureKind::AncientCity.icon_id(),
+                            if matches!(lang, Language::EnUs) { "Ancient City" } else { "C. Antigua" },
+                            StructureKind::AncientCity.label(lang),
+                            &mut state.map_layers.ancient_cities,
+                            palette,
+                        );
+                        layer_tile_toggle(
+                            &mut cols[1],
+                            atlas,
+                            StructureKind::Stronghold.icon_id(),
+                            "Stronghold",
+                            StructureKind::Stronghold.label(lang),
+                            &mut state.map_layers.strongholds,
+                            palette,
+                        );
+                    });
+                    ui.add_space(4.0);
+                    ui.columns(2, |cols| {
+                        layer_tile_toggle(
+                            &mut cols[0],
+                            atlas,
+                            StructureKind::Monument.icon_id(),
+                            if matches!(lang, Language::EnUs) { "Monument" } else { "Monumento" },
+                            StructureKind::Monument.label(lang),
+                            &mut state.map_layers.monuments,
+                            palette,
+                        );
+                        layer_tile_toggle(
+                            &mut cols[1],
+                            atlas,
+                            StructureKind::Mansion.icon_id(),
+                            if matches!(lang, Language::EnUs) { "Mansion" } else { "Mansión" },
+                            StructureKind::Mansion.label(lang),
+                            &mut state.map_layers.mansions,
+                            palette,
+                        );
+                    });
+                    ui.add_space(4.0);
+                    ui.columns(2, |cols| {
+                        layer_tile_toggle(
+                            &mut cols[0],
+                            atlas,
+                            StructureKind::Outpost.icon_id(),
+                            "Outpost",
+                            StructureKind::Outpost.label(lang),
+                            &mut state.map_layers.outposts,
+                            palette,
+                        );
+                        layer_tile_toggle(
+                            &mut cols[1],
+                            atlas,
+                            StructureKind::DesertPyramid.icon_id(),
+                            if matches!(lang, Language::EnUs) { "Temples" } else { "Templos" },
+                            "Templos / Ruinas",
+                            &mut state.map_layers.temples,
+                            palette,
+                        );
+                    });
+                    ui.add_space(4.0);
+                    ui.columns(2, |cols| {
+                        layer_tile_toggle(
+                            &mut cols[0],
+                            atlas,
+                            StructureKind::RuinedPortal.icon_id(),
+                            if matches!(lang, Language::EnUs) { "Ruined Portal" } else { "Portal Ruina" },
+                            StructureKind::RuinedPortal.label(lang),
+                            &mut state.map_layers.ruined_portals,
+                            palette,
+                        );
+                    });
+                }
+                Dimension::Nether => {
+                    ui.columns(2, |cols| {
+                        layer_tile_toggle(
+                            &mut cols[0],
+                            atlas,
+                            StructureKind::Fortress.icon_id(),
+                            StructureKind::Fortress.label(lang),
+                            StructureKind::Fortress.label(lang),
+                            &mut state.map_layers.fortresses,
+                            palette,
+                        );
+                        layer_tile_toggle(
+                            &mut cols[1],
+                            atlas,
+                            StructureKind::Bastion.icon_id(),
+                            StructureKind::Bastion.label(lang),
+                            StructureKind::Bastion.label(lang),
+                            &mut state.map_layers.bastions,
+                            palette,
+                        );
+                    });
+                    ui.add_space(4.0);
+                    ui.columns(2, |cols| {
+                        layer_tile_toggle(
+                            &mut cols[0],
+                            atlas,
+                            StructureKind::RuinedPortal.icon_id(),
+                            if matches!(lang, Language::EnUs) { "Ruined Portal" } else { "Portal Ruina" },
+                            StructureKind::RuinedPortal.label(lang),
+                            &mut state.map_layers.ruined_portals,
+                            palette,
+                        );
+                    });
+                }
+                Dimension::TheEnd => {
+                    ui.columns(2, |cols| {
+                        layer_tile_toggle(
+                            &mut cols[0],
+                            atlas,
+                            StructureKind::EndShip.icon_id(),
+                            StructureKind::EndShip.label(lang),
+                            StructureKind::EndShip.label(lang),
+                            &mut state.map_layers.end_cities,
+                            palette,
+                        );
+                        layer_tile_toggle(
+                            &mut cols[1],
+                            atlas,
+                            StructureKind::EndGateway.icon_id(),
+                            StructureKind::EndGateway.label(lang),
+                            StructureKind::EndGateway.label(lang),
+                            &mut state.map_layers.end_gateways,
+                            palette,
+                        );
+                    });
+                }
+            }
+        });
+}
+
+fn layer_tile_toggle(
     ui: &mut egui::Ui,
     atlas: &ItemAtlas,
     icon: &str,
     label: &str,
+    tooltip: &str,
     val: &mut bool,
     palette: McPalette,
 ) {
-    ui.horizontal(|ui| {
-        ui.spacing_mut().interact_size.y = 20.0;
-        ui.checkbox(val, "");
-        ui.add(atlas.ui_image(icon, 16.0));
-        let lbl = ui
-            .add(
-                egui::Label::new(
-                    RichText::new(label)
-                        .size(11.5)
-                        .color(if *val { palette.text_primary } else { palette.text_muted }),
-                )
-                .sense(egui::Sense::click()),
+    let desired = Vec2::new(ui.available_width(), 27.0);
+    let (rect, resp) = ui.allocate_exact_size(desired, egui::Sense::click());
+    if ui.is_rect_visible(rect) {
+        let fill = if *val {
+            Color32::from_rgba_unmultiplied(
+                palette.accent_primary.r(),
+                palette.accent_primary.g(),
+                palette.accent_primary.b(),
+                34,
             )
-            .on_hover_cursor(egui::CursorIcon::PointingHand);
-        if lbl.clicked() {
-            *val = !*val;
-        }
-    });
+        } else if resp.hovered() {
+            palette.bg_card_hover
+        } else {
+            palette.bg_card
+        };
+        let stroke = if *val {
+            Stroke::new(1.2_f32, palette.accent_primary)
+        } else {
+            Stroke::new(1.0_f32, palette.border_subtle)
+        };
+        ui.painter()
+            .rect(rect, CornerRadius::same(4), fill, stroke, egui::StrokeKind::Inside);
+
+        let icon_rect = Rect::from_min_size(
+            Pos2::new(rect.left() + 6.0, rect.center().y - 8.0),
+            Vec2::splat(16.0),
+        );
+        let tint = if *val {
+            Color32::WHITE
+        } else {
+            Color32::from_rgba_unmultiplied(255, 255, 255, 130)
+        };
+        atlas.paint(ui.painter(), icon_rect, icon, tint);
+
+        let text_col = if *val {
+            palette.text_primary
+        } else {
+            palette.text_muted
+        };
+        let galley = ui.painter().layout(
+            label.to_string(),
+            egui::FontId::proportional(11.0),
+            text_col,
+            (rect.width() - 30.0).max(20.0),
+        );
+        ui.painter().galley(
+            Pos2::new(rect.left() + 26.0, rect.center().y - galley.size().y * 0.5),
+            galley,
+            text_col,
+        );
+    }
+    let clicked = resp
+        .on_hover_text(tooltip)
+        .on_hover_cursor(egui::CursorIcon::PointingHand)
+        .clicked();
+    if clicked {
+        *val = !*val;
+    }
 }
 
 fn render_tool_tooltip(ui: &mut egui::Ui, palette: McPalette, title: &str, desc: &str) {
@@ -706,24 +1617,36 @@ fn render_tool_tooltip(ui: &mut egui::Ui, palette: McPalette, title: &str, desc:
     );
 }
 
-fn format_tp_command(dim: Dimension, x: i32, z: i32) -> String {
+fn format_tp_xyz(dim: Dimension, x: i32, y: Option<i32>, z: i32) -> String {
+    let y_str = match y {
+        Some(yv) => yv.to_string(),
+        None => "~".to_string(),
+    };
     match dim {
-        Dimension::Overworld => format!("/tp @s {} ~ {}", x, z),
-        Dimension::Nether => format!("/execute in minecraft:the_nether run tp @s {} ~ {}", x, z),
-        Dimension::TheEnd => format!("/execute in minecraft:the_end run tp @s {} ~ {}", x, z),
+        Dimension::Overworld => format!("/tp @s {} {} {}", x, y_str, z),
+        Dimension::Nether => format!("/execute in minecraft:the_nether run tp @s {} {} {}", x, y_str, z),
+        Dimension::TheEnd => format!("/execute in minecraft:the_end run tp @s {} {} {}", x, y_str, z),
     }
+}
+
+fn format_tp_command(dim: Dimension, x: i32, z: i32) -> String {
+    format_tp_xyz(dim, x, None, z)
 }
 
 fn render_map_viewport(
     ui: &mut egui::Ui,
     state: &mut AppState,
     engine: &mut SeedMapEngine,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
+    rcx: &RenderContext<'_>,
     toasts: &mut ToastQueue,
-    lang: Language,
 ) {
+    let RenderContext {
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
+    let lang = state.prefs.language;
     let avail = ui.available_size();
     let hud_h = 52.0;
     let canvas_h = (avail.y - hud_h - 6.0).max(220.0);
@@ -1045,6 +1968,89 @@ fn render_map_viewport(
         }
     }
 
+    // 8c. Saved Player Location Marker (with uploaded skin face or classic Steve)
+    let player_marker_data: Option<(String, [f64; 3], Dimension, String)> = if state.map_layers.player_marker {
+        state.active_world_for_seed(engine.seed).and_then(|w| {
+            w.player_pos.map(|pos| {
+                (
+                    w.level_name.clone(),
+                    pos,
+                    w.player_dimension(),
+                    w.last_played_label(lang),
+                )
+            })
+        })
+    } else {
+        None
+    };
+    let face_tex_id = state.ensure_player_face_tex(ui.ctx()).id();
+    let mut hovered_player: Option<(String, [f64; 3], Dimension, String)> = None;
+    if let Some((ref wname, pos, pdim, ref last_lbl)) = player_marker_data {
+        if pdim == state.map_dim {
+            let sp = world_to_screen(pos[0], pos[2]);
+            if view_rect.expand(48.0).contains(sp) {
+                let face_size = 24.0;
+                let head_rect = Rect::from_center_size(sp, Vec2::splat(face_size));
+                // Crisp contrasting ring + pixel-art player face square
+                painter.rect_filled(
+                    head_rect.expand(3.0),
+                    CornerRadius::same(5),
+                    Color32::from_rgba_unmultiplied(10, 14, 22, 235),
+                );
+                painter.rect_stroke(
+                    head_rect.expand(2.5),
+                    CornerRadius::same(5),
+                    Stroke::new(2.0_f32, palette.accent_gold),
+                    egui::StrokeKind::Outside,
+                );
+                painter.image(
+                    face_tex_id,
+                    head_rect,
+                    Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
+                    Color32::WHITE,
+                );
+
+                // Explicit non-live disclosure badge beneath player marker
+                let badge_txt = match lang {
+                    Language::EnUs => "Last saved (not live)",
+                    _ => "Última guardada (no en vivo)",
+                };
+                let badge_w = (badge_txt.len() as f32 * 5.6 + 12.0).max(122.0);
+                let badge_rect = Rect::from_center_size(
+                    sp + Vec2::new(0.0, face_size * 0.5 + 12.0),
+                    Vec2::new(badge_w, 16.0),
+                );
+                painter.rect_filled(
+                    badge_rect,
+                    CornerRadius::same(4),
+                    Color32::from_rgba_unmultiplied(12, 16, 26, 226),
+                );
+                painter.rect_stroke(
+                    badge_rect,
+                    CornerRadius::same(4),
+                    Stroke::new(1.0_f32, palette.accent_gold),
+                    egui::StrokeKind::Inside,
+                );
+                painter.text(
+                    badge_rect.center(),
+                    egui::Align2::CENTER_CENTER,
+                    badge_txt,
+                    egui::FontId::proportional(9.5),
+                    Color32::from_rgb(255, 224, 130),
+                );
+
+                if let Some(ptr) = pointer_pos {
+                    if (ptr.distance(sp) <= 18.0 || badge_rect.expand(4.0).contains(ptr))
+                        && hovered_marker.is_none()
+                        && hovered_waypoint.is_none()
+                    {
+                        hovered_player = Some((wname.clone(), pos, pdim, last_lbl.clone()));
+                    }
+                }
+            }
+        }
+    }
+
     // 8b. Temporary Google-Maps-Style Pin Overlay
     let mut temp_pin_screen: Option<Pos2> = None;
     if let Some((pdim, px, pz)) = state.temp_map_pin {
@@ -1146,6 +2152,21 @@ fn render_map_viewport(
                     format!("{}: {}", wp.name, cmd),
                     &wp.icon,
                     palette.accent_primary,
+                );
+            } else if let Some((ref wname, pos, pdim, _)) = hovered_player {
+                let cmd = format_tp_xyz(
+                    pdim,
+                    pos[0].round() as i32,
+                    Some(pos[1].round() as i32),
+                    pos[2].round() as i32,
+                );
+                ui.ctx().copy_text(cmd.clone());
+                audio.play(SoundCue::Toast);
+                toasts.push(
+                    t(lang, UiKey::CopiedTpTitle),
+                    format!("{}: {}", wname, cmd),
+                    "compass",
+                    palette.accent_gold,
                 );
             } else {
                 let clicked_existing_pin = temp_pin_screen.is_some_and(|ps| {
@@ -1361,10 +2382,11 @@ fn render_map_viewport(
                                     palette,
                                     atlas,
                                     Some(icon_id),
-                                    1,
-                                    active,
-                                    sresp.hovered(),
-                                    None,
+                                    SlotStyle {
+                                        selected: active,
+                                        hovered: sresp.hovered(),
+                                        ..Default::default()
+                                    },
                                 );
                                 let tip = if matches!(lang, Language::EnUs) { en_lbl } else { es_lbl };
                                 if sresp.on_hover_text(tip).clicked() {
@@ -1494,6 +2516,35 @@ fn render_map_viewport(
                 &[
                     (&coords, palette.accent_primary),
                     (&tp_hint, palette.accent_gold),
+                ],
+                palette,
+            );
+        } else if let (Some(ptr), Some((wname, pos, pdim, last_lbl))) = (pointer_pos, hovered_player) {
+            let not_live = t(lang, UiKey::PlayerNotLiveBadge);
+            let coords = format!(
+                "{} • X: {:.0}  Y: {:.0}  Z: {:.0}",
+                pdim.label(lang),
+                pos[0],
+                pos[1],
+                pos[2]
+            );
+            let played = match lang {
+                Language::EnUs => format!("Last played: {}", last_lbl),
+                _ => format!("Último guardado: {}", last_lbl),
+            };
+            let tp_hint = match lang {
+                Language::EnUs => "Left-Click -> Copy /tp to saved position",
+                _ => "Clic izq. -> Copiar /tp a posición guardada",
+            };
+            show_mc_tooltip_at(
+                ui.ctx(),
+                ptr,
+                &format!("{} - {}", t(lang, UiKey::PlayerMarkerTitle), wname),
+                &[
+                    (not_live, Color32::from_rgb(255, 210, 110)),
+                    (&coords, palette.accent_primary),
+                    (&played, palette.text_muted),
+                    (tp_hint, palette.accent_gold),
                 ],
                 palette,
             );
@@ -1685,4 +2736,666 @@ fn default_export_png_path(seed: i64, dim: Dimension) -> Option<PathBuf> {
         Dimension::TheEnd => "end",
     };
     Some(dir.join(format!("seed_{}_{}.png", seed, dname)))
+}
+
+fn handle_dropped_skin_png(
+    ctx: &egui::Context,
+    state: &mut AppState,
+    audio: &AudioEngine,
+    toasts: &mut ToastQueue,
+    lang: Language,
+) {
+    let dropped = ctx.input(|i| i.raw.dropped_files.clone());
+    if dropped.is_empty() {
+        return;
+    }
+    for f in dropped {
+        let is_png = f
+            .path
+            .as_ref()
+            .and_then(|p| p.extension())
+            .and_then(|e| e.to_str())
+            .is_some_and(|e| e.eq_ignore_ascii_case("png"))
+            || f.name.to_ascii_lowercase().ends_with(".png");
+        if !is_png {
+            continue;
+        }
+        let res = if let Some(ref path) = f.path {
+            state.apply_custom_skin_file(ctx, path)
+        } else if let Some(ref bytes) = f.bytes {
+            state.apply_custom_skin_bytes(ctx, bytes)
+        } else {
+            continue;
+        };
+        match res {
+            Ok(()) => {
+                audio.play(SoundCue::XpOrb);
+                toasts.push(
+                    t(lang, UiKey::PlayerSkinSavedToastTitle),
+                    t(lang, UiKey::PlayerSkinCustomBadge),
+                    "compass",
+                    Color32::from_rgb(80, 215, 130),
+                );
+            }
+            Err(err) => {
+                audio.play(SoundCue::Toast);
+                toasts.push(
+                    t(lang, UiKey::PlayerSkinErrorToastTitle),
+                    err,
+                    "barrier",
+                    Color32::from_rgb(235, 85, 85),
+                );
+            }
+        }
+        break;
+    }
+}
+
+fn render_player_skin_sidebar_card(
+    ui: &mut egui::Ui,
+    state: &mut AppState,
+    engine: &SeedMapEngine,
+    palette: McPalette,
+    audio: &AudioEngine,
+    toasts: &mut ToastQueue,
+    lang: Language,
+) {
+    let active_info: Option<(String, Option<[f64; 3]>, Dimension, String)> =
+        state.active_world_for_seed(engine.seed).map(|w| {
+            (
+                w.level_name.clone(),
+                w.player_pos,
+                w.player_dimension(),
+                w.last_played_label(lang),
+            )
+        });
+    let face_tex_id = state.ensure_player_face_tex(ui.ctx()).id();
+
+    egui::Frame::new()
+        .fill(palette.bg_panel)
+        .stroke(Stroke::new(1.0_f32, palette.border_subtle))
+        .corner_radius(CornerRadius::same(6))
+        .inner_margin(Margin::same(10))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.horizontal(|ui| {
+                let (face_rect, _) =
+                    ui.allocate_exact_size(Vec2::splat(32.0), egui::Sense::hover());
+                ui.painter().rect_stroke(
+                    face_rect.expand(1.5),
+                    CornerRadius::same(4),
+                    Stroke::new(1.5_f32, palette.accent_gold),
+                    egui::StrokeKind::Outside,
+                );
+                ui.painter().image(
+                    face_tex_id,
+                    face_rect,
+                    Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
+                    Color32::WHITE,
+                );
+                ui.add_space(6.0);
+                ui.vertical(|ui| {
+                    ui.spacing_mut().item_spacing.y = 1.0;
+                    ui.label(
+                        RichText::new(t(lang, UiKey::SeedSkinCardTitle))
+                            .strong()
+                            .size(12.0)
+                            .color(palette.accent_gold),
+                    );
+                    ui.label(
+                        RichText::new(t(lang, UiKey::PlayerNotLiveBadge))
+                            .size(9.5)
+                            .color(Color32::from_rgb(255, 205, 115)),
+                    );
+                });
+            });
+
+            if let Some((wname, maybe_pos, pdim, last_lbl)) = active_info {
+                ui.add_space(4.0);
+                ui.label(
+                    RichText::new(format!("{} • {}", wname, last_lbl))
+                        .size(10.5)
+                        .color(palette.text_muted),
+                );
+                if let Some(pos) = maybe_pos {
+                    let px = pos[0].round() as i32;
+                    let py = pos[1].round() as i32;
+                    let pz = pos[2].round() as i32;
+                    ui.label(
+                        RichText::new(format!(
+                            "{}: X {}  Y {}  Z {}",
+                            pdim.label(lang),
+                            px,
+                            py,
+                            pz
+                        ))
+                        .monospace()
+                        .size(10.5)
+                        .color(palette.accent_primary),
+                    );
+                    if pdim != state.map_dim {
+                        ui.label(
+                            RichText::new(t(lang, UiKey::PlayerOtherDimHint))
+                                .size(9.5)
+                                .color(palette.accent_enchant),
+                        );
+                    }
+                    ui.add_space(3.0);
+                    ui.horizontal(|ui| {
+                        if ui.small_button(t(lang, UiKey::PlayerJumpBtn)).clicked() {
+                            state.map_dim = pdim;
+                            state.jump_map_to(pos[0], pos[2]);
+                            audio.play(SoundCue::Click);
+                        }
+                        if ui.small_button("/tp").clicked() {
+                            let cmd = format_tp_xyz(pdim, px, Some(py), pz);
+                            ui.ctx().copy_text(cmd.clone());
+                            audio.play(SoundCue::Toast);
+                            toasts.push(
+                                t(lang, UiKey::CopiedTpTitle),
+                                cmd,
+                                "compass",
+                                palette.accent_gold,
+                            );
+                        }
+                    });
+                }
+            } else if state.is_server_seed_active {
+                ui.add_space(4.0);
+                ui.label(
+                    RichText::new(t(lang, UiKey::SeedServerModeNote))
+                        .size(10.0)
+                        .color(palette.accent_primary),
+                );
+            }
+
+            ui.add_space(6.0);
+            ui.horizontal_wrapped(|ui| {
+                ui.spacing_mut().item_spacing = Vec2::new(5.0, 4.0);
+                if ui.button(t(lang, UiKey::PlayerUploadSkinBtn)).clicked() {
+                    if let Some(path) = rfd::FileDialog::new()
+                        .add_filter("Minecraft Skin PNG", &["png"])
+                        .pick_file()
+                    {
+                        match state.apply_custom_skin_file(ui.ctx(), &path) {
+                            Ok(()) => {
+                                audio.play(SoundCue::XpOrb);
+                                toasts.push(
+                                    t(lang, UiKey::PlayerSkinSavedToastTitle),
+                                    path.file_name()
+                                        .map(|n| n.to_string_lossy().into_owned())
+                                        .unwrap_or_default(),
+                                    "compass",
+                                    palette.accent_primary,
+                                );
+                            }
+                            Err(err) => {
+                                audio.play(SoundCue::Toast);
+                                toasts.push(
+                                    t(lang, UiKey::PlayerSkinErrorToastTitle),
+                                    err,
+                                    "barrier",
+                                    Color32::from_rgb(235, 85, 85),
+                                );
+                            }
+                        }
+                    }
+                }
+                if state.has_custom_skin && ui.button(t(lang, UiKey::PlayerResetSkinBtn)).clicked() {
+                    state.reset_custom_skin(ui.ctx());
+                    audio.play(SoundCue::Click);
+                    toasts.push(
+                        t(lang, UiKey::PlayerSkinResetToastTitle),
+                        t(lang, UiKey::PlayerSkinDefaultBadge),
+                        "compass",
+                        palette.accent_gold,
+                    );
+                }
+            });
+            ui.add_space(2.0);
+            ui.label(
+                RichText::new(if state.has_custom_skin {
+                    t(lang, UiKey::PlayerSkinCustomBadge)
+                } else {
+                    t(lang, UiKey::PlayerSkinDefaultBadge)
+                })
+                .size(9.5)
+                .color(palette.text_muted),
+            );
+        });
+}
+
+#[allow(clippy::too_many_arguments)]
+fn render_saved_seeds_history_card(
+    ui: &mut egui::Ui,
+    state: &mut AppState,
+    engine: &mut SeedMapEngine,
+    palette: McPalette,
+    atlas: &ItemAtlas,
+    audio: &AudioEngine,
+    toasts: &mut ToastQueue,
+    lang: Language,
+) {
+    egui::Frame::new()
+        .fill(palette.bg_panel)
+        .stroke(Stroke::new(1.0_f32, palette.border_subtle))
+        .corner_radius(CornerRadius::same(6))
+        .inner_margin(Margin::same(10))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.label(
+                RichText::new(t(lang, UiKey::SeedSavedHeader))
+                    .strong()
+                    .size(12.0)
+                    .color(palette.accent_gold),
+            );
+            ui.add_space(4.0);
+
+            ui.horizontal(|ui| {
+                let saved_lbl = format!(
+                    "{} ({})",
+                    t(lang, UiKey::SeedSavedTab),
+                    state.prefs.saved_seeds.len()
+                );
+                if filter_chip(
+                    ui,
+                    palette,
+                    atlas,
+                    Some("ender_eye"),
+                    &saved_lbl,
+                    state.seed_book_tab == SeedBookTab::Saved,
+                )
+                .clicked()
+                {
+                    state.seed_book_tab = SeedBookTab::Saved;
+                    audio.play(SoundCue::Click);
+                }
+
+                let hist_lbl = format!(
+                    "{} ({})",
+                    t(lang, UiKey::SeedHistoryTab),
+                    state.prefs.seed_history.len()
+                );
+                if filter_chip(
+                    ui,
+                    palette,
+                    atlas,
+                    Some("clock"),
+                    &hist_lbl,
+                    state.seed_book_tab == SeedBookTab::History,
+                )
+                .clicked()
+                {
+                    state.seed_book_tab = SeedBookTab::History;
+                    audio.play(SoundCue::Click);
+                }
+            });
+
+            ui.add_space(6.0);
+
+            match state.seed_book_tab {
+                SeedBookTab::Saved => {
+                    ui.horizontal(|ui| {
+                        let sb_w = (ui.available_width() - 34.0).max(120.0);
+                        let sb_te = ui.add_sized(
+                            [sb_w, 23.0],
+                            egui::TextEdit::singleline(&mut state.save_seed_name)
+                                .hint_text(t(lang, UiKey::SeedSaveNameHint)),
+                        );
+                        let sb_enter =
+                            sb_te.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
+                        if sb_enter
+                            || ui
+                                .add_sized(
+                                    [28.0, 23.0],
+                                    egui::Button::new(
+                                        RichText::new("+").strong().color(palette.accent_primary),
+                                    ),
+                                )
+                                .on_hover_text(t(lang, UiKey::SaveSeedBtn))
+                                .clicked()
+                        {
+                            save_active_seed_bookmark(state, engine, audio, toasts, lang);
+                        }
+                    });
+                    ui.checkbox(&mut state.save_seed_is_server, t(lang, UiKey::SeedIsServerToggle));
+                    ui.add_space(4.0);
+
+                    if state.prefs.saved_seeds.is_empty() {
+                        ui.add(
+                            egui::Label::new(
+                                RichText::new(t(lang, UiKey::SeedSavedEmptyHint))
+                                    .size(10.0)
+                                    .color(palette.text_muted),
+                            )
+                            .wrap(),
+                        );
+                    } else {
+                        let saved_list = state.prefs.saved_seeds.clone();
+                        let mut load_entry: Option<SavedSeedEntry> = None;
+                        let mut remove_id: Option<u64> = None;
+                        let mut copy_entry: Option<(String, String, bool)> = None;
+
+                        egui::ScrollArea::vertical()
+                            .id_salt("saved_seeds_sidebar_scroll")
+                            .max_height(165.0)
+                            .auto_shrink([false, true])
+                            .show(ui, |ui| {
+                                for s in saved_list {
+                                    let active = s.seed == engine.seed
+                                        && s.large_biomes == state.prefs.large_biomes
+                                        && (!s.is_server || state.is_server_seed_active);
+                                    let icon = if s.is_server { "ender_eye" } else { "filled_map" };
+                                    ui.horizontal(|ui| {
+                                        ui.spacing_mut().interact_size.y = 20.0;
+                                        ui.add(atlas.ui_image(icon, 15.0));
+                                        let mut tags = String::new();
+                                        if s.is_server {
+                                            tags.push_str(&format!(" [{}]", t(lang, UiKey::SeedServerBadge)));
+                                        }
+                                        if s.large_biomes {
+                                            tags.push_str(" [LB]");
+                                        }
+                                        let btn = egui::Button::new(
+                                            RichText::new(format!("{}{}", s.name, tags))
+                                                .size(11.0)
+                                                .strong()
+                                                .color(if active {
+                                                    palette.accent_gold
+                                                } else {
+                                                    palette.text_primary
+                                                }),
+                                        )
+                                        .frame(false)
+                                        .truncate();
+                                        if ui.add(btn).on_hover_text(&s.seed_text).clicked() {
+                                            load_entry = Some(s.clone());
+                                        }
+                                        ui.with_layout(
+                                            egui::Layout::right_to_left(egui::Align::Center),
+                                            |ui| {
+                                                if ui.small_button("x").clicked() {
+                                                    remove_id = Some(s.id);
+                                                }
+                                                if ui
+                                                    .small_button(t(lang, UiKey::SeedCopySeedBtn))
+                                                    .on_hover_text(&s.seed_text)
+                                                    .clicked()
+                                                {
+                                                    copy_entry = Some((
+                                                        s.name.clone(),
+                                                        s.seed_text.clone(),
+                                                        s.is_server,
+                                                    ));
+                                                }
+                                            },
+                                        );
+                                    });
+                                }
+                            });
+
+                        if let Some(s) = load_entry {
+                            activate_saved_seed(state, engine, &s, audio);
+                        }
+                        if let Some((name, txt, is_srv)) = copy_entry {
+                            ui.ctx().copy_text(txt.clone());
+                            audio.play(SoundCue::Toast);
+                            toasts.push(
+                                t(lang, UiKey::SeedCopiedToastTitle),
+                                format!("{}: {}", name, txt),
+                                if is_srv { "ender_eye" } else { "filled_map" },
+                                palette.accent_primary,
+                            );
+                        }
+                        if let Some(id) = remove_id {
+                            state.prefs.remove_saved_seed(id);
+                            audio.play(SoundCue::Click);
+                        }
+                    }
+                }
+                SeedBookTab::History => {
+                    if state.prefs.seed_history.is_empty() {
+                        ui.add(
+                            egui::Label::new(
+                                RichText::new(t(lang, UiKey::SeedHistoryEmptyHint))
+                                    .size(10.0)
+                                    .color(palette.text_muted),
+                            )
+                            .wrap(),
+                        );
+                    } else {
+                        ui.horizontal(|ui| {
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                if ui.small_button(t(lang, UiKey::SeedClearHistoryBtn)).clicked() {
+                                    state.prefs.clear_seed_history();
+                                    audio.play(SoundCue::Click);
+                                }
+                            });
+                        });
+                        let history_list = state.prefs.seed_history.clone();
+                        let mut load_hist: Option<SeedHistoryEntry> = None;
+                        let mut bookmark_hist: Option<SeedHistoryEntry> = None;
+                        let mut copy_hist: Option<String> = None;
+
+                        egui::ScrollArea::vertical()
+                            .id_salt("seed_history_sidebar_scroll")
+                            .max_height(175.0)
+                            .auto_shrink([false, true])
+                            .show(ui, |ui| {
+                                for h in history_list {
+                                    let active = h.seed == engine.seed
+                                        && h.large_biomes == state.prefs.large_biomes;
+                                    let already_saved = state.is_seed_saved(h.seed, h.large_biomes);
+                                    ui.horizontal(|ui| {
+                                        ui.spacing_mut().interact_size.y = 20.0;
+                                        let lb_tag = if h.large_biomes { " [LB]" } else { "" };
+                                        let lbl = format!("{}{}", h.seed_text, lb_tag);
+                                        let hover = format!(
+                                            "{} • {}",
+                                            h.source_label,
+                                            format_relative_time_ms(h.used_at_ms, lang)
+                                        );
+                                        if ui
+                                            .add(
+                                                egui::Button::new(
+                                                    RichText::new(lbl)
+                                                        .monospace()
+                                                        .size(10.5)
+                                                        .color(if active {
+                                                            palette.accent_gold
+                                                        } else {
+                                                            palette.text_primary
+                                                        }),
+                                                )
+                                                .frame(false)
+                                                .truncate(),
+                                            )
+                                            .on_hover_text(hover)
+                                            .clicked()
+                                        {
+                                            load_hist = Some(h.clone());
+                                        }
+
+                                        if ui
+                                            .small_button(if already_saved { "*" } else { "+" })
+                                            .on_hover_text(t(lang, UiKey::SaveSeedBtn))
+                                            .clicked()
+                                        {
+                                            bookmark_hist = Some(h.clone());
+                                        }
+                                        if ui
+                                            .small_button(t(lang, UiKey::SeedCopySeedBtn))
+                                            .clicked()
+                                        {
+                                            copy_hist = Some(h.seed_text.clone());
+                                        }
+                                    });
+                                }
+                            });
+
+                        if let Some(h) = load_hist {
+                            state.selected_world_folder = None;
+                            state.is_server_seed_active = false;
+                            let src = if h.source_label.is_empty() {
+                                t(lang, UiKey::SeedHistoryTab).to_string()
+                            } else {
+                                h.source_label
+                            };
+                            state.commit_seed_change(
+                                engine,
+                                &h.seed_text,
+                                h.seed,
+                                h.large_biomes,
+                                &src,
+                            );
+                            audio.play(SoundCue::Click);
+                        }
+                        if let Some(h) = bookmark_hist {
+                            let has_local = state.local_worlds.iter().any(|w| w.seed == h.seed);
+                            let default_name = if !h.source_label.is_empty()
+                                && h.source_label != "Manual"
+                                && h.source_label != "Aleatorio"
+                                && h.source_label != "Random"
+                            {
+                                h.source_label.clone()
+                            } else if has_local {
+                                format!("Local ({})", h.seed)
+                            } else {
+                                format!("Server ({})", h.seed)
+                            };
+                            let saved = state.save_seed_bookmark(
+                                &default_name,
+                                &h.seed_text,
+                                h.seed,
+                                h.large_biomes,
+                                !has_local,
+                            );
+                            audio.play(SoundCue::XpOrb);
+                            toasts.push(
+                                t(lang, UiKey::SeedSavedToastTitle),
+                                format!("{} ({})", saved.name, saved.seed_text),
+                                if saved.is_server { "ender_eye" } else { "filled_map" },
+                                palette.accent_gold,
+                            );
+                        }
+                        if let Some(txt) = copy_hist {
+                            ui.ctx().copy_text(txt.clone());
+                            audio.play(SoundCue::Toast);
+                            toasts.push(
+                                t(lang, UiKey::SeedCopiedToastTitle),
+                                txt,
+                                "filled_map",
+                                palette.accent_primary,
+                            );
+                        }
+                    }
+                }
+            }
+        });
+}
+
+fn render_local_worlds_sidebar_card(
+    ui: &mut egui::Ui,
+    state: &mut AppState,
+    engine: &mut SeedMapEngine,
+    palette: McPalette,
+    atlas: &ItemAtlas,
+    audio: &AudioEngine,
+    lang: Language,
+) {
+    egui::Frame::new()
+        .fill(palette.bg_panel)
+        .stroke(Stroke::new(1.0_f32, palette.border_subtle))
+        .corner_radius(CornerRadius::same(6))
+        .inner_margin(Margin::same(10))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.horizontal(|ui| {
+                ui.add(atlas.ui_image("grass_block", 15.0));
+                ui.label(
+                    RichText::new(t(lang, UiKey::LocalSavesHeader))
+                        .strong()
+                        .size(11.5)
+                        .color(palette.accent_gold),
+                );
+            });
+            ui.add_space(5.0);
+
+            if state.local_worlds.is_empty() {
+                ui.add(
+                    egui::Label::new(
+                        RichText::new(t(lang, UiKey::NoLocalSaves))
+                            .size(10.0)
+                            .color(palette.text_muted),
+                    )
+                    .wrap(),
+                );
+                return;
+            }
+
+            let worlds = state.local_worlds.clone();
+            let mut pick_world: Option<DetectedWorld> = None;
+
+            egui::ScrollArea::vertical()
+                .id_salt("local_worlds_sidebar_scroll")
+                .max_height(175.0)
+                .auto_shrink([false, true])
+                .show(ui, |ui| {
+                    for w in &worlds {
+                        let is_folder_match = state
+                            .selected_world_folder
+                            .as_deref()
+                            .is_some_and(|f| f == w.folder_name);
+                        let active = !state.is_server_seed_active
+                            && w.seed == engine.seed
+                            && (state.selected_world_folder.is_none() || is_folder_match);
+                        let detail = if let Some(p) = w.player_pos {
+                            format!(
+                                "Seed: {} • {} • {} X:{} Y:{} Z:{}",
+                                w.seed,
+                                w.last_played_label(lang),
+                                w.player_dimension().label(lang),
+                                p[0].round() as i32,
+                                p[1].round() as i32,
+                                p[2].round() as i32
+                            )
+                        } else {
+                            format!("Seed: {} • {}", w.seed, w.last_played_label(lang))
+                        };
+                        ui.horizontal(|ui| {
+                            ui.spacing_mut().interact_size.y = 22.0;
+                            ui.add(atlas.ui_image("grass_block", 14.0));
+                            let btn = egui::Button::new(
+                                RichText::new(&w.level_name)
+                                    .size(11.0)
+                                    .strong()
+                                    .color(if active {
+                                        palette.accent_gold
+                                    } else {
+                                        palette.text_primary
+                                    }),
+                            )
+                            .frame(false)
+                            .truncate();
+                            if ui.add(btn).on_hover_text(detail).clicked() {
+                                pick_world = Some(w.clone());
+                            }
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    ui.label(
+                                        RichText::new(w.last_played_label(lang))
+                                            .size(9.5)
+                                            .color(palette.text_muted),
+                                    );
+                                },
+                            );
+                        });
+                    }
+                });
+
+            if let Some(w) = pick_world {
+                activate_local_world(state, engine, &w, audio);
+            }
+        });
 }

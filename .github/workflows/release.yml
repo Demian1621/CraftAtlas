@@ -63,13 +63,13 @@ jobs:
           VER: ${{ needs.prepare.outputs.version }}
         run: |
           New-Item -ItemType Directory -Force -Path dist/windows | Out-Null
-          Copy-Item target/release/minecraft-companion.exe "dist/windows/minecraft-companion-v$env:VER-windows-x86_64.exe"
+          Copy-Item target/release/craft-atlas.exe "dist/windows/craft-atlas-v$env:VER-windows-x86_64.exe"
           $zipStage = "dist/windows/stage"
           New-Item -ItemType Directory -Force -Path $zipStage | Out-Null
-          Copy-Item target/release/minecraft-companion.exe "$zipStage/minecraft-companion.exe"
+          Copy-Item target/release/craft-atlas.exe "$zipStage/craft-atlas.exe"
           Copy-Item README.md "$zipStage/README.md"
           if (Test-Path README.en.md) { Copy-Item README.en.md "$zipStage/README.en.md" }
-          Compress-Archive -Path "$zipStage/*" -DestinationPath "dist/windows/minecraft-companion-v$env:VER-windows-x86_64.zip" -Force
+          Compress-Archive -Path "$zipStage/*" -DestinationPath "dist/windows/craft-atlas-v$env:VER-windows-x86_64.zip" -Force
           Remove-Item -Recurse -Force $zipStage
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -101,16 +101,16 @@ jobs:
         env:
           VER: ${{ needs.prepare.outputs.version }}
         run: |
-          APP_NAME="Minecraft Companion.app"
+          APP_NAME="CraftAtlas.app"
           mkdir -p dist/macos/dmg_stage
           APP_DIR="dist/macos/dmg_stage/$APP_NAME"
           mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
 
           lipo -create \
-            target/aarch64-apple-darwin/release/minecraft-companion \
-            target/x86_64-apple-darwin/release/minecraft-companion \
-            -output "$APP_DIR/Contents/MacOS/minecraft-companion"
-          chmod +x "$APP_DIR/Contents/MacOS/minecraft-companion"
+            target/aarch64-apple-darwin/release/craft-atlas \
+            target/x86_64-apple-darwin/release/craft-atlas \
+            -output "$APP_DIR/Contents/MacOS/craft-atlas"
+          chmod +x "$APP_DIR/Contents/MacOS/craft-atlas"
 
           cp packaging/macos/Info.plist "$APP_DIR/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VER}" "$APP_DIR/Contents/Info.plist"
@@ -131,13 +131,13 @@ jobs:
 
           ln -s /Applications dist/macos/dmg_stage/Applications
           hdiutil create \
-            -volname "Minecraft Companion v${VER}" \
+            -volname "CraftAtlas v${VER}" \
             -srcfolder dist/macos/dmg_stage \
             -ov -format UDZO \
-            "dist/macos/minecraft-companion-v${VER}-macos-universal.dmg"
+            "dist/macos/craft-atlas-v${VER}-macos-universal.dmg"
 
           ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" \
-            "dist/macos/minecraft-companion-v${VER}-macos-universal-app.zip"
+            "dist/macos/craft-atlas-v${VER}-macos-universal-app.zip"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -188,7 +188,7 @@ jobs:
           VER: ${{ needs.prepare.outputs.version }}
         run: |
           chmod +x packaging/linux/build-packages.sh
-          ./packaging/linux/build-packages.sh "$VER" target/release/minecraft-companion dist/linux
+          ./packaging/linux/build-packages.sh "$VER" target/release/craft-atlas dist/linux
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -224,14 +224,14 @@ jobs:
           if [ -f "docs/RELEASE_${TAG}.md" ]; then
             cp "docs/RELEASE_${TAG}.md" release_notes.md
           else
-            printf "## Minecraft Companion %s\n\nCross-platform technical companion for Minecraft Java Edition (Windows, macOS Universal, Linux AppImage / .deb / .rpm / .tar.gz).\n\nSee [README.md](README.md) (ES) or [README.en.md](README.en.md) (EN).\n" "$TAG" > release_notes.md
+            printf "## CraftAtlas %s\n\nCross-platform technical companion and seed map explorer for Minecraft Java Edition (Windows, macOS Universal, Linux AppImage / .deb / .rpm / .tar.gz).\n\nSee [README.md](README.md) (ES) or [README.en.md](README.en.md) (EN).\n" "$TAG" > release_notes.md
           fi
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: ${{ needs.prepare.outputs.tag }}
-          name: Minecraft Companion ${{ needs.prepare.outputs.tag }}
+          name: CraftAtlas ${{ needs.prepare.outputs.tag }}
           body_path: release_notes.md
           draft: false
           prerelease: false

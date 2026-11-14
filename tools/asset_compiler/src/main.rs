@@ -528,6 +528,11 @@ fn main() {
         .and_then(|p| p.parent())
         .map(Path::to_path_buf)
         .unwrap_or_else(|| std::env::current_dir().unwrap());
+    if std::env::args().any(|a| a == "--generate-v110-icons") {
+        generate_v110_icons(&repo);
+        pack_items_atlas(&repo);
+        return;
+    }
     if std::env::args().any(|a| a == "--pack-atlas-only") {
         pack_items_atlas(&repo);
         return;
@@ -1101,4 +1106,79 @@ fn pack_items_atlas(repo: &Path) {
         "Built assets/atlas.png ({atlas_w}x{atlas_h}) packing {} crisp 32x32 icons!",
         manifest.entries.len()
     );
+}
+
+fn generate_v110_icons(repo: &Path) {
+    let items_dir = repo.join("assets/items");
+
+    // 1. Classic 3D isometric Red Bed derived faithfully from white_bed.png
+    let white_bed_path = items_dir.join("white_bed.png");
+    if let Ok(wb) = image::open(&white_bed_path) {
+        let mut rb = wb.to_rgba8();
+        let (w, h) = rb.dimensions();
+        for y in 0..h {
+            for x in 0..w {
+                let p = *rb.get_pixel(x, y);
+                if p[3] < 20 {
+                    continue;
+                }
+                // Keep wooden headboard rails & legs untouched
+                let is_wood = (p[0] as i32 - p[2] as i32) > 14;
+                if is_wood {
+                    continue;
+                }
+                // Blanket cuff line separating white pillow + white cuff strip from red quilt
+                let seam_y = 7.4_f32 + 0.215_f32 * (x as f32);
+                if (y as f32) > seam_y {
+                    let luma = (p[0] as f32) / 245.0;
+                    let r = (218.0 * luma).clamp(28.0, 248.0) as u8;
+                    let g = (34.0 * luma).clamp(8.0, 72.0) as u8;
+                    let b = (30.0 * luma).clamp(8.0, 68.0) as u8;
+                    rb.put_pixel(x, y, Rgba([r, g, b, p[3]]));
+                }
+            }
+        }
+        rb.save(items_dir.join("red_bed.png")).unwrap();
+        println!("Generated classic isometric assets/items/red_bed.png");
+    }
+
+    // 2. Unmistakable 32x32 Warden Head icon for Ancient City map landmarks
+    const GRID: [&str; 16] = [
+        "..H..........H..",
+        ".HCH........HCH.",
+        ".CH.H.KKKK.H.HC.",
+        ".CCHCKDLLDKCHCC.",
+        "..CCKDLBBLDKCC..",
+        "..KDDDDDDDDDDK..",
+        "..KDD00DD00DDK..",
+        "..KDDDDDDDDDDK..",
+        "..KLDDCHHCDDLK..",
+        "..KD0B0BB0B0DK..",
+        "..KD00000000DK..",
+        "..KD0b0bb0b0DK..",
+        "..KDD000000DDK..",
+        "...KDDLLLLDDK...",
+        "....KKKKKKKK....",
+        "................",
+    ];
+    let mut small: RgbaImage = ImageBuffer::from_pixel(16, 16, Rgba([0, 0, 0, 0]));
+    for (y, row) in GRID.iter().enumerate() {
+        for (x, ch) in row.chars().enumerate() {
+            let color = match ch {
+                'H' => Rgba([72, 238, 232, 255]),
+                'C' => Rgba([26, 168, 182, 255]),
+                'K' => Rgba([8, 20, 28, 255]),
+                'D' => Rgba([18, 56, 68, 255]),
+                'L' => Rgba([30, 84, 98, 255]),
+                'B' => Rgba([212, 204, 174, 255]),
+                'b' => Rgba([238, 232, 208, 255]),
+                '0' => Rgba([5, 11, 16, 255]),
+                _ => Rgba([0, 0, 0, 0]),
+            };
+            small.put_pixel(x as u32, y as u32, color);
+        }
+    }
+    let upscaled = image::imageops::resize(&small, 32, 32, FilterType::Nearest);
+    upscaled.save(items_dir.join("warden_head.png")).unwrap();
+    println!("Generated assets/items/warden_head.png");
 }

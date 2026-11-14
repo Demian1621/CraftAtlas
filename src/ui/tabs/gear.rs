@@ -7,26 +7,38 @@ use crate::anim::{paint_enchant_glint, ParticleSystem, ToastQueue};
 use crate::assets::ItemAtlas;
 use crate::audio::{AudioEngine, SoundCue};
 use crate::data::anvil_calc::compute_optimal_anvil_plan;
-use crate::data::models::{Database, GearItem, Language, VersionRegistry};
+use crate::data::models::{GearItem, Language};
 use crate::i18n::{t, UiKey};
 use crate::state::{AppState, RecipeViewMode};
 use crate::ui::chrome::render_inline_tab_search;
-use crate::ui::theme::{adaptive_sidebar_width, filter_chip, paint_mc_frame, paint_mc_slot, McPalette};
+use crate::ui::theme::{adaptive_sidebar_width, filter_chip, paint_mc_frame, paint_mc_slot, McPalette, SlotStyle};
+use crate::ui::RenderContext;
 
 pub fn render(
     ui: &mut egui::Ui,
     state: &mut AppState,
-    db: &Database,
-    versions: &VersionRegistry,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
+    rcx: &RenderContext<'_>,
     particles: &mut ParticleSystem,
     toasts: &mut ToastQueue,
     dt: f32,
 ) {
+    let RenderContext {
+        db,
+        versions,
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
     state.anvil_anim.tick(dt);
     let lang = state.prefs.language;
+    crate::ui::tabs::enchant_books::render_view_switcher(
+        ui, state, db, palette, atlas, audio, lang,
+    );
+    if state.gear_books_view {
+        crate::ui::tabs::enchant_books::render(ui, state, db, palette, atlas, audio, lang);
+        return;
+    }
     let active_ver = versions.resolve_valid_id(&state.prefs.selected_version);
     let q_lower = state.search_query.trim().to_lowercase();
 
@@ -76,9 +88,7 @@ pub fn render(
                 egui::Layout::top_down(egui::Align::Min),
                 |ui| {
                     if let Some(item) = resolved_all.iter().find(|g| g.id == state.selected_gear_id) {
-                        render_gear_detail(
-                            ui, state, item, palette, atlas, audio, particles, toasts, lang,
-                        );
+                        render_gear_detail(ui, state, item, rcx, particles, toasts);
                     }
                 },
             );
@@ -89,9 +99,7 @@ pub fn render(
         render_gear_compact_picker(ui, state, &filtered, palette, atlas, audio, lang);
         ui.add_space(8.0);
         if let Some(item) = resolved_all.iter().find(|g| g.id == state.selected_gear_id) {
-            render_gear_detail(
-                ui, state, item, palette, atlas, audio, particles, toasts, lang,
-            );
+            render_gear_detail(ui, state, item, rcx, particles, toasts);
         }
     }
 }
@@ -173,10 +181,11 @@ fn render_gear_sidebar(
                                 palette,
                                 atlas,
                                 Some(&item.icon),
-                                1,
-                                selected,
-                                false,
-                                if selected { Some(time) } else { None },
+                                SlotStyle {
+                                    selected,
+                                    glint_time: if selected { Some(time) } else { None },
+                                    ..Default::default()
+                                },
                             );
                             ui.vertical(|ui| {
                                 ui.add(
@@ -251,13 +260,17 @@ fn render_gear_detail(
     ui: &mut egui::Ui,
     state: &mut AppState,
     item: &GearItem,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
+    rcx: &RenderContext<'_>,
     particles: &mut ParticleSystem,
     toasts: &mut ToastQueue,
-    lang: Language,
 ) {
+    let RenderContext {
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
+    let lang = state.prefs.language;
     state.anvil_anim.sync_gear(&item.id);
     let time = ui.ctx().input(|i| i.time);
     let plan = compute_optimal_anvil_plan(item, lang);
@@ -284,10 +297,11 @@ fn render_gear_detail(
                             palette,
                             atlas,
                             Some(&item.icon),
-                            1,
-                            true,
-                            false,
-                            Some(time),
+                            SlotStyle {
+                                selected: true,
+                                glint_time: Some(time),
+                                ..Default::default()
+                            },
                         );
 
                         ui.add_space(6.0);
@@ -368,10 +382,12 @@ fn render_gear_detail(
                         col_w,
                         palette,
                         atlas,
-                        "knowledge_book",
-                        t(lang, UiKey::WhatItDoes),
-                        item.what_it_does.get(lang),
-                        palette.accent_primary,
+                        InfoCard {
+                            icon_id: "knowledge_book",
+                            title: t(lang, UiKey::WhatItDoes),
+                            body: item.what_it_does.get(lang),
+                            accent: palette.accent_primary,
+                        },
                     );
                     ui.add_space(10.0);
                     render_info_box(
@@ -379,10 +395,12 @@ fn render_gear_detail(
                         col_w,
                         palette,
                         atlas,
-                        "compass",
-                        t(lang, UiKey::WhatItIsFor),
-                        item.what_it_is_for.get(lang),
-                        palette.accent_gold,
+                        InfoCard {
+                            icon_id: "compass",
+                            title: t(lang, UiKey::WhatItIsFor),
+                            body: item.what_it_is_for.get(lang),
+                            accent: palette.accent_gold,
+                        },
                     );
                 });
             } else {
@@ -391,10 +409,12 @@ fn render_gear_detail(
                     pane_w,
                     palette,
                     atlas,
-                    "knowledge_book",
-                    t(lang, UiKey::WhatItDoes),
-                    item.what_it_does.get(lang),
-                    palette.accent_primary,
+                    InfoCard {
+                        icon_id: "knowledge_book",
+                        title: t(lang, UiKey::WhatItDoes),
+                        body: item.what_it_does.get(lang),
+                        accent: palette.accent_primary,
+                    },
                 );
                 ui.add_space(8.0);
                 render_info_box(
@@ -402,10 +422,12 @@ fn render_gear_detail(
                     pane_w,
                     palette,
                     atlas,
-                    "compass",
-                    t(lang, UiKey::WhatItIsFor),
-                    item.what_it_is_for.get(lang),
-                    palette.accent_gold,
+                    InfoCard {
+                        icon_id: "compass",
+                        title: t(lang, UiKey::WhatItIsFor),
+                        body: item.what_it_is_for.get(lang),
+                        accent: palette.accent_gold,
+                    },
                 );
             }
 
@@ -440,10 +462,10 @@ fn render_gear_detail(
                                 palette,
                                 atlas,
                                 Some("enchanted_book"),
-                                1,
-                                false,
-                                false,
-                                Some(time),
+                                SlotStyle {
+                                    glint_time: Some(time),
+                                    ..Default::default()
+                                },
                             );
                             let full_title = if ench.level.is_empty() {
                                 ench.name.get(lang).to_string()
@@ -762,16 +784,26 @@ fn render_gear_detail(
     let _ = Rect::NOTHING;
 }
 
+struct InfoCard<'a> {
+    icon_id: &'a str,
+    title: &'a str,
+    body: &'a str,
+    accent: Color32,
+}
+
 fn render_info_box(
     ui: &mut egui::Ui,
     width: f32,
     palette: McPalette,
     atlas: &ItemAtlas,
-    icon_id: &str,
-    title: &str,
-    body: &str,
-    accent: Color32,
+    card: InfoCard<'_>,
 ) {
+    let InfoCard {
+        icon_id,
+        title,
+        body,
+        accent,
+    } = card;
     ui.allocate_ui_with_layout(
         Vec2::new(width, 0.0),
         egui::Layout::top_down(egui::Align::Min),

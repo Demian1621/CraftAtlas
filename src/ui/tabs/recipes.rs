@@ -2,28 +2,33 @@ use eframe::egui::{self, Color32, CornerRadius, Margin, Pos2, Rect, RichText, St
 use std::collections::BTreeMap;
 
 use crate::anim::ToastQueue;
-use crate::assets::ItemAtlas;
-use crate::audio::{AudioEngine, SoundCue};
-use crate::data::models::{format_stack_breakdown, Language, VersionRegistry};
+use crate::audio::SoundCue;
+use crate::data::models::{format_stack_breakdown, Language};
 use crate::data::recipes::{
-    translate_brewing_note, CraftTreeNode, CraftingStation, RecipeCategory, RecipeDatabase,
-    RecipeEntry,
+    translate_brewing_note, CraftTreeNode, CraftingStation, RecipeCategory, RecipeEntry,
 };
 use crate::i18n::{t, UiKey};
 use crate::state::{AppState, RecipeViewMode};
 use crate::ui::chrome::render_inline_tab_search;
-use crate::ui::theme::{filter_chip, paint_mc_frame, paint_mc_slot, show_mc_tooltip_at, McPalette};
+use crate::ui::theme::{
+    filter_chip, paint_mc_frame, paint_mc_slot, show_mc_tooltip_at, SlotStyle,
+};
+use crate::ui::RenderContext;
 
 pub fn render(
     ui: &mut egui::Ui,
     state: &mut AppState,
-    recipes: &RecipeDatabase,
-    versions: &VersionRegistry,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
+    rcx: &RenderContext<'_>,
     toasts: &mut ToastQueue,
 ) {
+    let RenderContext {
+        recipes,
+        versions,
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
     let lang = state.prefs.language;
     let active_ver = versions
         .resolve_valid_id(&state.prefs.selected_version)
@@ -150,9 +155,7 @@ pub fn render(
                 Vec2::new(left_w, ui.available_height()),
                 egui::Layout::top_down(egui::Align::Min),
                 |ui| {
-                    render_jei_inspector(
-                        ui, state, recipes, versions, &active_ver, palette, atlas, audio, toasts, tag_step, lang,
-                    );
+                    render_jei_inspector(ui, state, rcx, &active_ver, toasts, tag_step);
                 },
             );
             ui.add_space(10.0);
@@ -161,8 +164,13 @@ pub fn render(
                 egui::Layout::top_down(egui::Align::Min),
                 |ui| {
                     render_jei_catalog_grid(
-                        ui, state, recipes, &active_ver, &filtered_items, palette, atlas, audio, toasts, want_kb,
-                        lang,
+                        ui,
+                        state,
+                        rcx,
+                        &active_ver,
+                        &filtered_items,
+                        toasts,
+                        want_kb,
                     );
                 },
             );
@@ -172,13 +180,16 @@ pub fn render(
             .id_salt("recipes_compact_scroll")
             .auto_shrink([false, false])
             .show(ui, |ui| {
-                render_jei_inspector(
-                    ui, state, recipes, versions, &active_ver, palette, atlas, audio, toasts, tag_step, lang,
-                );
+                render_jei_inspector(ui, state, rcx, &active_ver, toasts, tag_step);
                 ui.add_space(10.0);
                 render_jei_catalog_grid(
-                    ui, state, recipes, &active_ver, &filtered_items, palette, atlas, audio, toasts, want_kb,
-                    lang,
+                    ui,
+                    state,
+                    rcx,
+                    &active_ver,
+                    &filtered_items,
+                    toasts,
+                    want_kb,
                 );
             });
     }
@@ -197,16 +208,20 @@ pub fn render(
 fn render_jei_inspector(
     ui: &mut egui::Ui,
     state: &mut AppState,
-    recipes: &RecipeDatabase,
-    versions: &VersionRegistry,
+    rcx: &RenderContext<'_>,
     active_ver: &str,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
     toasts: &mut ToastQueue,
     tag_step: usize,
-    lang: Language,
 ) {
+    let RenderContext {
+        recipes,
+        versions,
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
+    let lang = state.prefs.language;
     let target_id = state.selected_recipe_item.clone();
     let display_name = recipes.item_name(&target_id, lang);
 
@@ -232,10 +247,7 @@ fn render_jei_inspector(
                             palette,
                             atlas,
                             Some(&target_id),
-                            1,
-                            true,
-                            false,
-                            None,
+                            SlotStyle::selected(true),
                         );
                         ui.vertical(|ui| {
                             ui.add(
@@ -440,9 +452,7 @@ fn render_jei_inspector(
                                 render_station_gui(
                                     ui,
                                     &entry,
-                                    recipes,
-                                    palette,
-                                    atlas,
+                                    rcx,
                                     tag_step,
                                     lang,
                                     &mut pending_nav,
@@ -564,10 +574,11 @@ fn render_jei_inspector(
                                             palette,
                                             atlas,
                                             Some(&r.result_id),
-                                            r.result_count,
-                                            false,
-                                            sresp.hovered(),
-                                            None,
+                                            SlotStyle {
+                                                count: r.result_count,
+                                                hovered: sresp.hovered(),
+                                                ..Default::default()
+                                            },
                                         );
                                         ui.add(atlas.ui_image(r.station.icon_id(), 16.0));
                                         let b = ui.add(
@@ -629,16 +640,7 @@ fn render_jei_inspector(
                         let (tree, raw_totals) =
                             recipes.build_craft_tree(&target_id, state.craft_tree_qty);
                         let mut nav_target: Option<String> = None;
-                        render_tree_node(
-                            ui,
-                            &tree,
-                            0,
-                            recipes,
-                            palette,
-                            atlas,
-                            lang,
-                            &mut nav_target,
-                        );
+                        render_tree_node(ui, &tree, 0, rcx, lang, &mut nav_target);
 
                         if !raw_totals.is_empty() {
                             ui.add_space(8.0);
@@ -694,9 +696,7 @@ fn render_jei_inspector(
                         let mut guide_nav: Option<String> = None;
                         render_alchemy_guide(
                             ui,
-                            recipes,
-                            palette,
-                            atlas,
+                            rcx,
                             lang,
                             &state.search_query.trim().to_lowercase(),
                             &mut guide_nav,
@@ -713,13 +713,17 @@ fn render_jei_inspector(
 fn render_station_gui(
     ui: &mut egui::Ui,
     entry: &RecipeEntry,
-    recipes: &RecipeDatabase,
-    palette: McPalette,
-    atlas: &ItemAtlas,
+    rcx: &RenderContext<'_>,
     tag_step: usize,
     lang: Language,
     pending_nav: &mut Option<(String, RecipeViewMode)>,
 ) {
+    let RenderContext {
+        recipes,
+        palette,
+        atlas,
+        ..
+    } = *rcx;
     let avail_w = ui.available_width();
     let slot_sz = if avail_w < 340.0 { 36.0 } else { 44.0 };
     let gap = 4.0;
@@ -751,7 +755,15 @@ fn render_station_gui(
                             let srect = Rect::from_min_size(pos, Vec2::splat(slot_sz));
                             let token = entry.slots.get(idx).map(|s| s.as_str()).unwrap_or("");
                             handle_recipe_slot(
-                                ui, srect, token, 1, recipes, palette, atlas, tag_step, lang,
+                                ui,
+                                srect,
+                                RecipeSlotSpec {
+                                    token,
+                                    count: 1,
+                                    tag_step,
+                                },
+                                rcx,
+                                lang,
                                 pending_nav,
                             );
                         }
@@ -777,12 +789,12 @@ fn render_station_gui(
                             handle_recipe_slot(
                                 ui,
                                 out_r,
-                                &entry.result_id,
-                                entry.result_count,
-                                recipes,
-                                palette,
-                                atlas,
-                                tag_step,
+                                RecipeSlotSpec {
+                                    token: &entry.result_id,
+                                    count: entry.result_count,
+                                    tag_step,
+                                },
+                                rcx,
                                 lang,
                                 pending_nav,
                             );
@@ -800,14 +812,30 @@ fn render_station_gui(
                                 ui.allocate_exact_size(Vec2::splat(slot_sz), egui::Sense::hover());
                             let tok = entry.slots.first().map(|s| s.as_str()).unwrap_or("");
                             handle_recipe_slot(
-                                ui, in_r, tok, 1, recipes, palette, atlas, tag_step, lang,
+                                ui,
+                                in_r,
+                                RecipeSlotSpec {
+                                    token: tok,
+                                    count: 1,
+                                    tag_step,
+                                },
+                                rcx,
+                                lang,
                                 pending_nav,
                             );
                             ui.add_space(4.0);
                             let (fuel_r, _) =
                                 ui.allocate_exact_size(Vec2::splat(slot_sz), egui::Sense::hover());
                             handle_recipe_slot(
-                                ui, fuel_r, "coal", 1, recipes, palette, atlas, tag_step, lang,
+                                ui,
+                                fuel_r,
+                                RecipeSlotSpec {
+                                    token: "coal",
+                                    count: 1,
+                                    tag_step,
+                                },
+                                rcx,
+                                lang,
                                 pending_nav,
                             );
                         });
@@ -834,12 +862,12 @@ fn render_station_gui(
                         handle_recipe_slot(
                             ui,
                             out_r,
-                            &entry.result_id,
-                            entry.result_count,
-                            recipes,
-                            palette,
-                            atlas,
-                            tag_step,
+                            RecipeSlotSpec {
+                                token: &entry.result_id,
+                                count: entry.result_count,
+                                tag_step,
+                            },
+                            rcx,
                             lang,
                             pending_nav,
                         );
@@ -857,7 +885,15 @@ fn render_station_gui(
                                 ui.allocate_exact_size(Vec2::splat(slot_sz), egui::Sense::hover());
                             let tok = entry.slots.get(i).map(|s| s.as_str()).unwrap_or(fallback);
                             handle_recipe_slot(
-                                ui, sr, tok, 1, recipes, palette, atlas, tag_step, lang,
+                                ui,
+                                sr,
+                                RecipeSlotSpec {
+                                    token: tok,
+                                    count: 1,
+                                    tag_step,
+                                },
+                                rcx,
+                                lang,
                                 pending_nav,
                             );
                         }
@@ -873,12 +909,12 @@ fn render_station_gui(
                         handle_recipe_slot(
                             ui,
                             out_r,
-                            &entry.result_id,
-                            entry.result_count,
-                            recipes,
-                            palette,
-                            atlas,
-                            tag_step,
+                            RecipeSlotSpec {
+                                token: &entry.result_id,
+                                count: entry.result_count,
+                                tag_step,
+                            },
+                            rcx,
                             lang,
                             pending_nav,
                         );
@@ -894,7 +930,15 @@ fn render_station_gui(
                             let (sr, _) =
                                 ui.allocate_exact_size(Vec2::splat(slot_sz), egui::Sense::hover());
                             handle_recipe_slot(
-                                ui, sr, tok, 1, recipes, palette, atlas, tag_step, lang,
+                                ui,
+                                sr,
+                                RecipeSlotSpec {
+                                    token: tok,
+                                    count: 1,
+                                    tag_step,
+                                },
+                                rcx,
+                                lang,
                                 pending_nav,
                             );
                         }
@@ -912,12 +956,12 @@ fn render_station_gui(
                         handle_recipe_slot(
                             ui,
                             out_r,
-                            &entry.result_id,
-                            entry.result_count,
-                            recipes,
-                            palette,
-                            atlas,
-                            tag_step,
+                            RecipeSlotSpec {
+                                token: &entry.result_id,
+                                count: entry.result_count,
+                                tag_step,
+                            },
+                            rcx,
                             lang,
                             pending_nav,
                         );
@@ -933,12 +977,12 @@ fn render_station_gui(
                             handle_recipe_slot(
                                 ui,
                                 fuel_r,
-                                "blaze_powder",
-                                1,
-                                recipes,
-                                palette,
-                                atlas,
-                                tag_step,
+                                RecipeSlotSpec {
+                                    token: "blaze_powder",
+                                    count: 1,
+                                    tag_step,
+                                },
+                                rcx,
                                 lang,
                                 pending_nav,
                             );
@@ -960,7 +1004,15 @@ fn render_station_gui(
                                     egui::Sense::hover(),
                                 );
                                 handle_recipe_slot(
-                                    ui, ing_r, ing_tok, 1, recipes, palette, atlas, tag_step, lang,
+                                    ui,
+                                    ing_r,
+                                    RecipeSlotSpec {
+                                        token: ing_tok,
+                                        count: 1,
+                                        tag_step,
+                                    },
+                                    rcx,
+                                    lang,
                                     pending_nav,
                                 );
                                 ui.label(
@@ -987,8 +1039,16 @@ fn render_station_gui(
                                     egui::Sense::hover(),
                                 );
                                 handle_recipe_slot(
-                                    ui, base_r, base_tok, 1, recipes, palette, atlas, tag_step,
-                                    lang, pending_nav,
+                                    ui,
+                                    base_r,
+                                    RecipeSlotSpec {
+                                        token: base_tok,
+                                        count: 1,
+                                        tag_step,
+                                    },
+                                    rcx,
+                                    lang,
+                                    pending_nav,
                                 );
                                 ui.add_space(6.0);
                                 ui.label(
@@ -1006,12 +1066,12 @@ fn render_station_gui(
                                 handle_recipe_slot(
                                     ui,
                                     out_r,
-                                    &entry.result_id,
-                                    entry.result_count,
-                                    recipes,
-                                    palette,
-                                    atlas,
-                                    tag_step,
+                                    RecipeSlotSpec {
+                                        token: &entry.result_id,
+                                        count: entry.result_count,
+                                        tag_step,
+                                    },
+                                    rcx,
                                     lang,
                                     pending_nav,
                                 );
@@ -1023,18 +1083,31 @@ fn render_station_gui(
         });
 }
 
+struct RecipeSlotSpec<'a> {
+    token: &'a str,
+    count: u32,
+    tag_step: usize,
+}
+
 fn handle_recipe_slot(
     ui: &mut egui::Ui,
     rect: Rect,
-    token: &str,
-    count: u32,
-    recipes: &RecipeDatabase,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    tag_step: usize,
+    spec: RecipeSlotSpec<'_>,
+    rcx: &RenderContext<'_>,
     lang: Language,
     pending_nav: &mut Option<(String, RecipeViewMode)>,
 ) {
+    let RecipeSlotSpec {
+        token,
+        count,
+        tag_step,
+    } = spec;
+    let RenderContext {
+        recipes,
+        palette,
+        atlas,
+        ..
+    } = *rcx;
     let resolved = if token.is_empty() {
         String::new()
     } else {
@@ -1048,10 +1121,11 @@ fn handle_recipe_slot(
         palette,
         atlas,
         if resolved.is_empty() { None } else { Some(&resolved) },
-        count,
-        false,
-        hovered,
-        None,
+        SlotStyle {
+            count,
+            hovered,
+            ..Default::default()
+        },
     );
 
     if !resolved.is_empty() {
@@ -1079,12 +1153,16 @@ fn render_tree_node(
     ui: &mut egui::Ui,
     node: &CraftTreeNode,
     depth: usize,
-    recipes: &RecipeDatabase,
-    palette: McPalette,
-    atlas: &ItemAtlas,
+    rcx: &RenderContext<'_>,
     lang: Language,
     nav_target: &mut Option<String>,
 ) {
+    let RenderContext {
+        recipes,
+        palette,
+        atlas,
+        ..
+    } = *rcx;
     let indent = (depth as f32) * 16.0;
     ui.horizontal(|ui| {
         ui.add_space(indent);
@@ -1116,23 +1194,27 @@ fn render_tree_node(
         }
     });
     for child in &node.children {
-        render_tree_node(ui, child, depth + 1, recipes, palette, atlas, lang, nav_target);
+        render_tree_node(ui, child, depth + 1, rcx, lang, nav_target);
     }
 }
 
 fn render_jei_catalog_grid(
     ui: &mut egui::Ui,
     state: &mut AppState,
-    recipes: &RecipeDatabase,
+    rcx: &RenderContext<'_>,
     active_ver: &str,
     filtered_items: &[&str],
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
     toasts: &mut ToastQueue,
     want_kb: bool,
-    lang: Language,
 ) {
+    let RenderContext {
+        recipes,
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
+    let lang = state.prefs.language;
     // Strictly compute grid dimensions from ACTUAL available panel width so items NEVER overflow right!
     let avail_w = ui.available_width().max(200.0);
     let inner_pad = 10.0;
@@ -1242,10 +1324,12 @@ fn render_jei_catalog_grid(
                             palette,
                             atlas,
                             Some(item_id),
-                            count,
-                            selected,
-                            hovered,
-                            None,
+                            SlotStyle {
+                                count,
+                                selected,
+                                hovered,
+                                glint_time: None,
+                            },
                         );
 
                         if sresp.clicked() {
@@ -1295,15 +1379,7 @@ fn render_jei_catalog_grid(
                     .id_salt("brewing_guide_catalog_scroll")
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
-                        render_alchemy_guide(
-                            ui,
-                            recipes,
-                            palette,
-                            atlas,
-                            lang,
-                            &q_lower,
-                            &mut guide_nav,
-                        );
+                        render_alchemy_guide(ui, rcx, lang, &q_lower, &mut guide_nav);
                     });
                 if let Some(id) = guide_nav {
                     state.open_recipe_item(&id, RecipeViewMode::RecipesFor);
@@ -1340,12 +1416,16 @@ fn alchemy_slot_button(
     ui: &mut egui::Ui,
     item_id: &str,
     size: f32,
-    recipes: &RecipeDatabase,
-    palette: McPalette,
-    atlas: &ItemAtlas,
+    rcx: &RenderContext<'_>,
     lang: Language,
     pending_nav: &mut Option<String>,
 ) {
+    let RenderContext {
+        recipes,
+        palette,
+        atlas,
+        ..
+    } = *rcx;
     let (r, resp) = ui.allocate_exact_size(Vec2::splat(size), egui::Sense::click());
     paint_mc_slot(
         ui.painter(),
@@ -1353,10 +1433,7 @@ fn alchemy_slot_button(
         palette,
         atlas,
         Some(item_id),
-        1,
-        false,
-        resp.hovered(),
-        None,
+        SlotStyle::hovered(resp.hovered()),
     );
     let tip = format!(
         "{}\n{}",
@@ -1370,13 +1447,14 @@ fn alchemy_slot_button(
 
 fn render_alchemy_guide(
     ui: &mut egui::Ui,
-    recipes: &RecipeDatabase,
-    palette: McPalette,
-    atlas: &ItemAtlas,
+    rcx: &RenderContext<'_>,
     lang: Language,
     q_lower: &str,
     pending_nav: &mut Option<String>,
 ) {
+    let RenderContext {
+        recipes, palette, ..
+    } = *rcx;
     let pick_lang = |mx: &'static str, es: &'static str, en: &'static str| -> &'static str {
         match lang {
             Language::EsMx => mx,
@@ -1393,7 +1471,7 @@ fn render_alchemy_guide(
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
             ui.horizontal_wrapped(|ui| {
-                alchemy_slot_button(ui, "brewing_stand", 28.0, recipes, palette, atlas, lang, pending_nav);
+                alchemy_slot_button(ui, "brewing_stand", 28.0, rcx, lang, pending_nav);
                 ui.vertical(|ui| {
                     ui.label(
                         RichText::new(t(lang, UiKey::AlchemyGuideTitle))
@@ -1430,13 +1508,13 @@ fn render_alchemy_guide(
                     );
                     ui.add_space(4.0);
                     ui.horizontal_wrapped(|ui| {
-                        alchemy_slot_button(ui, "glass_bottle", 28.0, recipes, palette, atlas, lang, pending_nav);
+                        alchemy_slot_button(ui, "glass_bottle", 28.0, rcx, lang, pending_nav);
                         ui.label(RichText::new("+").strong().color(palette.text_muted));
-                        alchemy_slot_button(ui, "nether_wart", 28.0, recipes, palette, atlas, lang, pending_nav);
+                        alchemy_slot_button(ui, "nether_wart", 28.0, rcx, lang, pending_nav);
                         ui.label(RichText::new("===>").monospace().strong().color(palette.accent_gold));
-                        alchemy_slot_button(ui, "potion", 28.0, recipes, palette, atlas, lang, pending_nav);
+                        alchemy_slot_button(ui, "potion", 28.0, rcx, lang, pending_nav);
                         ui.add_space(8.0);
-                        alchemy_slot_button(ui, "blaze_powder", 26.0, recipes, palette, atlas, lang, pending_nav);
+                        alchemy_slot_button(ui, "blaze_powder", 26.0, rcx, lang, pending_nav);
                         ui.label(
                             RichText::new(t(lang, UiKey::BrewingFuelHint))
                                 .size(11.0)
@@ -1545,9 +1623,7 @@ fn render_alchemy_guide(
                                                 ui,
                                                 icon,
                                                 28.0,
-                                                recipes,
-                                                palette,
-                                                atlas,
+                                                rcx,
                                                 lang,
                                                 pending_nav,
                                             );
@@ -1589,9 +1665,7 @@ fn render_alchemy_guide(
                             ui,
                             "lingering_potion",
                             24.0,
-                            recipes,
-                            palette,
-                            atlas,
+                            rcx,
                             lang,
                             pending_nav,
                         );
@@ -1600,9 +1674,7 @@ fn render_alchemy_guide(
                             ui,
                             "arrow",
                             24.0,
-                            recipes,
-                            palette,
-                            atlas,
+                            rcx,
                             lang,
                             pending_nav,
                         );
@@ -1611,9 +1683,7 @@ fn render_alchemy_guide(
                             ui,
                             "tipped_arrow",
                             24.0,
-                            recipes,
-                            palette,
-                            atlas,
+                            rcx,
                             lang,
                             pending_nav,
                         );
@@ -1713,9 +1783,7 @@ fn render_alchemy_guide(
                                                 ui,
                                                 ing,
                                                 26.0,
-                                                recipes,
-                                                palette,
-                                                atlas,
+                                                rcx,
                                                 lang,
                                                 pending_nav,
                                             );

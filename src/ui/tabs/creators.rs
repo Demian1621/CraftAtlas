@@ -6,7 +6,7 @@ use crate::audio::{AudioEngine, SoundCue};
 use crate::data::models::{Language, TechCreator};
 use crate::i18n::{t, UiKey};
 use crate::state::AppState;
-use crate::ui::theme::{filter_chip, paint_mc_slot, McPalette};
+use crate::ui::theme::{filter_chip, paint_mc_slot, McPalette, SlotStyle};
 
 pub fn creator_platform_color(platform_key: &str) -> Color32 {
     if platform_key == "bilibili" {
@@ -475,10 +475,7 @@ pub fn render_recommended_creators_footer(
                                 palette,
                                 atlas,
                                 Some(&creator.icon),
-                                1,
-                                false,
-                                false,
-                                None,
+                                SlotStyle::default(),
                             );
                             ui.label(
                                 RichText::new(&creator.name)
@@ -653,10 +650,7 @@ fn render_creator_card(
                     palette,
                     atlas,
                     Some(&creator.icon),
-                    1,
-                    false,
-                    false,
-                    None,
+                    SlotStyle::default(),
                 );
                 ui.vertical(|ui| {
                     ui.horizontal_wrapped(|ui| {

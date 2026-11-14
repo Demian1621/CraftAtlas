@@ -1,15 +1,16 @@
 [package]
-name = "minecraft-companion"
-version = "1.0.2"
+name = "craft-atlas"
+version = "1.1.0"
 edition = "2021"
-description = "Cross-platform desktop companion for Minecraft Java Edition: Biomes & Seed Map explorer, Anvil God Gear optimizer, JEI Recipes & Crafting Tree, Technical Farms & Creators."
+description = "CraftAtlas — Cross-platform desktop companion for Minecraft Java Edition: Biomes & Seed Map explorer, Enchanted Books, Anvil God Gear optimizer, JEI Recipes & Crafting Tree, Technical Farms & Creators."
 license = "MIT"
-repository = "https://github.com/Demian1621/minecraft-companion"
+repository = "https://github.com/Demian1621/CraftAtlas"
 readme = "README.md"
 
 [dependencies]
 eframe = "0.31"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+rfd = "0.18"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 simple-easing = "1"

@@ -159,11 +159,24 @@ mod tests {
             "end_crystal",
             "compass",
             "knowledge_book",
+            "red_bed",
+            "warden_head",
         ] {
             assert!(meta.entries.contains_key(req), "Missing sprite: {}", req);
         }
 
         let db = load_database().expect("valid database");
+        for b in &db.enchant_books {
+            assert!(resolve_ok(&b.icon), "Missing enchant book icon: {}", b.icon);
+            for (item_icon, _, _) in b.applicable_item_icons() {
+                assert!(
+                    resolve_ok(item_icon),
+                    "Missing applicable item icon '{}' for book {}",
+                    item_icon,
+                    b.id
+                );
+            }
+        }
         for g in &db.gear {
             assert!(resolve_ok(&g.icon), "Missing gear icon: {}", g.icon);
         }

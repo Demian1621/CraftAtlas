@@ -61,7 +61,7 @@ pub fn enchant_book_multiplier(id: &str) -> u32 {
         "blast_protection" | "respiration" | "aqua_affinity" | "depth_strider" | "frost_walker"
         | "looting" | "sweeping_edge" | "fire_aspect" | "flame" | "punch" | "multishot"
         | "riptide" | "impaling" | "fortune" | "luck_of_the_sea" | "lure" | "mending"
-        | "wind_burst" | "breach" => 2,
+        | "wind_burst" | "breach" | "lunge" => 2,
 
         // Rare / Treasure Book Weight (Multiplier 4 from book)
         "thorns" | "soul_speed" | "swift_sneak" | "silk_touch" | "infinity" | "channeling"
@@ -165,7 +165,7 @@ fn solve_optimal_tree(initial_nodes: &[CombineNode], base_name: &str) -> (Vec<An
     let mut books: Vec<CombineNode> = initial_nodes[1..].to_vec();
 
     // Put highest-cost enchantments slightly deeper on target (cheaper sacrifice!)
-    books.sort_by(|a, b| b.ench_cost.cmp(&a.ench_cost));
+    books.sort_by_key(|b| std::cmp::Reverse(b.ench_cost));
 
     let mut steps = Vec::new();
     let mut step_idx = 1;

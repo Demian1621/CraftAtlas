@@ -9,17 +9,17 @@ use serde_json::Value;
 use std::os::windows::process::CommandExt;
 
 pub const CURRENT_VERSION: &str = env!("CARGO_PKG_VERSION");
-pub const GITHUB_REPO: &str = "Demian1621/minecraft-companion";
-pub const RELEASES_PAGE_URL: &str = "https://github.com/Demian1621/minecraft-companion/releases";
+pub const GITHUB_REPO: &str = "Demian1621/CraftAtlas";
+pub const RELEASES_PAGE_URL: &str = "https://github.com/Demian1621/CraftAtlas/releases";
 pub const FEEDBACK_URL: &str =
-    "https://github.com/Demian1621/minecraft-companion/issues/new/choose";
+    "https://github.com/Demian1621/CraftAtlas/issues/new/choose";
 pub const KOFI_URL: &str = "https://ko-fi.com/titusdb";
 const RELEASES_ALLOWED_PREFIX: &str =
-    "https://github.com/Demian1621/minecraft-companion/releases/";
+    "https://github.com/Demian1621/CraftAtlas/releases/";
 const ASSET_DOWNLOAD_PREFIX: &str =
-    "https://github.com/Demian1621/minecraft-companion/releases/download/";
+    "https://github.com/Demian1621/CraftAtlas/releases/download/";
 const RELEASES_LATEST_API: &str =
-    "https://api.github.com/repos/Demian1621/minecraft-companion/releases/latest";
+    "https://api.github.com/repos/Demian1621/CraftAtlas/releases/latest";
 const MAX_RELEASE_JSON_BYTES: &str = "262144";
 
 #[cfg(target_os = "windows")]
@@ -160,7 +160,7 @@ fn fetch_latest_release_sync() -> UpdateStatus {
         "-H",
         "Accept: application/vnd.github+json",
         "-H",
-        &format!("User-Agent: minecraft-companion/{}", CURRENT_VERSION),
+        &format!("User-Agent: craft-atlas/{}", CURRENT_VERSION),
         RELEASES_LATEST_API,
     ]);
     #[cfg(target_os = "windows")]
@@ -354,14 +354,14 @@ mod tests {
     fn parses_valid_github_release_payload_and_sha256_assets() {
         let payload = r###"{
             "tag_name": "v1.1.0",
-            "html_url": "https://github.com/Demian1621/minecraft-companion/releases/tag/v1.1.0",
+            "html_url": "https://github.com/Demian1621/CraftAtlas/releases/tag/v1.1.0",
             "draft": false,
             "prerelease": false,
             "body": "## Novedades\n- Mejora\u202E spoofing \u0007\n- Soporte Linux",
             "assets": [
                 {
-                    "name": "minecraft-companion-v1.1.0-windows-x86_64.exe",
-                    "browser_download_url": "https://github.com/Demian1621/minecraft-companion/releases/download/v1.1.0/minecraft-companion-v1.1.0-windows-x86_64.exe",
+                    "name": "craft-atlas-v1.1.0-windows-x86_64.exe",
+                    "browser_download_url": "https://github.com/Demian1621/CraftAtlas/releases/download/v1.1.0/craft-atlas-v1.1.0-windows-x86_64.exe",
                     "digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
                 },
                 {

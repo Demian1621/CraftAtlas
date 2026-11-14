@@ -4,6 +4,10 @@ use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
+
+use crate::data::models::Language;
+use crate::data::seed_engine::Dimension;
 
 /// A detected local Minecraft Java Edition singleplayer world save.
 #[derive(Debug, Clone)]
@@ -16,6 +20,70 @@ pub struct DetectedWorld {
     pub player_pos: Option<[f64; 3]>,
     pub player_dim: Option<String>,
     pub last_played_ms: i64,
+}
+
+impl DetectedWorld {
+    /// Converts `Player.Dimension` from `level.dat` into the Seed Map's `Dimension`.
+    pub fn player_dimension(&self) -> Dimension {
+        match self.player_dim.as_deref() {
+            Some("minecraft:the_nether") | Some("-1") => Dimension::Nether,
+            Some("minecraft:the_end") | Some("1") => Dimension::TheEnd,
+            _ => Dimension::Overworld,
+        }
+    }
+
+    /// Formats `LastPlayed` cleanly as a relative elapsed time or fallback timestamp.
+    pub fn last_played_label(&self, lang: Language) -> String {
+        format_relative_time_ms(self.last_played_ms, lang)
+    }
+}
+
+/// Returns the current Unix epoch timestamp in milliseconds.
+pub fn now_unix_ms() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0)
+}
+
+/// Formats a Unix millisecond timestamp as a localized relative age string.
+pub fn format_relative_time_ms(ts_ms: i64, lang: Language) -> String {
+    if ts_ms <= 0 {
+        return match lang {
+            Language::EnUs => "Unknown time".to_string(),
+            _ => "Fecha desconocida".to_string(),
+        };
+    }
+    let now_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(ts_ms);
+    let diff_secs = ((now_ms - ts_ms).max(0)) / 1000;
+    if diff_secs < 90 {
+        return match lang {
+            Language::EnUs => "Just now".to_string(),
+            _ => "Hace instantes".to_string(),
+        };
+    }
+    let mins = diff_secs / 60;
+    if mins < 60 {
+        return match lang {
+            Language::EnUs => format!("{} min ago", mins),
+            _ => format!("Hace {} min", mins),
+        };
+    }
+    let hours = mins / 60;
+    if hours < 48 {
+        return match lang {
+            Language::EnUs => format!("{} h ago", hours),
+            _ => format!("Hace {} h", hours),
+        };
+    }
+    let days = hours / 24;
+    match lang {
+        Language::EnUs => format!("{} d ago", days),
+        _ => format!("Hace {} d", days),
+    }
 }
 
 /// A local schematic file found in `.minecraft/schematics` or `.minecraft/config/litematica`.
@@ -222,7 +290,7 @@ pub fn scan_local_worlds() -> Vec<DetectedWorld> {
         }
     }
 
-    out.sort_by(|a, b| b.last_played_ms.cmp(&a.last_played_ms));
+    out.sort_by_key(|w| std::cmp::Reverse(w.last_played_ms));
     out
 }
 
@@ -303,7 +371,7 @@ pub fn find_minecraft_sound_paths() -> HashMap<String, PathBuf> {
             }
         })
         .collect();
-    index_files.sort_by(|a, b| b.0.cmp(&a.0));
+    index_files.sort_by_key(|item| std::cmp::Reverse(item.0));
 
     let wanted = [
         ("click", "minecraft/sounds/random/click.ogg"),
@@ -361,6 +429,13 @@ mod tests {
         data: FakeData,
     }
     #[derive(Serialize)]
+    struct FakePlayer {
+        #[serde(rename = "Pos")]
+        pos: Vec<f64>,
+        #[serde(rename = "Dimension")]
+        dimension: String,
+    }
+    #[derive(Serialize)]
     struct FakeData {
         #[serde(rename = "LevelName")]
         level_name: String,
@@ -370,6 +445,8 @@ mod tests {
         game_type: i32,
         #[serde(rename = "LastPlayed")]
         last_played: i64,
+        #[serde(rename = "Player")]
+        player: Option<FakePlayer>,
     }
     #[derive(Serialize)]
     struct FakeWorldGen {
@@ -384,6 +461,10 @@ mod tests {
                 world_gen: FakeWorldGen { seed: -42198374129834i64 },
                 game_type: 0,
                 last_played: 1_700_000_000_000,
+                player: Some(FakePlayer {
+                    pos: vec![120.5, 64.0, -350.25],
+                    dimension: "minecraft:the_nether".to_string(),
+                }),
             },
         };
         let raw_nbt = fastnbt::to_bytes(&root).expect("serialize synthetic nbt");
@@ -394,6 +475,8 @@ mod tests {
         let parsed = parse_level_dat_bytes(&gz_bytes, "WorldFolder").expect("parse level.dat");
         assert_eq!(parsed.level_name, "Technical 26.3");
         assert_eq!(parsed.seed, -42198374129834i64);
+        assert_eq!(parsed.player_pos, Some([120.5, 64.0, -350.25]));
+        assert_eq!(parsed.player_dimension(), Dimension::Nether);
     }
 
     #[test]

@@ -218,6 +218,42 @@ pub fn paint_mc_frame(
     );
 }
 
+/// Visual presentation options for [`paint_mc_slot`].
+#[derive(Clone, Copy)]
+pub struct SlotStyle {
+    pub count: u32,
+    pub selected: bool,
+    pub hovered: bool,
+    pub glint_time: Option<f64>,
+}
+
+impl Default for SlotStyle {
+    fn default() -> Self {
+        Self {
+            count: 1,
+            selected: false,
+            hovered: false,
+            glint_time: None,
+        }
+    }
+}
+
+impl SlotStyle {
+    pub fn hovered(hovered: bool) -> Self {
+        Self {
+            hovered,
+            ..Default::default()
+        }
+    }
+
+    pub fn selected(selected: bool) -> Self {
+        Self {
+            selected,
+            ..Default::default()
+        }
+    }
+}
+
 /// Renders an authentic 3D beveled Minecraft inventory slot with optional hover pickup glow,
 /// item count stack badge, and diagonal Enchantment Glint animation.
 pub fn paint_mc_slot(
@@ -226,11 +262,14 @@ pub fn paint_mc_slot(
     palette: McPalette,
     atlas: &ItemAtlas,
     item_id: Option<&str>,
-    count: u32,
-    selected: bool,
-    hovered: bool,
-    glint_time: Option<f64>,
+    style: SlotStyle,
 ) {
+    let SlotStyle {
+        count,
+        selected,
+        hovered,
+        glint_time,
+    } = style;
     // Inset bevel fill
     painter.rect_filled(rect, 2.0, palette.slot_bg);
 

@@ -8,7 +8,7 @@ use crate::data::worlds_nbt::{
 
 use super::prefs::{UserPrefs, Waypoint};
 
-/// Primary top-level modules of Minecraft Companion.
+/// Primary top-level modules of CraftAtlas.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AppTab {
     Gear,
@@ -91,6 +91,21 @@ pub struct RecipeHistoryEntry {
     pub variant_idx: usize,
 }
 
+/// Active sub-tab inside the Seed Map Saved Seeds & History sidebar card.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SeedBookTab {
+    Saved,
+    History,
+}
+
+/// Active section inside the Seed Map Explorer left sidebar.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SeedSidebarTab {
+    Waypoints,
+    Layers,
+    Worlds,
+}
+
 /// Complete mutable UI & interactive session state.
 pub struct AppState {
     pub prefs: UserPrefs,
@@ -103,9 +118,12 @@ pub struct AppState {
     pub focus_search_next_frame: bool,
     pub hovered_tooltip_id: Option<String>,
 
-    // Gear Tab
+    // Gear Tab & Enchanted Books Encyclopedia
     pub gear_filter: String,
     pub selected_gear_id: String,
+    pub gear_books_view: bool,
+    pub book_filter: String,
+    pub selected_book_id: String,
     pub anvil_anim: AnvilAnimState,
 
     // Recipes JEI + EMI Tab
@@ -140,6 +158,15 @@ pub struct AppState {
     pub new_waypoint_name: String,
     pub new_waypoint_icon: String,
     pub local_worlds: Vec<DetectedWorld>,
+    pub selected_world_folder: Option<String>,
+    pub save_seed_open: bool,
+    pub save_seed_name: String,
+    pub save_seed_is_server: bool,
+    pub seed_sidebar_tab: SeedSidebarTab,
+    pub seed_book_tab: SeedBookTab,
+    pub is_server_seed_active: bool,
+    pub player_face_tex: Option<eframe::egui::TextureHandle>,
+    pub has_custom_skin: bool,
     pub local_schematics: Vec<DetectedSchematic>,
     pub last_cursor_world: Option<(i32, i32)>,
 
@@ -223,6 +250,9 @@ impl AppState {
 
             gear_filter: "all".to_string(),
             selected_gear_id: initial_gear_id.clone(),
+            gear_books_view: false,
+            book_filter: "all".to_string(),
+            selected_book_id: "protection".to_string(),
             anvil_anim: AnvilAnimState {
                 gear_id: initial_gear_id,
                 ..Default::default()
@@ -262,6 +292,15 @@ impl AppState {
             new_waypoint_name: String::new(),
             new_waypoint_icon: "beacon".to_string(),
             local_worlds: scan_local_worlds(),
+            selected_world_folder: None,
+            save_seed_open: false,
+            save_seed_name: String::new(),
+            save_seed_is_server: true,
+            seed_sidebar_tab: SeedSidebarTab::Waypoints,
+            seed_book_tab: SeedBookTab::Saved,
+            is_server_seed_active: false,
+            player_face_tex: None,
+            has_custom_skin: false,
             local_schematics: scan_local_schematics(),
             last_cursor_world: None,
 
@@ -427,5 +466,166 @@ impl AppState {
     pub fn remove_waypoint(&mut self, id: u64) {
         self.prefs.waypoints.retain(|w| w.id != id);
         self.prefs.save();
+    }
+
+    /// Resolves the best matching local world save for the currently active seed.
+    /// Returns `None` while explicitly browsing a saved multiplayer server seed so
+    /// unrelated local singleplayer coordinates are never shown as server coords.
+    pub fn active_world_for_seed(&self, seed: i64) -> Option<&DetectedWorld> {
+        if self.is_server_seed_active {
+            return None;
+        }
+        if let Some(ref folder) = self.selected_world_folder {
+            if let Some(found) = self
+                .local_worlds
+                .iter()
+                .find(|w| w.folder_name == *folder && w.seed == seed)
+            {
+                return Some(found);
+            }
+        }
+        self.local_worlds.iter().find(|w| w.seed == seed)
+    }
+
+    /// Applies a seed to the map engine, persists `last_seed` / `large_biomes`, and logs history.
+    pub fn commit_seed_change(
+        &mut self,
+        engine: &mut crate::data::seed_engine::SeedMapEngine,
+        seed_text: &str,
+        seed: i64,
+        large_biomes: bool,
+        source_label: &str,
+    ) {
+        let now_ms = crate::data::worlds_nbt::now_unix_ms();
+        // Preserve the currently displayed seed before switching away on first use.
+        if self.prefs.seed_history.is_empty()
+            && (engine.seed != seed || self.prefs.large_biomes != large_biomes)
+        {
+            let prev_txt = if self.seed_input.trim().is_empty() {
+                engine.seed.to_string()
+            } else {
+                self.seed_input.trim().to_string()
+            };
+            self.prefs.record_seed_history_in_memory(
+                &prev_txt,
+                engine.seed,
+                self.prefs.large_biomes,
+                "Inicial",
+                now_ms.saturating_sub(1000),
+            );
+        }
+        let trimmed = seed_text.trim();
+        let display_text = if trimmed.is_empty() {
+            seed.to_string()
+        } else {
+            trimmed.to_string()
+        };
+        self.seed_input = display_text.clone();
+        self.prefs.last_seed = display_text.clone();
+        self.prefs.large_biomes = large_biomes;
+        engine.set_seed(seed, large_biomes);
+        self.prefs.record_seed_history(
+            &display_text,
+            seed,
+            large_biomes,
+            source_label,
+            now_ms,
+        );
+    }
+
+    pub fn save_seed_bookmark(
+        &mut self,
+        raw_name: &str,
+        seed_text: &str,
+        seed: i64,
+        large_biomes: bool,
+        is_server: bool,
+    ) -> crate::state::prefs::SavedSeedEntry {
+        self.prefs.upsert_saved_seed(
+            raw_name,
+            seed_text,
+            seed,
+            large_biomes,
+            is_server,
+            crate::data::worlds_nbt::now_unix_ms(),
+        )
+    }
+
+    pub fn is_seed_saved(&self, seed: i64, large_biomes: bool) -> bool {
+        self.prefs
+            .saved_seeds
+            .iter()
+            .any(|s| s.seed == seed && s.large_biomes == large_biomes)
+    }
+
+    /// Re-scans `.minecraft/saves` to refresh saved player positions and worlds.
+    pub fn reload_local_worlds(&mut self) -> usize {
+        self.local_worlds = scan_local_worlds();
+        self.local_worlds.len()
+    }
+
+    /// Lazily loads either the persisted custom skin face or the embedded classic Steve face.
+    pub fn ensure_player_face_tex(&mut self, ctx: &eframe::egui::Context) -> &eframe::egui::TextureHandle {
+        if self.player_face_tex.is_none() {
+            let (img, is_custom) = match crate::assets::skin::load_persisted_custom_skin_face() {
+                Some(custom_img) => (custom_img, true),
+                None => (crate::assets::skin::default_steve_face_image(), false),
+            };
+            self.has_custom_skin = is_custom;
+            let tex = ctx.load_texture(
+                "player_map_skin_face",
+                img,
+                eframe::egui::TextureOptions::NEAREST,
+            );
+            self.player_face_tex = Some(tex);
+        }
+        self.player_face_tex.as_ref().expect("player_face_tex initialized above")
+    }
+
+    pub fn apply_custom_skin_file(
+        &mut self,
+        ctx: &eframe::egui::Context,
+        path: &std::path::Path,
+    ) -> Result<(), String> {
+        let (rgba, img) = crate::assets::skin::load_skin_face_from_png_file(path)?;
+        crate::assets::skin::save_custom_skin_face_rgba(&rgba)?;
+        let tex = ctx.load_texture(
+            "player_map_skin_face",
+            img,
+            eframe::egui::TextureOptions::NEAREST,
+        );
+        self.player_face_tex = Some(tex);
+        self.has_custom_skin = true;
+        Ok(())
+    }
+
+    pub fn apply_custom_skin_bytes(
+        &mut self,
+        ctx: &eframe::egui::Context,
+        bytes: &[u8],
+    ) -> Result<(), String> {
+        let rgba = crate::assets::skin::extract_player_face_rgba_from_png_bytes(bytes)?;
+        let img = crate::assets::skin::face_rgba_to_color_image(&rgba)?;
+        crate::assets::skin::save_custom_skin_face_rgba(&rgba)?;
+        let tex = ctx.load_texture(
+            "player_map_skin_face",
+            img,
+            eframe::egui::TextureOptions::NEAREST,
+        );
+        self.player_face_tex = Some(tex);
+        self.has_custom_skin = true;
+        Ok(())
+    }
+
+    pub fn reset_custom_skin(&mut self, ctx: &eframe::egui::Context) {
+        crate::assets::skin::clear_persisted_custom_skin_face();
+        let img = crate::assets::skin::default_steve_face_image();
+        let tex = ctx.load_texture(
+            "player_map_skin_face",
+            img,
+            eframe::egui::TextureOptions::NEAREST,
+        );
+        self.player_face_tex = Some(tex);
+        self.has_custom_skin = false;
     }
 }

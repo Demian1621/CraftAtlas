@@ -30,10 +30,11 @@ use ui::chrome::{
 };
 use ui::tabs;
 use ui::theme::McPalette;
+use ui::RenderContext;
 
-const TOTEM_ICON_PNG: &[u8] = include_bytes!("../assets/items/totem_of_undying.png");
+const APP_ICON_PNG: &[u8] = include_bytes!("../assets/custom_app_icon.png");
 
-struct MinecraftCompanionApp {
+struct CraftAtlasApp {
     versions: VersionRegistry,
     db: Database,
     recipes: RecipeDatabase,
@@ -47,7 +48,7 @@ struct MinecraftCompanionApp {
     anim_time: f64,
 }
 
-impl MinecraftCompanionApp {
+impl CraftAtlasApp {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         install_fonts(&cc.egui_ctx);
         let atlas = ItemAtlas::load(&cc.egui_ctx);
@@ -97,7 +98,7 @@ impl MinecraftCompanionApp {
     }
 }
 
-impl eframe::App for MinecraftCompanionApp {
+impl eframe::App for CraftAtlasApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let active = ui::chrome::is_window_active(ctx);
         let raw_dt = ctx.input(|i| i.unstable_dt.clamp(0.001, 0.08));
@@ -143,6 +144,15 @@ impl eframe::App for MinecraftCompanionApp {
             ctx.request_repaint_after(Duration::from_millis(33));
         }
 
+        let rcx = RenderContext {
+            versions: &self.versions,
+            db: &self.db,
+            recipes: &self.recipes,
+            palette,
+            atlas: &self.atlas,
+            audio: &self.audio,
+        };
+
         render_top_chrome(
             ctx,
             &mut self.state,
@@ -152,16 +162,7 @@ impl eframe::App for MinecraftCompanionApp {
             &self.audio,
         );
 
-        render_favorites_rail(
-            ctx,
-            &mut self.state,
-            &self.versions,
-            &self.db,
-            &self.recipes,
-            palette,
-            &self.atlas,
-            &self.audio,
-        );
+        render_favorites_rail(ctx, &mut self.state, &rcx);
 
         let anim_offset = (1.0 - cubic_out(self.state.tab_anim_t)) * 10.0;
 
@@ -181,55 +182,28 @@ impl eframe::App for MinecraftCompanionApp {
                     AppTab::Gear => tabs::gear::render(
                         ui,
                         &mut self.state,
-                        &self.db,
-                        &self.versions,
-                        palette,
-                        &self.atlas,
-                        &self.audio,
+                        &rcx,
                         &mut self.particles,
                         &mut self.toasts,
                         dt,
                     ),
-                    AppTab::Recipes => tabs::recipes::render(
-                        ui,
-                        &mut self.state,
-                        &self.recipes,
-                        &self.versions,
-                        palette,
-                        &self.atlas,
-                        &self.audio,
-                        &mut self.toasts,
-                    ),
+                    AppTab::Recipes => {
+                        tabs::recipes::render(ui, &mut self.state, &rcx, &mut self.toasts)
+                    }
                     AppTab::SeedMap => tabs::seed_map::render(
                         ui,
                         &mut self.state,
                         &mut self.seed_engine,
-                        palette,
-                        &self.atlas,
-                        &self.audio,
+                        &rcx,
                         &mut self.toasts,
                         dt,
                     ),
-                    AppTab::Farms => tabs::farms::render(
-                        ui,
-                        &mut self.state,
-                        &self.db,
-                        &self.versions,
-                        palette,
-                        &self.atlas,
-                        &self.audio,
-                        &mut self.toasts,
-                    ),
-                    AppTab::Dupes => tabs::dupes::render(
-                        ui,
-                        &mut self.state,
-                        &self.db,
-                        &self.versions,
-                        palette,
-                        &self.atlas,
-                        &self.audio,
-                        &mut self.toasts,
-                    ),
+                    AppTab::Farms => {
+                        tabs::farms::render(ui, &mut self.state, &rcx, &mut self.toasts)
+                    }
+                    AppTab::Dupes => {
+                        tabs::dupes::render(ui, &mut self.state, &rcx, &mut self.toasts)
+                    }
                     AppTab::ProTips => tabs::pro_tips::render(
                         ui,
                         &mut self.state,
@@ -242,24 +216,15 @@ impl eframe::App for MinecraftCompanionApp {
                 }
             });
 
-        render_search_palette(
-            ctx,
-            &mut self.state,
-            &self.versions,
-            &self.db,
-            &self.recipes,
-            palette,
-            &self.atlas,
-            &self.audio,
-        );
+        render_search_palette(ctx, &mut self.state, &rcx);
         self.particles.update_and_paint(ctx, dt);
         self.toasts.update_and_paint(ctx, &self.atlas, dt);
         render_borderless_window_frame(ctx, palette);
     }
 }
 
-fn load_totem_icon() -> Option<Arc<egui::IconData>> {
-    let img = image::load_from_memory_with_format(TOTEM_ICON_PNG, image::ImageFormat::Png)
+fn load_app_icon() -> Option<Arc<egui::IconData>> {
+    let img = image::load_from_memory_with_format(APP_ICON_PNG, image::ImageFormat::Png)
         .ok()?
         .to_rgba8();
     Some(Arc::new(egui::IconData {
@@ -271,12 +236,12 @@ fn load_totem_icon() -> Option<Arc<egui::IconData>> {
 
 fn main() -> eframe::Result<()> {
     let mut viewport = egui::ViewportBuilder::default()
-        .with_title("Minecraft Companion")
-        .with_app_id("minecraft-companion")
+        .with_title("CraftAtlas")
+        .with_app_id("craft-atlas")
         .with_decorations(false)
         .with_inner_size([1320.0, 840.0])
         .with_min_inner_size([760.0, 520.0]);
-    if let Some(icon) = load_totem_icon() {
+    if let Some(icon) = load_app_icon() {
         viewport = viewport.with_icon(icon);
     }
 
@@ -286,8 +251,21 @@ fn main() -> eframe::Result<()> {
     };
 
     eframe::run_native(
-        "Minecraft Companion",
+        "CraftAtlas",
         options,
-        Box::new(|cc| Ok(Box::new(MinecraftCompanionApp::new(cc)))),
+        Box::new(|cc| Ok(Box::new(CraftAtlasApp::new(cc)))),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::load_app_icon;
+
+    #[test]
+    fn app_window_icon_decodes_at_256x256_rgba() {
+        let icon = load_app_icon().expect("embedded custom_app_icon.png should decode");
+        assert_eq!(icon.width, 256);
+        assert_eq!(icon.height, 256);
+        assert_eq!(icon.rgba.len(), 256 * 256 * 4);
+    }
 }

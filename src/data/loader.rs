@@ -2,6 +2,7 @@ use super::models::{Database, VersionRegistry};
 use super::recipes::RecipeDatabase;
 
 static DATABASE_BYTES: &[u8] = include_bytes!("../../data/database.json");
+static ENCHANT_BOOKS_BYTES: &[u8] = include_bytes!("../../data/enchant_books.json");
 static RECIPES_BYTES: &[u8] = include_bytes!("../../data/recipes.json");
 static LANG_ITEMS_BYTES: &[u8] = include_bytes!("../../data/lang_items.json");
 static VERSIONS_BYTES: &[u8] = include_bytes!("../../data/versions.json");
@@ -23,7 +24,12 @@ pub fn load_versions() -> Result<VersionRegistry, String> {
 /// Loads the bundled trilingual 26.3 companion database cleanly without filesystem fragility.
 pub fn load_database() -> Result<Database, String> {
     let slice = strip_utf8_bom(DATABASE_BYTES);
-    serde_json::from_slice(slice).map_err(|e| format!("Failed to parse database.json: {}", e))
+    let mut db: Database =
+        serde_json::from_slice(slice).map_err(|e| format!("Failed to parse database.json: {}", e))?;
+    let books_slice = strip_utf8_bom(ENCHANT_BOOKS_BYTES);
+    db.enchant_books = serde_json::from_slice(books_slice)
+        .map_err(|e| format!("Failed to parse enchant_books.json: {}", e))?;
+    Ok(db)
 }
 
 /// Loads the bundled 26.3 JEI recipe catalog and trilingual Mojang item names.

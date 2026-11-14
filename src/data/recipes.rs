@@ -450,7 +450,7 @@ impl RecipeDatabase {
 
         let rec = &self.recipes[rec_idx];
         let out_count = rec.result_count.max(1);
-        let batches = (needed + out_count - 1) / out_count;
+        let batches = needed.div_ceil(out_count);
 
         let mut per_batch_inputs: BTreeMap<String, u32> = BTreeMap::new();
         for slot in &rec.slots {
@@ -503,13 +503,12 @@ impl RecipeDatabase {
         if matches!(item_id, "potion" | "splash_potion" | "lingering_potion" | "tipped_arrow") {
             for &idx in self.recipes_for(item_id) {
                 let note = &self.recipes[idx].note;
-                if !note.is_empty() {
-                    if strip_accents_lower(note).contains(&q)
+                if !note.is_empty()
+                    && (strip_accents_lower(note).contains(&q)
                         || strip_accents_lower(&translate_brewing_note(note, Language::EsMx))
-                            .contains(&q)
-                    {
-                        return true;
-                    }
+                            .contains(&q))
+                {
+                    return true;
                 }
             }
         }

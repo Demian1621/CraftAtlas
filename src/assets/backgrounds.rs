@@ -33,9 +33,9 @@ impl ThemeBackgrounds {
         palette: McPalette,
         time: f64,
     ) {
-        if !self.cache.contains_key(&theme) {
+        if let std::collections::hash_map::Entry::Vacant(slot) = self.cache.entry(theme) {
             if let Some(loaded) = load_theme_backdrop(ctx, theme) {
-                self.cache.insert(theme, loaded);
+                slot.insert(loaded);
             }
         }
 

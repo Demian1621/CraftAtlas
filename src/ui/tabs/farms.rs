@@ -5,26 +5,28 @@ use std::collections::BTreeMap;
 use crate::anim::ToastQueue;
 use crate::assets::ItemAtlas;
 use crate::audio::{AudioEngine, SoundCue};
-use crate::data::models::{
-    format_stack_breakdown, parse_material_qty, Database, FarmItem, Language, TechCreator,
-    VersionRegistry,
-};
+use crate::data::models::{format_stack_breakdown, parse_material_qty, FarmItem, Language};
 use crate::i18n::{t, UiKey};
 use crate::state::{AppState, RecipeViewMode};
 use crate::ui::chrome::render_inline_tab_search;
 use crate::ui::tabs::creators;
-use crate::ui::theme::{adaptive_sidebar_width, filter_chip, paint_mc_slot, McPalette};
+use crate::ui::theme::{adaptive_sidebar_width, filter_chip, paint_mc_slot, McPalette, SlotStyle};
+use crate::ui::RenderContext;
 
 pub fn render(
     ui: &mut egui::Ui,
     state: &mut AppState,
-    db: &Database,
-    versions: &VersionRegistry,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
+    rcx: &RenderContext<'_>,
     toasts: &mut ToastQueue,
 ) {
+    let RenderContext {
+        db,
+        versions,
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
     let lang = state.prefs.language;
     let active_ver = versions
         .resolve_valid_id(&state.prefs.selected_version)
@@ -157,18 +159,7 @@ pub fn render(
                 egui::Layout::top_down(egui::Align::Min),
                 |ui| {
                     if let Some(farm) = resolved_all.iter().find(|f| f.id == state.selected_farm_id) {
-                        render_farm_detail(
-                            ui,
-                            state,
-                            farm,
-                            &db.creators,
-                            &active_ver,
-                            palette,
-                            atlas,
-                            audio,
-                            toasts,
-                            lang,
-                        );
+                        render_farm_detail(ui, state, farm, rcx, &active_ver, toasts);
                     }
                 },
             );
@@ -194,18 +185,7 @@ pub fn render(
             });
         ui.add_space(8.0);
         if let Some(farm) = resolved_all.iter().find(|f| f.id == state.selected_farm_id) {
-            render_farm_detail(
-                ui,
-                state,
-                farm,
-                &db.creators,
-                &active_ver,
-                palette,
-                atlas,
-                audio,
-                toasts,
-                lang,
-            );
+            render_farm_detail(ui, state, farm, rcx, &active_ver, toasts);
         }
     }
 }
@@ -259,10 +239,7 @@ fn render_farm_sidebar(
                                 palette,
                                 atlas,
                                 Some(icon),
-                                1,
-                                selected,
-                                false,
-                                None,
+                                SlotStyle::selected(selected),
                             );
                             ui.vertical(|ui| {
                                 ui.add(
@@ -302,19 +279,23 @@ fn render_farm_sidebar(
         });
 }
 
-#[allow(clippy::too_many_arguments)]
 fn render_farm_detail(
     ui: &mut egui::Ui,
     state: &mut AppState,
     farm: &FarmItem,
-    creators: &[TechCreator],
+    rcx: &RenderContext<'_>,
     active_ver: &str,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
     toasts: &mut ToastQueue,
-    lang: Language,
 ) {
+    let RenderContext {
+        db,
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
+    let creators = &db.creators;
+    let lang = state.prefs.language;
     let icon = farm.resolved_icon();
 
     egui::ScrollArea::vertical()
@@ -467,10 +448,7 @@ fn render_farm_detail(
                                 palette,
                                 atlas,
                                 Some(&mat.icon),
-                                1,
-                                false,
-                                sresp.hovered(),
-                                None,
+                                SlotStyle::hovered(sresp.hovered()),
                             );
                             let sresp = sresp.on_hover_text(t(lang, UiKey::MaterialRowTooltip));
                             if sresp.clicked() {

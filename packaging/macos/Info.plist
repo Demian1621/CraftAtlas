@@ -3,19 +3,19 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>Minecraft Companion</string>
+    <string>CraftAtlas</string>
     <key>CFBundleDisplayName</key>
-    <string>Minecraft Companion</string>
+    <string>CraftAtlas</string>
     <key>CFBundleIdentifier</key>
-    <string>com.demian1621.minecraft-companion</string>
+    <string>com.demian1621.craft-atlas</string>
     <key>CFBundleVersion</key>
-    <string>1.0.2</string>
+    <string>1.1.0</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.2</string>
+    <string>1.1.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
-    <string>minecraft-companion</string>
+    <string>craft-atlas</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>LSMinimumSystemVersion</key>
