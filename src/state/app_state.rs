@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use crate::data::litematic::ParsedLitematic;
 use crate::data::recipes::{CraftingStation, RecipeCategory};
 use crate::data::seed_engine::{Dimension, LayerToggles, MapStyle};
 use crate::data::worlds_nbt::{
@@ -102,8 +103,31 @@ pub enum SeedBookTab {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SeedSidebarTab {
     Waypoints,
+    Finder,
     Layers,
     Worlds,
+}
+
+/// Target mode inside the Seed Map radial Nearest Finder panel.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NearestFinderMode {
+    Structure,
+    Biome,
+}
+
+/// Active tab inside the collapsible right utility rail (Favorites vs. Shopping List).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RightRailTab {
+    Favorites,
+    ShoppingList,
+}
+
+/// Active sub-view inside the Gear ("Equipamiento God y Yunque") tab.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GearSubView {
+    Standard,
+    Books,
+    IllegalGod,
 }
 
 /// Complete mutable UI & interactive session state.
@@ -118,10 +142,13 @@ pub struct AppState {
     pub focus_search_next_frame: bool,
     pub hovered_tooltip_id: Option<String>,
 
-    // Gear Tab & Enchanted Books Encyclopedia
+    // Gear Tab, Enchanted Books Encyclopedia & Illegal God Armor
     pub gear_filter: String,
     pub selected_gear_id: String,
-    pub gear_books_view: bool,
+    pub gear_view: GearSubView,
+    pub god_piece_idx: usize,
+    pub god_include_thorns: bool,
+    pub god_method_tab: u8,
     pub book_filter: String,
     pub selected_book_id: String,
     pub anvil_anim: AnvilAnimState,
@@ -164,11 +191,24 @@ pub struct AppState {
     pub save_seed_is_server: bool,
     pub seed_sidebar_tab: SeedSidebarTab,
     pub seed_book_tab: SeedBookTab,
+    pub finder_mode: NearestFinderMode,
+    pub finder_structure_idx: usize,
+    pub finder_biome_idx: usize,
+    pub finder_radius: i32,
     pub is_server_seed_active: bool,
     pub player_face_tex: Option<eframe::egui::TextureHandle>,
     pub has_custom_skin: bool,
     pub local_schematics: Vec<DetectedSchematic>,
+    pub active_litematic: Option<ParsedLitematic>,
+    pub litematic_error: Option<String>,
+    pub litematic_filter: String,
+    pub litematic_shulker_mode: bool,
+    pub farms_litematic_view: bool,
     pub last_cursor_world: Option<(i32, i32)>,
+
+    // Right rail & updater modal state
+    pub right_rail_tab: RightRailTab,
+    pub update_modal_open: bool,
 
     // Farms / Dupes / Pro Tips Tabs
     pub farm_category_filter: String,
@@ -195,9 +235,10 @@ pub struct AppState {
     pub creators_specialty_filter: String,
     pub creators_region_filter: String,
 
-    // Export cache metadata & release update checker
+    // Export cache metadata, release updater & custom video backdrop importer
     pub last_export_path: Option<PathBuf>,
     pub updater: crate::updater::UpdateChecker,
+    pub video_importer: crate::assets::video_bg::CustomVideoImporter,
 }
 
 /// Active right-click floating menu to place a custom waypoint at exact clicked world coordinates.
@@ -250,7 +291,10 @@ impl AppState {
 
             gear_filter: "all".to_string(),
             selected_gear_id: initial_gear_id.clone(),
-            gear_books_view: false,
+            gear_view: GearSubView::Standard,
+            god_piece_idx: 0,
+            god_include_thorns: false,
+            god_method_tab: 0,
             book_filter: "all".to_string(),
             selected_book_id: "protection".to_string(),
             anvil_anim: AnvilAnimState {
@@ -298,11 +342,22 @@ impl AppState {
             save_seed_is_server: true,
             seed_sidebar_tab: SeedSidebarTab::Waypoints,
             seed_book_tab: SeedBookTab::Saved,
+            finder_mode: NearestFinderMode::Structure,
+            finder_structure_idx: 0,
+            finder_biome_idx: 0,
+            finder_radius: 12_000,
             is_server_seed_active: false,
             player_face_tex: None,
             has_custom_skin: false,
             local_schematics: scan_local_schematics(),
+            active_litematic: None,
+            litematic_error: None,
+            litematic_filter: String::new(),
+            litematic_shulker_mode: true,
+            farms_litematic_view: false,
             last_cursor_world: None,
+            right_rail_tab: RightRailTab::Favorites,
+            update_modal_open: false,
 
             farm_category_filter: "all".to_string(),
             farm_tier_filter: "all".to_string(),
@@ -327,6 +382,7 @@ impl AppState {
 
             last_export_path: None,
             updater: crate::updater::UpdateChecker::new(),
+            video_importer: crate::assets::video_bg::CustomVideoImporter::default(),
         }
     }
 
@@ -627,5 +683,27 @@ impl AppState {
         );
         self.player_face_tex = Some(tex);
         self.has_custom_skin = false;
+    }
+
+    pub fn reload_local_schematics(&mut self) -> usize {
+        self.local_schematics = scan_local_schematics();
+        self.local_schematics.len()
+    }
+
+    pub fn load_litematic_path(&mut self, path: &std::path::Path) -> Result<(), String> {
+        match crate::data::litematic::parse_litematic_file(path) {
+            Ok(parsed) => {
+                self.active_litematic = Some(parsed);
+                self.litematic_error = None;
+                self.litematic_filter.clear();
+                self.farms_litematic_view = true;
+                self.farms_creators_view = false;
+                Ok(())
+            }
+            Err(err) => {
+                self.litematic_error = Some(err.clone());
+                Err(err)
+            }
+        }
     }
 }

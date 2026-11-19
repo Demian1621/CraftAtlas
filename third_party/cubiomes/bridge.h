@@ -17,6 +17,12 @@ typedef struct McStructureHit {
     int32_t biome;
 } McStructureHit;
 
+typedef struct McBiomeHit {
+    int32_t biome;
+    int32_t x;
+    int32_t z;
+} McBiomeHit;
+
 /* Structure bitmasks matching enum StructureType indices requested by UI */
 enum McStructMask {
     MC_MASK_VILLAGE        = 1u << 0,
@@ -43,7 +49,17 @@ enum McMapStyle {
     MC_STYLE_MC_MAP    = 2,
 };
 
-McWorldHandle *mc_world_new(uint64_t seed, int32_t large_biomes);
+/*
+ * Create a world generator handle.
+ * mc_version_code:
+ *   0 or >= 2600 -> MC_NEWEST (26.3 / 1.21.4+ Winter Drop)
+ *   1213         -> MC_1_21_3
+ *   1211         -> MC_1_21_1
+ *   1206         -> MC_1_20_6
+ *   1194         -> MC_1_19_4
+ *   1182         -> MC_1_18_2
+ */
+McWorldHandle *mc_world_new(uint64_t seed, int32_t mc_version_code, int32_t large_biomes);
 void mc_world_free(McWorldHandle *h);
 
 /*
@@ -87,6 +103,31 @@ int32_t mc_scan_structures(
     int32_t max_bz,
     uint32_t mask,
     McStructureHit *out,
+    int32_t max_out
+);
+
+/* Radial nearest-structure search sorted by Euclidean distance from (origin_x, origin_z). */
+int32_t mc_find_nearest_structures(
+    McWorldHandle *h,
+    int32_t dim,
+    int32_t stype,
+    int32_t only_end_ship,
+    int32_t origin_x,
+    int32_t origin_z,
+    int32_t max_radius,
+    McStructureHit *out,
+    int32_t max_out
+);
+
+/* Radial nearest-biome search returning spatially distinct locations sorted by distance. */
+int32_t mc_find_nearest_biomes(
+    const McWorldHandle *h,
+    int32_t dim,
+    int32_t target_biome_id,
+    int32_t origin_x,
+    int32_t origin_z,
+    int32_t max_radius,
+    McBiomeHit *out,
     int32_t max_out
 );
 

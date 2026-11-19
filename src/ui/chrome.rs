@@ -1,11 +1,14 @@
-use eframe::egui::{self, Align, Color32, CornerRadius, CursorIcon, Layout, Margin, Pos2, Rect, ResizeDirection, RichText, Sense, Stroke, Vec2, ViewportCommand};
+use eframe::egui::{
+    self, Align, Color32, CornerRadius, CursorIcon, Layout, Margin, Pos2, Rect, ResizeDirection,
+    RichText, Sense, Stroke, Vec2, ViewportCommand,
+};
 
 use crate::assets::ItemAtlas;
 use crate::audio::{AudioEngine, SoundCue};
 use crate::data::models::{Language, VersionRegistry};
 use crate::i18n::{t, UiKey};
-use crate::state::{AppState, AppTab, RecipeViewMode, ThemeId};
-use crate::ui::theme::{filter_chip, paint_mc_slot, McPalette, SlotStyle};
+use crate::state::{AppState, AppTab, GearSubView, RecipeViewMode, ThemeId};
+use crate::ui::theme::{filter_chip, McPalette};
 use crate::ui::RenderContext;
 
 /// Handles frameless window edge/corner resize strips and draws a sharp 1px outer border when restored.
@@ -368,11 +371,11 @@ pub fn render_top_chrome(
                     state.prefs.save();
                 }
 
-                // Theme switcher (6 scenic themes)
+                // Theme switcher (10 built-in static/video themes + Custom Video importer)
                 let cur_theme = state.prefs.theme;
                 egui::ComboBox::from_id_salt("theme_selector")
                     .selected_text(cur_theme.label(lang))
-                    .width(146.0)
+                    .width(172.0)
                     .show_ui(ui, |ui| {
                         for th in ThemeId::all() {
                             if ui
@@ -383,7 +386,37 @@ pub fn render_top_chrome(
                                 audio.play(SoundCue::Click);
                             }
                         }
+                        ui.separator();
+                        let import_lbl = if state.video_importer.is_importing() {
+                            match lang {
+                                Language::EnUs => "Importing video...",
+                                _ => "Importando video...",
+                            }
+                        } else {
+                            match lang {
+                                Language::EnUs => "Import Video (.mp4/.webm/.gif)...",
+                                _ => "Importar Video (.mp4/.webm/.gif)...",
+                            }
+                        };
+                        if ui
+                            .add_enabled(
+                                !state.video_importer.is_importing(),
+                                egui::Button::new(import_lbl),
+                            )
+                            .clicked()
+                        {
+                            if let Some(path) = rfd::FileDialog::new()
+                                .add_filter("Video / GIF / CAVF", &["mp4", "webm", "mov", "mkv", "gif", "cavf"])
+                                .pick_file()
+                            {
+                                state.video_importer.start_import(path);
+                                audio.play(SoundCue::Click);
+                            }
+                        }
                     });
+                if state.video_importer.is_importing() {
+                    ui.spinner();
+                }
 
                 // Language switcher
                 let cur_lang = state.prefs.language;
@@ -455,7 +488,7 @@ fn window_chrome_btn(
 
 fn render_app_version_pill(
     ui: &mut egui::Ui,
-    ctx: &egui::Context,
+    _ctx: &egui::Context,
     state: &mut AppState,
     palette: McPalette,
     lang: crate::data::models::Language,
@@ -480,7 +513,6 @@ fn render_app_version_pill(
         .stroke(Stroke::new(1.0_f32, palette.accent_xp))
         .corner_radius(CornerRadius::same(5));
         let resp = ui.add(btn);
-        let url = info.html_url.clone();
         let tooltip = if info.notes_summary.is_empty() {
             format!("v{} -> v{}\n{}", CURRENT_VERSION, info.version, t(lang, UiKey::UpdateAvailableHint))
         } else {
@@ -494,9 +526,7 @@ fn render_app_version_pill(
         };
         if resp.on_hover_text(tooltip).clicked() {
             audio.play(SoundCue::Click);
-            if crate::updater::is_safe_https_url(&url) {
-                ctx.open_url(egui::OpenUrl::new_tab(url));
-            }
+            state.update_modal_open = true;
         }
         return;
     }
@@ -706,7 +736,7 @@ pub fn render_search_palette(ctx: &egui::Context, state: &mut AppState, rcx: &Re
         if !versions.is_active(g.since_version.as_deref(), g.until_version.as_deref(), &active_ver) {
             continue;
         }
-        let res = g.resolved(&active_ver);
+        let res = g.resolved_for(versions, &active_ver);
         if q.is_empty()
             || res.name.matches(&q)
             || res.what_it_does.matches(&q)
@@ -727,10 +757,17 @@ pub fn render_search_palette(ctx: &egui::Context, state: &mut AppState, rcx: &Re
 
     let mut book_added = 0usize;
     for book in &db.enchant_books {
+        if !versions.is_active(
+            book.since_version.as_deref(),
+            book.until_version.as_deref(),
+            &active_ver,
+        ) {
+            continue;
+        }
         let matched = if q.is_empty() {
             matches!(
                 book.id.as_str(),
-                "mending" | "swift_sneak" | "wind_burst" | "soul_speed"
+                "mending" | "protection" | "fortune" | "soul_speed" | "swift_sneak" | "wind_burst"
             )
         } else {
             book.name.matches(&q)
@@ -767,7 +804,14 @@ pub fn render_search_palette(ctx: &egui::Context, state: &mut AppState, rcx: &Re
         let matched = if q.is_empty() {
             matches!(
                 item_id.as_str(),
-                "crafter" | "mace" | "elytra" | "beacon" | "shulker_box" | "heavy_core"
+                "crafting_table"
+                    | "enchanting_table"
+                    | "anvil"
+                    | "crafter"
+                    | "mace"
+                    | "beacon"
+                    | "shulker_box"
+                    | "heavy_core"
             )
         } else {
             name.to_lowercase().contains(&q)
@@ -1030,13 +1074,13 @@ pub fn render_search_palette(ctx: &egui::Context, state: &mut AppState, rcx: &Re
         state.search_query.clear();
         match target {
             PaletteTarget::Gear(id) => {
-                state.gear_books_view = false;
+                state.gear_view = GearSubView::Standard;
                 state.selected_gear_id = id;
                 state.switch_tab(AppTab::Gear);
             }
             PaletteTarget::EnchantBook(id) => {
                 state.selected_book_id = id;
-                state.gear_books_view = true;
+                state.gear_view = GearSubView::Books;
                 state.switch_tab(AppTab::Gear);
             }
             PaletteTarget::Recipe(id) => {
@@ -1089,221 +1133,3 @@ pub fn render_inline_tab_search(
     ui.add_space(4.0);
 }
 
-/// Renders collapsible Pinned Favorites Rail (shown when `prefs.favorites_open` and window width allows).
-pub fn render_favorites_rail(ctx: &egui::Context, state: &mut AppState, rcx: &RenderContext<'_>) {
-    let RenderContext {
-        versions,
-        db,
-        recipes,
-        palette,
-        atlas,
-        audio,
-    } = *rcx;
-    if !state.prefs.favorites_open || ctx.screen_rect().width() < 860.0 {
-        return;
-    }
-    let lang = state.prefs.language;
-    let active_ver = versions
-        .resolve_valid_id(&state.prefs.selected_version)
-        .to_string();
-
-    egui::SidePanel::right("mc_favorites_rail")
-        .resizable(false)
-        .default_width(216.0)
-        .frame(
-            egui::Frame::new()
-                .fill(palette.bg_panel)
-                .inner_margin(Margin::symmetric(10, 10))
-                .stroke(Stroke::new(1.0_f32, palette.border_subtle)),
-        )
-        .show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.add(atlas.ui_image("nether_star", 16.0));
-                ui.label(
-                    RichText::new(t(lang, UiKey::FavoritesTitle))
-                        .strong()
-                        .size(13.0)
-                        .color(palette.accent_gold),
-                );
-            });
-            ui.separator();
-
-            if state.prefs.favorite_items.is_empty()
-                && state.prefs.favorite_gear.is_empty()
-                && state.prefs.favorite_farms.is_empty()
-            {
-                ui.label(
-                    RichText::new(t(lang, UiKey::FavoritesEmpty))
-                        .size(11.5)
-                        .color(palette.text_muted),
-                );
-                return;
-            }
-
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                // Pinned JEI Items
-                let items_clone = state.prefs.favorite_items.clone();
-                if !items_clone.is_empty() {
-                    ui.label(
-                        RichText::new(t(lang, UiKey::TabRecipes))
-                            .size(11.0)
-                            .strong()
-                            .color(palette.text_muted),
-                    );
-                    ui.add_space(4.0);
-                    let mut remove_item: Option<String> = None;
-                    for id in &items_clone {
-                        if !recipes.item_active_in(id, versions, &active_ver) {
-                            continue;
-                        }
-                        let name = recipes.item_name(id, lang);
-                        ui.horizontal(|ui| {
-                            let (slot_r, sresp) =
-                                ui.allocate_exact_size(Vec2::splat(30.0), egui::Sense::click());
-                            paint_mc_slot(
-                                ui.painter(),
-                                slot_r,
-                                palette,
-                                atlas,
-                                Some(id),
-                                SlotStyle {
-                                    selected: state.active_tab == AppTab::Recipes
-                                        && state.selected_recipe_item == *id,
-                                    hovered: sresp.hovered(),
-                                    ..Default::default()
-                                },
-                            );
-                            if sresp.clicked() {
-                                state.open_recipe_item(id, RecipeViewMode::RecipesFor);
-                                audio.play(SoundCue::Click);
-                            }
-                            let lbl_resp = ui.add(
-                                egui::Button::new(
-                                    RichText::new(&name).size(11.5).color(palette.text_primary),
-                                )
-                                .frame(false)
-                                .truncate(),
-                            );
-                            if lbl_resp.clicked() {
-                                state.open_recipe_item(id, RecipeViewMode::RecipesFor);
-                                audio.play(SoundCue::Click);
-                            }
-                            if ui.small_button("x").clicked() {
-                                remove_item = Some(id.clone());
-                            }
-                        });
-                    }
-                    if let Some(rm) = remove_item {
-                        state.prefs.toggle_favorite_item(&rm);
-                        audio.play(SoundCue::Click);
-                    }
-                    ui.add_space(8.0);
-                }
-
-                // Pinned God Gear
-                let gear_clone = state.prefs.favorite_gear.clone();
-                if !gear_clone.is_empty() {
-                    ui.label(
-                        RichText::new(t(lang, UiKey::TabGear))
-                            .size(11.0)
-                            .strong()
-                            .color(palette.text_muted),
-                    );
-                    ui.add_space(4.0);
-                    let mut remove_gear: Option<String> = None;
-                    for gid in &gear_clone {
-                        if let Some(g) = db.gear.iter().find(|x| {
-                            x.id == *gid
-                                && versions.is_active(
-                                    x.since_version.as_deref(),
-                                    x.until_version.as_deref(),
-                                    &active_ver,
-                                )
-                        }) {
-                            let res = g.resolved(&active_ver);
-                            ui.horizontal(|ui| {
-                                ui.add(atlas.ui_image(&g.icon, 20.0));
-                                if ui
-                                    .add(
-                                        egui::Button::new(
-                                            RichText::new(res.name.get(lang))
-                                                .size(11.5)
-                                                .color(palette.accent_primary),
-                                        )
-                                        .frame(false)
-                                        .truncate(),
-                                    )
-                                    .clicked()
-                                {
-                                    state.gear_books_view = false;
-                                    state.selected_gear_id = g.id.clone();
-                                    state.switch_tab(AppTab::Gear);
-                                    audio.play(SoundCue::Click);
-                                }
-                                if ui.small_button("x").clicked() {
-                                    remove_gear = Some(gid.clone());
-                                }
-                            });
-                        }
-                    }
-                    if let Some(rm) = remove_gear {
-                        state.prefs.toggle_favorite_gear(&rm);
-                        audio.play(SoundCue::Click);
-                    }
-                    ui.add_space(8.0);
-                }
-
-                // Pinned Farms
-                let farms_clone = state.prefs.favorite_farms.clone();
-                if !farms_clone.is_empty() {
-                    ui.label(
-                        RichText::new(t(lang, UiKey::TabFarms))
-                            .size(11.0)
-                            .strong()
-                            .color(palette.text_muted),
-                    );
-                    ui.add_space(4.0);
-                    let mut remove_farm: Option<String> = None;
-                    for fid in &farms_clone {
-                        if let Some(f) = db.farms.iter().find(|x| {
-                            x.id == *fid
-                                && versions.is_active(
-                                    x.since_version.as_deref(),
-                                    x.until_version.as_deref(),
-                                    &active_ver,
-                                )
-                        }) {
-                            let res = f.resolved(&active_ver);
-                            ui.horizontal(|ui| {
-                                let icon = res.resolved_icon();
-                                ui.add(atlas.ui_image(icon, 18.0));
-                                if ui
-                                    .add(
-                                        egui::Button::new(
-                                            RichText::new(res.title.get(lang))
-                                                .size(11.5)
-                                                .color(palette.accent_xp),
-                                        )
-                                        .frame(false)
-                                        .truncate(),
-                                    )
-                                    .clicked()
-                                {
-                                    state.selected_farm_id = f.id.clone();
-                                    state.switch_tab(AppTab::Farms);
-                                    audio.play(SoundCue::Click);
-                                }
-                                if ui.small_button("x").clicked() {
-                                    remove_farm = Some(fid.clone());
-                                }
-                            });
-                        }
-                    }
-                    if let Some(rm) = remove_farm {
-                        state.prefs.toggle_favorite_farm(&rm);
-                        audio.play(SoundCue::Click);
-                    }
-                }
-            });
-        });
-}

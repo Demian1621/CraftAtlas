@@ -6,32 +6,62 @@ use std::path::PathBuf;
 use crate::data::models::Language;
 use crate::data::seed_engine::Dimension;
 
-/// Switchable Minecraft visual themes backed by scenic wallpapers / 360° panoramas.
+/// Switchable Minecraft visual themes backed by scenic wallpapers, 360° panoramas, or `.cavf` video loops.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum ThemeId {
     #[default]
     DeepslateOre,
+    DeepDarkSculk,
+    TrialChambers,
+    PaleGarden,
+    OceanMonument,
     ClassicJavaStone,
     NetherCrimsonEnd,
     EndVoidAurora,
     CherryBlossom,
     StarryOverworld,
+    CustomVideo,
 }
 
 impl ThemeId {
-    pub fn all() -> [ThemeId; 6] {
+    pub fn all() -> [ThemeId; 11] {
         [
+            ThemeId::DeepDarkSculk,
+            ThemeId::TrialChambers,
+            ThemeId::PaleGarden,
+            ThemeId::OceanMonument,
             ThemeId::DeepslateOre,
             ThemeId::ClassicJavaStone,
             ThemeId::NetherCrimsonEnd,
             ThemeId::EndVoidAurora,
             ThemeId::CherryBlossom,
             ThemeId::StarryOverworld,
+            ThemeId::CustomVideo,
         ]
+    }
+
+    pub fn is_video(self) -> bool {
+        matches!(
+            self,
+            ThemeId::DeepDarkSculk
+                | ThemeId::TrialChambers
+                | ThemeId::PaleGarden
+                | ThemeId::OceanMonument
+                | ThemeId::CustomVideo
+        )
     }
 
     pub fn label(self, lang: Language) -> &'static str {
         match (self, lang) {
+            (ThemeId::DeepDarkSculk, Language::EnUs) => "Deep Dark [Video]",
+            (ThemeId::DeepDarkSculk, _) => "Ciudad Antigua [Video]",
+            (ThemeId::TrialChambers, Language::EnUs) => "Trial Chambers [Video]",
+            (ThemeId::TrialChambers, Language::EsEs) => "Cámaras de Juicio [Video]",
+            (ThemeId::TrialChambers, _) => "Trial Chambers [Video]",
+            (ThemeId::PaleGarden, Language::EnUs) => "Pale Garden [Video]",
+            (ThemeId::PaleGarden, _) => "Jardín Pálido [Video]",
+            (ThemeId::OceanMonument, Language::EnUs) => "Ocean Monument [Video]",
+            (ThemeId::OceanMonument, _) => "Monumento Oceánico [Video]",
             (ThemeId::DeepslateOre, Language::EnUs) => "Deep Cave Glow",
             (ThemeId::DeepslateOre, _) => "Cueva Profunda",
             (ThemeId::ClassicJavaStone, Language::EnUs) => "Wilderness Panorama",
@@ -44,6 +74,8 @@ impl ThemeId {
             (ThemeId::CherryBlossom, _) => "Cerezo Atardecer",
             (ThemeId::StarryOverworld, Language::EnUs) => "Starry Ruin",
             (ThemeId::StarryOverworld, _) => "Noche Estrellada",
+            (ThemeId::CustomVideo, Language::EnUs) => "Custom Video [Video]",
+            (ThemeId::CustomVideo, _) => "Mi Video [Video]",
         }
     }
 }
@@ -100,6 +132,19 @@ pub struct SeedHistoryEntry {
 
 pub const MAX_SEED_HISTORY: usize = 20;
 
+/// One material row inside the unified persistent Shopping List (fed by JEI trees, Farms, or .litematic).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ShoppingListItem {
+    pub item_id: String,
+    #[serde(default)]
+    pub label: String,
+    pub count: u64,
+    #[serde(default)]
+    pub done: bool,
+    #[serde(default)]
+    pub source: String,
+}
+
 /// Persistent user configuration serialized safely under `%APPDATA%\craft-atlas\prefs.json`
 /// (with automatic read fallback from legacy `%APPDATA%\minecraft-companion\prefs.json`).
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -122,6 +167,14 @@ pub struct UserPrefs {
     pub saved_seeds: Vec<SavedSeedEntry>,
     #[serde(default)]
     pub seed_history: Vec<SeedHistoryEntry>,
+    #[serde(default)]
+    pub shopping_list: Vec<ShoppingListItem>,
+    #[serde(default = "default_true")]
+    pub shopping_shulker_mode: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 impl Default for UserPrefs {
@@ -147,6 +200,8 @@ impl Default for UserPrefs {
             checked_materials: HashSet::new(),
             saved_seeds: Vec::new(),
             seed_history: Vec::new(),
+            shopping_list: Vec::new(),
+            shopping_shulker_mode: true,
         }
     }
 }
@@ -204,6 +259,11 @@ impl UserPrefs {
 
     pub fn prefs_path() -> Option<PathBuf> {
         Self::prefs_path_for("craft-atlas")
+    }
+
+    /// Root application configuration/cache directory (`%APPDATA%\craft-atlas` or XDG equivalent).
+    pub fn app_data_dir() -> Option<PathBuf> {
+        Self::prefs_path().and_then(|p| p.parent().map(|d| d.to_path_buf()))
     }
 
     /// Legacy v1.0.x config path kept for seamless upgrade migration.
@@ -415,6 +475,64 @@ impl UserPrefs {
         self.seed_history.clear();
         self.save();
     }
+
+    /// Merges a batch of `(item_id, label, count)` into the unified shopping list in memory.
+    pub fn add_shopping_items_in_memory(&mut self, items: &[(String, String, u64)], source: &str) {
+        for (item_id, label, count) in items {
+            if *count == 0 || item_id.trim().is_empty() {
+                continue;
+            }
+            if let Some(existing) = self.shopping_list.iter_mut().find(|e| e.item_id == *item_id) {
+                existing.count = existing.count.saturating_add(*count);
+                existing.done = false;
+                if existing.label.is_empty() && !label.is_empty() {
+                    existing.label = label.clone();
+                }
+                if !source.is_empty() {
+                    existing.source = source.to_string();
+                }
+            } else {
+                self.shopping_list.push(ShoppingListItem {
+                    item_id: item_id.clone(),
+                    label: label.clone(),
+                    count: *count,
+                    done: false,
+                    source: source.to_string(),
+                });
+            }
+        }
+        self.shopping_list
+            .sort_by(|a, b| a.done.cmp(&b.done).then_with(|| b.count.cmp(&a.count)));
+    }
+
+    pub fn add_shopping_items(&mut self, items: &[(String, String, u64)], source: &str) {
+        self.add_shopping_items_in_memory(items, source);
+        self.save();
+    }
+
+    pub fn toggle_shopping_done(&mut self, item_id: &str) {
+        if let Some(entry) = self.shopping_list.iter_mut().find(|e| e.item_id == item_id) {
+            entry.done = !entry.done;
+        }
+        self.shopping_list
+            .sort_by(|a, b| a.done.cmp(&b.done).then_with(|| b.count.cmp(&a.count)));
+        self.save();
+    }
+
+    pub fn remove_shopping_item(&mut self, item_id: &str) {
+        self.shopping_list.retain(|e| e.item_id != item_id);
+        self.save();
+    }
+
+    pub fn clear_done_shopping_items(&mut self) {
+        self.shopping_list.retain(|e| !e.done);
+        self.save();
+    }
+
+    pub fn clear_shopping_list(&mut self) {
+        self.shopping_list.clear();
+        self.save();
+    }
 }
 
 #[cfg(test)]
@@ -477,5 +595,20 @@ mod tests {
         p.record_seed_history_in_memory("10", 10, false, "History", 99_000);
         assert_eq!(p.seed_history.len(), MAX_SEED_HISTORY);
         assert_eq!(p.seed_history[0].seed, 10);
+
+        // Unified shopping list merge & legacy deserialization check
+        assert!(p.shopping_list.is_empty());
+        assert!(p.shopping_shulker_mode);
+        p.add_shopping_items_in_memory(
+            &[
+                ("hopper".into(), "Hopper".into(), 64),
+                ("glass".into(), "Glass".into(), 128),
+            ],
+            "Iron Farm",
+        );
+        p.add_shopping_items_in_memory(&[("hopper".into(), "Hopper".into(), 32)], "Litematic");
+        assert_eq!(p.shopping_list.len(), 2);
+        let hopper = p.shopping_list.iter().find(|i| i.item_id == "hopper").unwrap();
+        assert_eq!(hopper.count, 96);
     }
 }

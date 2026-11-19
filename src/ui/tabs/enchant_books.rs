@@ -2,22 +2,37 @@ use eframe::egui::{self, Color32, CornerRadius, Margin, RichText, Stroke, Vec2};
 
 use crate::assets::ItemAtlas;
 use crate::audio::{AudioEngine, SoundCue};
-use crate::data::models::{Database, EnchantBookEntry, Language};
+use crate::data::models::{EnchantBookEntry, Language};
 use crate::i18n::{t, UiKey};
-use crate::state::AppState;
+use crate::state::{AppState, GearSubView};
 use crate::ui::chrome::render_inline_tab_search;
 use crate::ui::theme::{adaptive_sidebar_width, filter_chip, paint_mc_slot, McPalette, SlotStyle};
+use crate::ui::RenderContext;
 
 /// Sub-view switch inside the Gear ("Equipamiento God y Yunque") tab.
 pub fn render_view_switcher(
     ui: &mut egui::Ui,
     state: &mut AppState,
-    db: &Database,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
+    rcx: &RenderContext<'_>,
+    active_ver: &str,
     lang: Language,
 ) {
+    let RenderContext {
+        db,
+        versions,
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
+    let active_book_count = db
+        .enchant_books
+        .iter()
+        .filter(|b| {
+            versions.is_active(b.since_version.as_deref(), b.until_version.as_deref(), active_ver)
+        })
+        .count();
+
     ui.horizontal_wrapped(|ui| {
         ui.spacing_mut().item_spacing = Vec2::new(6.0, 5.0);
         let gear_lbl = match lang {
@@ -30,32 +45,48 @@ pub fn render_view_switcher(
             atlas,
             Some("anvil"),
             gear_lbl,
-            !state.gear_books_view,
+            state.gear_view == GearSubView::Standard,
         )
         .clicked()
-            && state.gear_books_view
+            && state.gear_view != GearSubView::Standard
         {
-            state.gear_books_view = false;
+            state.gear_view = GearSubView::Standard;
             audio.play(SoundCue::Click);
         }
 
-        let books_lbl = format!(
-            "{} ({})",
-            t(lang, UiKey::BooksViewBtn),
-            db.enchant_books.len()
-        );
+        let books_lbl = format!("{} ({})", t(lang, UiKey::BooksViewBtn), active_book_count);
         if filter_chip(
             ui,
             palette,
             atlas,
             Some("enchanted_book"),
             &books_lbl,
-            state.gear_books_view,
+            state.gear_view == GearSubView::Books,
         )
         .clicked()
-            && !state.gear_books_view
+            && state.gear_view != GearSubView::Books
         {
-            state.gear_books_view = true;
+            state.gear_view = GearSubView::Books;
+            audio.play(SoundCue::Click);
+        }
+
+        let god_lbl = match lang {
+            Language::EnUs => "God Armor (Illegal / Glitches)",
+            Language::EsEs => "Armadura God (Ilegal / Glitches)",
+            Language::EsMx => "God Armor (Ilegal / Glitches)",
+        };
+        if filter_chip(
+            ui,
+            palette,
+            atlas,
+            Some("netherite_chestplate"),
+            god_lbl,
+            state.gear_view == GearSubView::IllegalGod,
+        )
+        .clicked()
+            && state.gear_view != GearSubView::IllegalGod
+        {
+            state.gear_view = GearSubView::IllegalGod;
             audio.play(SoundCue::Click);
         }
     });
@@ -66,20 +97,34 @@ pub fn render_view_switcher(
 pub fn render(
     ui: &mut egui::Ui,
     state: &mut AppState,
-    db: &Database,
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
+    rcx: &RenderContext<'_>,
+    active_ver: &str,
     lang: Language,
 ) {
+    let RenderContext {
+        db,
+        versions,
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
     let q_lower = state.search_query.trim().to_lowercase();
 
     render_book_filters(ui, state, palette, atlas, audio, lang);
     ui.add_space(6.0);
 
-    let filtered: Vec<&EnchantBookEntry> = db
+    let active_books: Vec<&EnchantBookEntry> = db
         .enchant_books
         .iter()
+        .filter(|b| {
+            versions.is_active(b.since_version.as_deref(), b.until_version.as_deref(), active_ver)
+        })
+        .collect();
+
+    let filtered: Vec<&EnchantBookEntry> = active_books
+        .iter()
+        .copied()
         .filter(|b| b.matches_filter(&state.book_filter))
         .filter(|b| {
             if q_lower.is_empty() {
@@ -103,8 +148,8 @@ pub fn render(
         .iter()
         .copied()
         .find(|b| b.id == state.selected_book_id)
-        .or_else(|| db.enchant_books.iter().find(|b| b.id == state.selected_book_id))
-        .or_else(|| db.enchant_books.first());
+        .or_else(|| active_books.iter().copied().find(|b| b.id == state.selected_book_id))
+        .or_else(|| active_books.first().copied());
 
     let total_w = ui.available_width();
     if total_w >= 780.0 {
@@ -116,7 +161,7 @@ pub fn render(
                 |ui| {
                     render_inline_tab_search(ui, state, palette, atlas, audio);
                     ui.add_space(6.0);
-                    render_book_list(ui, state, &filtered, palette, atlas, audio, lang);
+                    render_book_list(ui, state, &filtered, rcx, active_ver, lang);
                 },
             );
             ui.add_space(10.0);
@@ -125,7 +170,7 @@ pub fn render(
                 egui::Layout::top_down(egui::Align::Min),
                 |ui| {
                     if let Some(book) = selected_book {
-                        render_book_detail(ui, book, palette, atlas, lang);
+                        render_book_detail(ui, book, rcx, active_ver, lang);
                     }
                 },
             );
@@ -136,7 +181,7 @@ pub fn render(
         render_book_compact_picker(ui, state, &filtered, palette, atlas, audio, lang);
         ui.add_space(8.0);
         if let Some(book) = selected_book {
-            render_book_detail(ui, book, palette, atlas, lang);
+            render_book_detail(ui, book, rcx, active_ver, lang);
         }
     }
 }
@@ -202,11 +247,17 @@ fn render_book_list(
     ui: &mut egui::Ui,
     state: &mut AppState,
     filtered: &[&EnchantBookEntry],
-    palette: McPalette,
-    atlas: &ItemAtlas,
-    audio: &AudioEngine,
+    rcx: &RenderContext<'_>,
+    active_ver: &str,
     lang: Language,
 ) {
+    let RenderContext {
+        versions,
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
     let time = ui.ctx().input(|i| i.time);
     egui::ScrollArea::vertical()
         .id_salt("enchant_books_list_scroll")
@@ -302,7 +353,7 @@ fn render_book_list(
                                 };
                                 ui.label(RichText::new(badge_txt).size(10.0).color(badge_color));
 
-                                let icons = book.applicable_item_icons();
+                                let icons = book.applicable_item_icons_in(versions, active_ver);
                                 ui.horizontal(|ui| {
                                     ui.spacing_mut().item_spacing = Vec2::new(3.0, 2.0);
                                     for (icon_id, es_tip, en_tip) in icons.iter().take(6) {
@@ -364,10 +415,16 @@ fn render_book_compact_picker(
 fn render_book_detail(
     ui: &mut egui::Ui,
     book: &EnchantBookEntry,
-    palette: McPalette,
-    atlas: &ItemAtlas,
+    rcx: &RenderContext<'_>,
+    active_ver: &str,
     lang: Language,
 ) {
+    let RenderContext {
+        versions,
+        palette,
+        atlas,
+        ..
+    } = *rcx;
     let time = ui.ctx().input(|i| i.time);
     egui::ScrollArea::vertical()
         .id_salt("enchant_book_detail_scroll")
@@ -508,11 +565,13 @@ fn render_book_detail(
                             ui.add_space(5.0);
                             ui.horizontal_wrapped(|ui| {
                                 ui.spacing_mut().item_spacing = Vec2::new(5.0, 5.0);
-                                for (icon_id, es_tip, en_tip) in book.applicable_item_icons() {
+                                for (icon_id, es_tip, en_tip) in
+                                    book.applicable_item_icons_in(versions, active_ver)
+                                {
                                     let tip = if matches!(lang, Language::EnUs) {
-                                        *en_tip
+                                        en_tip
                                     } else {
-                                        *es_tip
+                                        es_tip
                                     };
                                     egui::Frame::new()
                                         .fill(palette.slot_bg)

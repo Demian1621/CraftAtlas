@@ -20,7 +20,10 @@ pub fn render(
     audio: &AudioEngine,
 ) {
     let lang = state.prefs.language;
-    let active_ver = versions.resolve_valid_id(&state.prefs.selected_version);
+    let active_ver = versions
+        .resolve_valid_id(&state.prefs.selected_version)
+        .to_string();
+    let active_ver = active_ver.as_str();
     let q_lower = state.search_query.trim().to_lowercase();
 
     let resolved_all: Vec<Cow<'_, ProTip>> = db
@@ -98,13 +101,13 @@ pub fn render(
                     ui.allocate_ui_with_layout(
                         Vec2::new(half_w, 0.0),
                         egui::Layout::top_down(egui::Align::Min),
-                        |ui| render_ore_y_chart_card(ui, palette, atlas, lang),
+                        |ui| render_ore_y_chart_card(ui, palette, atlas, lang, active_ver),
                     );
                 });
             } else {
                 render_spawning_sphere_card(ui, palette, atlas, lang);
                 ui.add_space(8.0);
-                render_ore_y_chart_card(ui, palette, atlas, lang);
+                render_ore_y_chart_card(ui, palette, atlas, lang, active_ver);
             }
 
             ui.add_space(12.0);
@@ -250,6 +253,7 @@ fn render_ore_y_chart_card(
     palette: McPalette,
     atlas: &ItemAtlas,
     lang: Language,
+    active_ver: &str,
 ) {
     egui::Frame::new()
         .fill(palette.bg_panel)
@@ -261,7 +265,7 @@ fn render_ore_y_chart_card(
             ui.horizontal(|ui| {
                 ui.add(atlas.ui_image("diamond_ore", 20.0));
                 ui.label(
-                    RichText::new(t(lang, UiKey::TipMiningYLevelsTitle))
+                    RichText::new(format!("{} (Java {})", t(lang, UiKey::TipMiningYLevelsTitle), active_ver))
                         .size(13.0)
                         .strong()
                         .color(palette.accent_primary),

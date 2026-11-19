@@ -202,10 +202,16 @@ impl ParticleSystem {
         for m in &mut self.ambient {
             let (dir_x, dir_y) = match theme {
                 ThemeId::CherryBlossom => (0.016, m.vy_norm * 1.4),
-                ThemeId::NetherCrimsonEnd => (m.vx_norm * 0.6, -m.vy_norm * 1.5),
-                ThemeId::EndVoidAurora => (m.vx_norm * 0.8, -m.vy_norm * 0.55),
+                ThemeId::NetherCrimsonEnd | ThemeId::TrialChambers => {
+                    (m.vx_norm * 0.6, -m.vy_norm * 1.5)
+                }
+                ThemeId::EndVoidAurora | ThemeId::DeepDarkSculk => {
+                    (m.vx_norm * 0.8, -m.vy_norm * 0.55)
+                }
+                ThemeId::OceanMonument => (m.vx_norm * 0.4, -m.vy_norm * 1.1),
+                ThemeId::PaleGarden => (0.014, (t * 0.7 + m.phase).sin() * 0.008),
                 ThemeId::StarryOverworld => (m.vx_norm * 0.7, (t * 0.8 + m.phase).sin() * 0.007),
-                ThemeId::DeepslateOre | ThemeId::ClassicJavaStone => {
+                ThemeId::DeepslateOre | ThemeId::ClassicJavaStone | ThemeId::CustomVideo => {
                     (0.012 + m.vx_norm * 0.5, -m.vy_norm * 0.35)
                 }
             };
@@ -269,6 +275,42 @@ impl ParticleSystem {
                         Color32::from_rgba_unmultiplied(252, 226, 128, alpha)
                     };
                     painter.rect_filled(Rect::from_center_size(pos, Vec2::splat(m.size * 0.9)), 0.0, col);
+                }
+                ThemeId::DeepDarkSculk => {
+                    let col = if m.alt {
+                        Color32::from_rgba_unmultiplied(44, 226, 218, (125.0 * pulse) as u8)
+                    } else {
+                        Color32::from_rgba_unmultiplied(92, 168, 220, alpha)
+                    };
+                    painter.circle_filled(pos, m.size * 0.75, col);
+                }
+                ThemeId::TrialChambers => {
+                    let col = if m.alt {
+                        Color32::from_rgba_unmultiplied(252, 164, 62, (120.0 * pulse) as u8)
+                    } else {
+                        Color32::from_rgba_unmultiplied(72, 218, 182, alpha)
+                    };
+                    painter.rect_filled(Rect::from_center_size(pos, Vec2::splat(m.size)), 0.5, col);
+                }
+                ThemeId::PaleGarden => {
+                    let col = if m.alt {
+                        Color32::from_rgba_unmultiplied(245, 168, 56, (120.0 * pulse) as u8)
+                    } else {
+                        Color32::from_rgba_unmultiplied(212, 218, 228, (85.0 * pulse) as u8)
+                    };
+                    painter.circle_filled(pos, m.size * 0.7, col);
+                }
+                ThemeId::OceanMonument => {
+                    let col = if m.alt {
+                        Color32::from_rgba_unmultiplied(112, 242, 232, (118.0 * pulse) as u8)
+                    } else {
+                        Color32::from_rgba_unmultiplied(186, 238, 252, (92.0 * pulse) as u8)
+                    };
+                    painter.circle_stroke(pos, m.size * 0.9, egui::Stroke::new(1.0_f32, col));
+                }
+                ThemeId::CustomVideo => {
+                    let col = Color32::from_rgba_unmultiplied(220, 232, 248, (72.0 * pulse) as u8);
+                    painter.rect_filled(Rect::from_center_size(pos, Vec2::splat(m.size * 0.8)), 0.0, col);
                 }
             }
         }

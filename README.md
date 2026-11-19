@@ -1,8 +1,8 @@
 <div align="center">
 
-# CraftAtlas (`v1.1.0`)
+# CraftAtlas (`v1.2.0`)
 
-**La navaja suiza de escritorio para sobrevivir, optimizar y romper límites en Minecraft Java (`26.3`) — nativa en Rust + C, 100% offline y multiplataforma.**
+**La navaja suiza de escritorio para sobrevivir, optimizar y romper límites en Minecraft Java (`1.18.2` – `26.3`) — nativa en Rust + C, 100% offline y multiplataforma.**
 
 [![CI](https://github.com/Demian1621/CraftAtlas/actions/workflows/ci.yml/badge.svg)](https://github.com/Demian1621/CraftAtlas/actions/workflows/ci.yml)
 [![Release](https://github.com/Demian1621/CraftAtlas/actions/workflows/release.yml/badge.svg)](https://github.com/Demian1621/CraftAtlas/actions/workflows/release.yml)
@@ -21,9 +21,11 @@ Cualquiera que juegue Minecraft técnico o survival avanzado conoce la rutina de
 
 ---
 
-## 🧭 Qué incluye la v1.1.0
+## 🧭 Qué incluye la v1.2.0
 
-### 1. 🗺️ Mapa de Semilla Nativo (`cubiomes` C Engine)
+### 1. 🗺️ Mapa de Semilla Nativo Multi-Versión (`cubiomes` C Engine · `1.18.2` – `26.3`)
+- **Multi-versión real (`1.18.2`, `1.19.4`, `1.20.6`, `1.21.1`, `1.21.4`, `26.3`):** adaptá biomas, strongholds y estructuras a la versión exacta de tu mundo o servidor SMP desde el selector superior (incluyendo notas por versión, capas y objetivos filtrados para ocultar estructuras/biomas inexistentes en versiones previas).
+- **Buscador Radial "Más Cercano" (Estructuras y Biomas):** encontrá en segundo plano los 10 puntos más cercanos de cualquier estructura o bioma (*Mansión, Ciudad Antigua, Stronghold, Monumento, Cámaras de Desafío, Barco Elytra, Campos de Hongos, Arboleda de Cerezos, Jardín Pálido, Oscuridad Profunda, etc.*) ordenados por distancia exacta con botón **`Ir`** y copia de `/tp`.
 - **Overworld, Nether y End** con renderizado nativo de biomas, terreno 3D topográfico y **Slime Chunks**.
 - **Lectura directa de tus mundos locales (`level.dat`)**: detecta automáticamente carpetas de Minecraft oficial, macOS `Application Support`, Flatpak y **PrismLauncher** (ordenados por último juego) para cargar tu semilla al instante sin escribirla a mano.
 - **Semillas guardadas e historial (pensado para Servers):** guardá tus semillas con nombre (por ejemplo servidores SMP que no existen en `.minecraft/saves`) para abrirlas en 1 clic y consultá el historial automático de las últimas 20 semillas exploradas.
@@ -31,26 +33,29 @@ Cualquiera que juegue Minecraft técnico o survival avanzado conoce la rutina de
 - **Escaneo inteligente por prioridad de estructuras**: Strongholds, **Mansiones del Bosque** (incluyendo biomas `dark_forest` y `pale_garden` de Java 26.3), Monumentos Oceánicos, **Ciudades Antiguas (ícono de cabeza de Warden)**, Trial Chambers, Bastiones, Fortalezas y End Cities con Barco.
 - **Sincronización Overworld ↔ Nether (8:1)**, herramienta **Regla** para medir bloques exactos, **marcadores (waypoints) personalizados** (con ícono de cama roja clásica para `Casa / Cama`), pin temporal con copia instantánea de comando `/tp` (click derecho en cualquier coordenada) y **exportación a PNG**.
 
-### 2. ⚒️ Equipamiento God, Yunque Vivo y Libros Encantados (29 presets · 43 libros)
-- Configuraciones completas de armadura, herramientas, armas (incluyendo **Lanza / Estocada**) y élitros con qué hace y para qué sirve cada encantamiento y todas sus incompatibilidades.
-- **Nueva guía de Libros Encantados conmutada**: los **43 encantamientos oficiales de Minecraft Java (`26.3`)**, sus fuentes (Mesa de Encantamientos, Aldeano Librero, Pesca, Trueque Piglin y Cofres/Bóvedas), incompatibilidades, filtro específico y alerta clara para los **libros que NO venden los aldeanos** (*Sigilo rápido / Swift Sneak*, *Velocidad de alma / Soul Speed*, *Aeroimpulso / Wind Burst*).
+### 2. ⚒️ Equipamiento God, God Armor Ilegal y Libros Encantados (29 presets · 43 libros)
+- Configuraciones completas de armadura, herramientas, armas (incluyendo **Lanza / Estocada**) y élitros con filtrado estricto por versión (sin *Sigilo Rápido* en `1.18.2`, sin *Brocha/Lobo* antes de `1.20.6`, sin *Maza* antes de `1.21.1`).
+- **Nueva vista `God Armor (Ilegal / Glitches)`:** guía paso a paso para armar sets con las **4 Protecciones IV simultáneas** (tope **EPF 20 / 80% reducción**), Arco *Mending + Infinity* (`1.9–1.11.1`), Espada triple daño, Ballesta doble y Mazo ilegal (`1.21.1+`), cubriendo ruta Survival Vanilla desde `1.14.2` hacia adelante (con alerta anti-downgrade), pirámide binaria de yunque, **comandos `/give` exactos adaptados a cada versión** (`{Enchantments}` NBT vs `levels:{}` vs `26.3`) y **Datapack JSON (`#exclusive_set`)**.
+- **Guía de Libros Encantados conmutada**: hasta **43 encantamientos oficiales de Minecraft Java** filtrados según la versión seleccionada (`38` en `1.18.2` → `43` en `26.3`), sus fuentes, incompatibilidades e ítems compatibles filtrados por versión.
 - **Optimizador matemático real de Yunque Java**: calcula el **árbol de fusión óptimo** frente al orden ingenuo paso a paso para ahorrar niveles de XP y **no superar nunca el tope de 39 niveles ("Demasiado caro")**.
 - Incluye simulación interactiva **Yunque Vivo** paso a paso para forjar tu pieza sin equivocarte.
 
-### 3. 📖 Crafteos JEI / EMI + Alquimia Completa (2,023 recetas)
-- Buscador instantáneo estilo **JEI / EMI** (`Crafteos` y `Usos`) con historial de navegación atrás/adelante, soporte para tags alternativos y **Árbol de Crafteo recursivo** con desglose exacto de materias primas.
-- Cubre mesa de crafteo, horno, alto horno, ahumador, herrería, cortapiedras y **Mesa de Alquimia** con una guía visual completa de pociones: base rara (verruga del Nether), Redstone (`+Tiempo`), Glowstone (`+Nivel II`), Pólvora (`Lanzadora`), Aliento de Dragón (`Persistente`), Ojo de Araña Fermentado (`Corrupción`) y Flechas con Efecto.
+### 3. 📖 Crafteos JEI / EMI + Alquimia Completa (2,034 recetas por versión)
+- Buscador instantáneo estilo **JEI / EMI** (`Crafteos` y `Usos`) estrictamente filtrado por la versión activa de Minecraft Java (incluyendo **Herrería Netherita de 2 slots sin plantilla en `1.18.2–1.19.4`**, Magnetita con Netherita y Rienda con Slime antes de `26.3`, y sin ítems modernos en versiones viejas).
+- Cubre mesa de crafteo, horno, alto horno, ahumador, herrería, cortapiedras y **Mesa de Alquimia** con pociones adaptadas por versión (`15` base en `<=1.20.6`, `19` con Trial Potions en `1.21.1+`).
 
-### 4. 🌾 Granjas Técnicas y Creadores Especializados (113 granjas · 31 creadores)
-- Filtrables por etapa (`Early`, `Mid`, `End Game`) y categoría, con lista de materiales conmutable entre **Stacks (x64)** y **conteo exacto** y checklist persistente.
-- Detecta tus archivos locales de **Litematica (`.litematic` / `.schematic`)**.
-- Botón inteligente de búsqueda en YouTube que adapta automáticamente idioma y versión activa de Minecraft (`26.3`), acompañado de un directorio curado de **31 creadores técnicos** de habla hispana, inglesa y china con sus caras reales de skin y etiquetas de especialidad (`Granjas`, `Dupes/Exploits`, `Redstone`).
+### 4. 🌾 Granjas Técnicas, Lector `.litematic` y Lista de Compras (113 granjas · 31 creadores)
+- Filtrables por etapa (`Early`, `Mid`, `End Game`) y categoría, con **compatibilidad estricta por versión** (oculta granjas de *Crafter/Trial/Resin/Armadillo* en versiones previas y adapta *Stacking Raid Farm*, *Brujas* y *Bambú* según la versión activa).
+- **Lector nativo de archivos `.litematic` (Litematica):** abrí cualquier `.litematic` desde `.minecraft/schematics` o arrastrándolo a la ventana para ver el desglose real de bloques (incluyendo losas dobles), filtros y conteo en **Shulkers (`x1,728`) + Stacks (`x64`)**.
+- **Lista de Compras Unificada (Shulkers + Progreso):** enviá materiales con 1 clic desde **Granjas**, **Árboles JEI** o **`.litematic`** al panel derecho persistente con barra de progreso y checklist.
+- Botón inteligente de búsqueda en YouTube que adapta automáticamente idioma y versión activa de Minecraft, acompañado de un directorio curado de **31 creadores técnicos** de habla hispana, inglesa y china con sus caras reales de skin y etiquetas de especialidad (`Granjas`, `Dupes/Exploits`, `Redstone`).
 
-### 5. ⚡ Dupes, Glitches y Calculadora de Portales (34 mecánicas)
-- Fichas técnicas diferenciando lo que **funciona en 26.3** frente a mecánicas históricas o parcheadas, con componentes necesarios, explicación técnica y **calculadora instantánea de enlace de portales Overworld ↔ Nether**.
+### 5. ⚡ Dupes, Glitches y Calculadora de Portales (34 mecánicas por versión)
+- Fichas técnicas dinámicas por versión: muestra el estado real en cada versión (*String Duper* activo en `1.18.2–1.21.1` vs parcheado en `1.21.4+`; *Void Trading* activo hasta `1.20.6` vs parcheado en `1.21.1+`; *Supresor StackOverflow* nativo en `1.18.2` vs CCE/Light en `1.19.4+`; *Curación x5* hasta `1.19.4` vs límite `1x` desde `1.20.2+`), junto a la **calculadora instantánea de enlace de portales Overworld ↔ Nether**.
 
-### 6. 💡 Pro Tips y Experiencia Personalizable (17 guías · 6 temas · 3 idiomas)
-- **2,308 íconos** empaquetados en atlas de alta nitidez (sin borrosidad), audio sintetizado desactivable, **6 fondos panorámicos/escénicos animados** (*Cueva Profunda, Panorama Salvaje, Nether Carmesí, Aurora del End, Cerezo Atardecer, Noche Estrellada*), buscador universal **`Ctrl + F`**, barra de **Favoritos**, idiomas **`ES-MX`**, **`ES-ES`** y **`EN-US`**, y **comprobador integrado de nuevas versiones** desde GitHub Releases (preparado para evolucionar a auto-actualizador en futuras versiones).
+### 6. 💡 Pro Tips y Temas de Video (17 guías · 10 temas + Video Propio · 3 idiomas)
+- **2,308 íconos** empaquetados en atlas de alta nitidez (sin borrosidad), audio sintetizado desactivable, **10 temas visuales integrados** — incluyendo **4 fondos de video animados nativos (`.cavf`)** (*Ciudad Antigua Sculk*, *Trial Chambers*, *Jardín Pálido*, *Monumento Oceánico*) y **6 paisajes/panoramas**, más **importador de Video Propio (`.mp4`/`.webm`/`.gif`)** con streaming de baja RAM y pausa automática (`0%` CPU) en segundo plano.
+- Buscador universal **`Ctrl + F`**, barra de **Favoritos**, idiomas **`ES-MX`**, **`ES-ES`** y **`EN-US`**, y **auto-updater verificado por SHA-256** desde GitHub Releases.
 
 ---
 
@@ -63,7 +68,7 @@ Descarga el instalador o ejecutable de tu sistema desde la sección de **[Releas
 - **`.zip`**: descomprime y ejecuta `craft-atlas.exe`.
 
 ### 🍎 macOS (Universal: Apple Silicon M1/M2/M3/M4 + Intel)
-1. Descarga **`craft-atlas-v1.1.0-macos-universal.dmg`** (o el `.zip`).
+1. Descarga **`craft-atlas-v1.2.0-macos-universal.dmg`** (o el `.zip`).
 2. Arrastra **CraftAtlas.app** a tu carpeta **Aplicaciones**.
 3. **Nota de primera apertura (Gatekeeper)**: como esta release aún no cuenta con firma paga de Apple Developer, haz **clic derecho (o Ctrl + clic) → Abrir → Abrir**, o ejecuta una sola vez en Terminal:
    ```bash
@@ -73,12 +78,12 @@ Descarga el instalador o ejecutable de tu sistema desde la sección de **[Releas
 ### 🐧 Linux (Todas las distros)
 | Formato | Distros recomendadas | Cómo usar |
 | --- | --- | --- |
-| **`.AppImage`** *(Universal)* | Ubuntu, Fedora, Arch, Mint, Pop!_OS, openSUSE, SteamOS | `chmod +x craft-atlas-v1.1.0-linux-x86_64.AppImage && ./craft-atlas-v1.1.0-linux-x86_64.AppImage` |
-| **`.deb`** | Ubuntu, Debian, Linux Mint, Pop!_OS, Zorin | `sudo apt install ./craft-atlas_1.1.0_amd64.deb` |
-| **`.rpm`** | Fedora, RHEL, Rocky, openSUSE | `sudo dnf install ./craft-atlas-1.1.0-1.x86_64.rpm` |
+| **`.AppImage`** *(Universal)* | Ubuntu, Fedora, Arch, Mint, Pop!_OS, openSUSE, SteamOS | `chmod +x craft-atlas-v1.2.0-linux-x86_64.AppImage && ./craft-atlas-v1.2.0-linux-x86_64.AppImage` |
+| **`.deb`** | Ubuntu, Debian, Linux Mint, Pop!_OS, Zorin | `sudo apt install ./craft-atlas_1.2.0_amd64.deb` |
+| **`.rpm`** | Fedora, RHEL, Rocky, openSUSE | `sudo dnf install ./craft-atlas-1.2.0-1.x86_64.rpm` |
 | **`.tar.gz`** *(Portable)* | Arch Linux, Manjaro, NixOS, genérico | Extrae y ejecuta `./craft-atlas` o `./install-user.sh` |
 
-> **Nota Linux y verificación SHA-256**: en Linux requiere librerías gráficas estándar (`OpenGL` / `Wayland` o `X11`) y audio `ALSA`. Podés verificar la integridad de cualquier descarga comparando su hash con `SHA256SUMS.txt` (ver [SECURITY.md](SECURITY.md)).
+> **Verificación SHA-256 y Build Provenance**: cada Release incluye `SHA256SUMS.txt` y atestación criptográfica oficial de GitHub Actions (ver [SECURITY.md](SECURITY.md)).
 
 ---
 
@@ -99,12 +104,12 @@ cargo build --release --locked
 
 ---
 
-## ⚡ Novedades de `v1.1.0`
+## ⚡ Novedades de `v1.2.0`
 
-- **Semillas guardadas e historial para Servidores + Última posición y Skin `.png` propia:** Guardá seeds con nombre propio (ideal para servidores online sin `level.dat` local), consultá el historial de tus últimas 20 semillas, visualizá tu última posición guardada (`Player.Pos`, aclarando que no es en vivo) y cargá o arrastrá tu skin `.png`.
-- **Enciclopedia completa de Libros Encantados (43 encantamientos Java `26.3`):** Sub-vista dedicada dentro de **Equipamiento God y Yunque** con ícono de libro encantado + íconos de los ítems compatibles, fuentes de obtención, incompatibilidades, mejor método y filtro para los libros que no dan los aldeanos (*Sigilo rápido*, *Velocidad de alma*, *Aeroimpulso*).
-- **Íconos y distribución renovada en el Mapa de Semilla:** Panel lateral limpio en 3 pestañas (**Marcadores** primero arriba de todo, **Capas** en 2 columnas y **Mundos / Skin**), selector desplegable unificado, nuevo ícono de **cama roja clásica** para `Casa / Cama` e ícono de **cabeza de Warden** para la **Ciudad Antigua**.
-- Además mantiene todas las optimizaciones de `v1.0.2` (**~0% de CPU en segundo plano**, **30 FPS activos**, botones de **Feedback/Ko-fi** y balance del yunque). Ver notas completas en [RELEASE_v1.1.0.md](docs/RELEASE_v1.1.0.md).
+- **Soporte Multi-Versión Real en TODA la App (`1.18.2` → `26.3`):** Cambiá la versión de Java en la barra superior para adaptar Mapa Cubiomes + Buscador Radial, Crafteos JEI (incl. herrería 2-slots sin plantilla, Magnetita y Rienda clásicas), Pociones, Libros Encantados, Equipamiento God, Granjas, Glitches (*String Duper*, *Void Trading*, *StackOverflow*, *Zombie Curing x5*) y Notas de cada versión.
+- **God Armor (Ilegal / Glitches) en Equipamiento God:** Nueva vista con sets 4-Protecciones (EPF 20 / 80%), Arco Mending+Infinity, ruta Survival Vanilla `1.14.2` hacia adelante con advertencia anti-downgrade, comandos `/give` adaptados por versión y Datapacks JSON (`exclusive_set`).
+- **4 Temas de Video Integrados (`.cavf`) + Video Propio (`.mp4`/`.webm`/`.gif`):** Streaming asíncrono en Rust nativo (~2–3 MB VRAM, `0%` CPU inactivo) para *Deep Dark*, *Trial Chambers*, *Pale Garden* y *Ocean Monument* más importador de video personalizado.
+- **Lector `.litematic` + Lista de Compras Unificada + Auto-Updater SHA-256:** Ver notas completas en [RELEASE_v1.2.0.md](docs/RELEASE_v1.2.0.md).
 
 ---
 
@@ -117,9 +122,9 @@ CraftAtlas es **100% gratis, sin anuncios y sin funciones bloqueadas detrás de 
 
 ---
 
-## 🚀 Actualizaciones futuras (Roadmap v1.x)
+## 🚀 Actualizaciones automáticas y seguridad
 
-La arquitectura `v1.x` ya incluye verificación asíncrona endurecida por TLS 1.2+ contra **GitHub Releases** (`v1.1.0` en la barra superior). En próximas versiones (`v1.2+`) evolucionará a **descarga e instalación automática in-app con verificación SHA-256**, además de ampliar versiones históricas del registro de Minecraft.
+CraftAtlas `v1.2.0` incluye **comprobación y actualización in-app verificada por SHA-256 (FIPS 180-4)** vía HTTPS `TLS 1.2+` contra **GitHub Releases**, junto con **Build Provenance Attestations** firmadas por GitHub Actions en cada ejecutable publicado.
 
 ---
 

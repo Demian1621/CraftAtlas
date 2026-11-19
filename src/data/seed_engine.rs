@@ -8,6 +8,120 @@ use std::thread;
 
 use super::models::Language;
 
+/// Maps a version identifier from `data/versions.json` (`cubiomes_mc`) to our stable C bridge code.
+pub fn cubiomes_version_code(ver: &str) -> i32 {
+    let v = ver.trim();
+    if v.starts_with("1.18") {
+        1182
+    } else if v.starts_with("1.19.2") {
+        1192
+    } else if v.starts_with("1.19") {
+        1194
+    } else if v.starts_with("1.20") {
+        1206
+    } else if v.starts_with("1.21.1") || v == "1.21" {
+        1211
+    } else if v.starts_with("1.21.3") {
+        1213
+    } else {
+        // 1.21.4+, 26.3+ -> MC_NEWEST (MC_1_21_WD)
+        0
+    }
+}
+
+/// Curated list of popular biomes searchable via the radial Nearest Biome Finder.
+#[derive(Debug, Clone, Copy)]
+pub struct SearchableBiome {
+    pub id: i32,
+    pub slug: &'static str,
+    pub icon_id: &'static str,
+    pub accent: Color32,
+}
+
+impl SearchableBiome {
+    pub fn label(self, lang: Language) -> String {
+        localized_biome_name(self.slug, lang)
+    }
+
+    pub fn for_dim(dim: Dimension) -> &'static [SearchableBiome] {
+        match dim {
+            Dimension::Overworld => OVERWORLD_SEARCHABLE_BIOMES,
+            Dimension::Nether => NETHER_SEARCHABLE_BIOMES,
+            Dimension::TheEnd => END_SEARCHABLE_BIOMES,
+        }
+    }
+}
+
+const OVERWORLD_SEARCHABLE_BIOMES: &[SearchableBiome] = &[
+    SearchableBiome { id: 14, slug: "mushroom_fields", icon_id: "red_mushroom", accent: Color32::from_rgb(188, 56, 202) },
+    SearchableBiome { id: 185, slug: "cherry_grove", icon_id: "cherry_sapling", accent: Color32::from_rgb(242, 154, 194) },
+    SearchableBiome { id: 186, slug: "pale_garden", icon_id: "pale_oak_sapling", accent: Color32::from_rgb(168, 174, 182) },
+    SearchableBiome { id: 183, slug: "deep_dark", icon_id: "sculk_catalyst", accent: Color32::from_rgb(54, 214, 218) },
+    SearchableBiome { id: 175, slug: "lush_caves", icon_id: "glow_berries", accent: Color32::from_rgb(112, 204, 88) },
+    SearchableBiome { id: 174, slug: "dripstone_caves", icon_id: "pointed_dripstone", accent: Color32::from_rgb(164, 134, 110) },
+    SearchableBiome { id: 21, slug: "jungle", icon_id: "jungle_sapling", accent: Color32::from_rgb(68, 176, 52) },
+    SearchableBiome { id: 168, slug: "bamboo_jungle", icon_id: "bamboo", accent: Color32::from_rgb(110, 196, 52) },
+    SearchableBiome { id: 37, slug: "badlands", icon_id: "red_sand", accent: Color32::from_rgb(214, 112, 58) },
+    SearchableBiome { id: 140, slug: "ice_spikes", icon_id: "packed_ice", accent: Color32::from_rgb(166, 216, 240) },
+    SearchableBiome { id: 184, slug: "mangrove_swamp", icon_id: "mangrove_propagule", accent: Color32::from_rgb(68, 146, 118) },
+    SearchableBiome { id: 6, slug: "swamp", icon_id: "lily_pad", accent: Color32::from_rgb(98, 140, 88) },
+    SearchableBiome { id: 2, slug: "desert", icon_id: "sand", accent: Color32::from_rgb(236, 210, 148) },
+    SearchableBiome { id: 44, slug: "warm_ocean", icon_id: "brain_coral", accent: Color32::from_rgb(56, 168, 224) },
+    SearchableBiome { id: 180, slug: "jagged_peaks", icon_id: "emerald_ore", accent: Color32::from_rgb(186, 198, 212) },
+    SearchableBiome { id: 132, slug: "flower_forest", icon_id: "allium", accent: Color32::from_rgb(238, 132, 196) },
+    SearchableBiome { id: 29, slug: "dark_forest", icon_id: "dark_oak_sapling", accent: Color32::from_rgb(76, 128, 62) },
+    SearchableBiome { id: 12, slug: "snowy_plains", icon_id: "snowball", accent: Color32::from_rgb(224, 234, 242) },
+];
+
+const NETHER_SEARCHABLE_BIOMES: &[SearchableBiome] = &[
+    SearchableBiome { id: 171, slug: "crimson_forest", icon_id: "crimson_fungus", accent: Color32::from_rgb(198, 42, 62) },
+    SearchableBiome { id: 172, slug: "warped_forest", icon_id: "warped_fungus", accent: Color32::from_rgb(28, 178, 156) },
+    SearchableBiome { id: 170, slug: "soul_sand_valley", icon_id: "soul_sand", accent: Color32::from_rgb(94, 156, 166) },
+    SearchableBiome { id: 173, slug: "basalt_deltas", icon_id: "basalt", accent: Color32::from_rgb(112, 108, 122) },
+    SearchableBiome { id: 8, slug: "nether_wastes", icon_id: "netherrack", accent: Color32::from_rgb(162, 62, 56) },
+];
+
+const END_SEARCHABLE_BIOMES: &[SearchableBiome] = &[
+    SearchableBiome { id: 42, slug: "end_highlands", icon_id: "chorus_fruit", accent: Color32::from_rgb(228, 216, 148) },
+    SearchableBiome { id: 41, slug: "end_midlands", icon_id: "end_stone", accent: Color32::from_rgb(186, 172, 114) },
+    SearchableBiome { id: 43, slug: "end_barrens", icon_id: "end_stone_bricks", accent: Color32::from_rgb(144, 132, 136) },
+];
+
+/// Search target for the radial Nearest Finder.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NearestTarget {
+    Structure(StructureKind),
+    Biome {
+        id: i32,
+        slug: &'static str,
+        icon_id: &'static str,
+        accent: Color32,
+    },
+}
+
+/// Single result returned by the radial Nearest Structure / Biome Finder.
+#[derive(Debug, Clone)]
+pub struct NearestHit {
+    pub x: i32,
+    pub z: i32,
+    pub dist_blocks: i32,
+    pub label: String,
+    pub icon_id: &'static str,
+    pub accent: Color32,
+    pub dim: Dimension,
+}
+
+/// Async status of the radial nearest finder so scanning never blocks UI frames.
+#[derive(Debug, Clone, Default)]
+pub enum NearestSearchState {
+    #[default]
+    Idle,
+    Searching,
+    Ready {
+        hits: Vec<NearestHit>,
+    },
+}
+
 pub const TILE_PX: usize = 128;
 
 /// Dimensions supported natively by Cubiomes & Seed Map Explorer.
@@ -208,6 +322,61 @@ impl StructureKind {
             _ => 0.18,
         }
     }
+
+    pub fn searchable_for_dim(dim: Dimension) -> &'static [StructureKind] {
+        match dim {
+            Dimension::Overworld => &[
+                StructureKind::Mansion,
+                StructureKind::AncientCity,
+                StructureKind::Stronghold,
+                StructureKind::Monument,
+                StructureKind::TrialChambers,
+                StructureKind::Village,
+                StructureKind::Outpost,
+                StructureKind::DesertPyramid,
+                StructureKind::JungleTemple,
+                StructureKind::SwampHut,
+                StructureKind::Igloo,
+                StructureKind::TrailRuins,
+                StructureKind::RuinedPortal,
+            ],
+            Dimension::Nether => &[
+                StructureKind::Fortress,
+                StructureKind::Bastion,
+                StructureKind::RuinedPortal,
+            ],
+            Dimension::TheEnd => &[
+                StructureKind::EndShip,
+                StructureKind::EndCity,
+                StructureKind::EndGateway,
+            ],
+        }
+    }
+
+    /// Maps `StructureKind` to Cubiomes `stype` and `only_end_ship` flag for radial search.
+    pub fn to_c_query(self, dim: Dimension) -> Option<(i32, i32)> {
+        match self {
+            StructureKind::Stronghold => Some((-1, 0)),
+            StructureKind::DesertPyramid => Some((1, 0)),
+            StructureKind::JungleTemple => Some((2, 0)),
+            StructureKind::SwampHut => Some((3, 0)),
+            StructureKind::Igloo => Some((4, 0)),
+            StructureKind::Village => Some((5, 0)),
+            StructureKind::Monument => Some((8, 0)),
+            StructureKind::Mansion => Some((9, 0)),
+            StructureKind::Outpost => Some((10, 0)),
+            StructureKind::RuinedPortal => Some((if dim == Dimension::Nether { 12 } else { 11 }, 0)),
+            StructureKind::AncientCity => Some((13, 0)),
+            StructureKind::Fortress => Some((18, 0)),
+            StructureKind::Bastion => Some((19, 0)),
+            StructureKind::EndCity => Some((20, 0)),
+            StructureKind::EndShip => Some((20, 1)),
+            StructureKind::EndGateway => Some((21, 0)),
+            StructureKind::TrailRuins => Some((23, 0)),
+            StructureKind::TrialChambers => Some((24, 0)),
+            StructureKind::SpawnPoint | StructureKind::SlimeChunk => None,
+        }
+    }
 }
 
 /// UI Toggle bitflags corresponding to C bridge masks.
@@ -313,8 +482,16 @@ struct CMcStructureHit {
     biome: i32,
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+struct CMcBiomeHit {
+    biome: i32,
+    x: i32,
+    z: i32,
+}
+
 extern "C" {
-    fn mc_world_new(seed: u64, large_biomes: i32) -> *mut McWorldHandleOpaque;
+    fn mc_world_new(seed: u64, mc_version_code: i32, large_biomes: i32) -> *mut McWorldHandleOpaque;
     fn mc_world_free(h: *mut McWorldHandleOpaque);
     fn mc_render_tile(
         h: *const McWorldHandleOpaque,
@@ -358,6 +535,27 @@ extern "C" {
         out: *mut CMcStructureHit,
         max_out: i32,
     ) -> i32;
+    fn mc_find_nearest_structures(
+        h: *mut McWorldHandleOpaque,
+        dim: i32,
+        stype: i32,
+        only_end_ship: i32,
+        origin_x: i32,
+        origin_z: i32,
+        max_radius: i32,
+        out: *mut CMcStructureHit,
+        max_out: i32,
+    ) -> i32;
+    fn mc_find_nearest_biomes(
+        h: *const McWorldHandleOpaque,
+        dim: i32,
+        target_biome_id: i32,
+        origin_x: i32,
+        origin_z: i32,
+        max_radius: i32,
+        out: *mut CMcBiomeHit,
+        max_out: i32,
+    ) -> i32;
 }
 
 struct OwnedWorld {
@@ -367,8 +565,10 @@ struct OwnedWorld {
 unsafe impl Send for OwnedWorld {}
 
 impl OwnedWorld {
-    fn new(seed: i64, large_biomes: bool) -> Self {
-        let ptr = unsafe { mc_world_new(seed as u64, if large_biomes { 1 } else { 0 }) };
+    fn new(seed: i64, mc_version: i32, large_biomes: bool) -> Self {
+        let ptr = unsafe {
+            mc_world_new(seed as u64, mc_version, if large_biomes { 1 } else { 0 })
+        };
         assert!(!ptr.is_null(), "mc_world_new returned null");
         Self { ptr }
     }
@@ -385,6 +585,7 @@ impl Drop for OwnedWorld {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TileKey {
     pub seed: i64,
+    pub mc_version: i32,
     pub large_biomes: bool,
     pub dim: Dimension,
     pub scale: i32,
@@ -412,9 +613,22 @@ pub struct CachedTile {
     pub last_used_frame: u64,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct StructureScanKey {
+    seed: i64,
+    mc_version: i32,
+    dim: Dimension,
+    mask: u32,
+    min_x: i32,
+    min_z: i32,
+    max_x: i32,
+    max_z: i32,
+}
+
 /// Interactive Cubiomes Engine owning multi-threaded tile workers, cached GPU tiles, spawn & stronghold state.
 pub struct SeedMapEngine {
     pub seed: i64,
+    pub mc_version: i32,
     pub large_biomes: bool,
     world: OwnedWorld,
     spawn_pos: (i32, i32),
@@ -422,7 +636,7 @@ pub struct SeedMapEngine {
     end_gateways: Vec<StructureMarker>,
 
     // Structure area cache key
-    last_scan_key: Option<(i64, Dimension, u32, i32, i32, i32, i32)>,
+    last_scan_key: Option<StructureScanKey>,
     cached_structures: Vec<StructureMarker>,
 
     // Multi-threaded tile rasterizer + GPU texture cache
@@ -431,6 +645,10 @@ pub struct SeedMapEngine {
     in_flight: HashSet<TileKey>,
     tiles: HashMap<TileKey, CachedTile>,
     frame_counter: u64,
+
+    // Non-blocking radial nearest structure/biome finder
+    nearest_state: NearestSearchState,
+    nearest_rx: Option<Receiver<NearestSearchState>>,
 }
 
 impl Drop for SeedMapEngine {
@@ -445,7 +663,7 @@ impl Drop for SeedMapEngine {
 }
 
 impl SeedMapEngine {
-    pub fn new(initial_seed: i64, large_biomes: bool) -> Self {
+    pub fn new(initial_seed: i64, mc_version: i32, large_biomes: bool) -> Self {
         let (res_tx, res_rx) = mpsc::channel::<TileResult>();
         let job_queue = Arc::new((
             Mutex::new(TileQueueState {
@@ -468,11 +686,12 @@ impl SeedMapEngine {
                 .expect("spawn tile worker thread");
         }
 
-        let mut world = OwnedWorld::new(initial_seed, large_biomes);
+        let mut world = OwnedWorld::new(initial_seed, mc_version, large_biomes);
         let (spawn_pos, strongholds, end_gateways) = compute_global_markers(&mut world);
 
         Self {
             seed: initial_seed,
+            mc_version,
             large_biomes,
             world,
             spawn_pos,
@@ -485,16 +704,30 @@ impl SeedMapEngine {
             in_flight: HashSet::new(),
             tiles: HashMap::new(),
             frame_counter: 0,
+            nearest_state: NearestSearchState::Idle,
+            nearest_rx: None,
         }
     }
 
     pub fn set_seed(&mut self, new_seed: i64, large_biomes: bool) {
-        if self.seed == new_seed && self.large_biomes == large_biomes {
+        self.set_world_config(new_seed, self.mc_version, large_biomes);
+    }
+
+    pub fn set_mc_version(&mut self, mc_version: i32) {
+        self.set_world_config(self.seed, mc_version, self.large_biomes);
+    }
+
+    pub fn set_world_config(&mut self, new_seed: i64, mc_version: i32, large_biomes: bool) {
+        if self.seed == new_seed
+            && self.mc_version == mc_version
+            && self.large_biomes == large_biomes
+        {
             return;
         }
         self.seed = new_seed;
+        self.mc_version = mc_version;
         self.large_biomes = large_biomes;
-        self.world = OwnedWorld::new(new_seed, large_biomes);
+        self.world = OwnedWorld::new(new_seed, mc_version, large_biomes);
         let (sp, sh, gw) = compute_global_markers(&mut self.world);
         self.spawn_pos = sp;
         self.strongholds = sh;
@@ -506,6 +739,86 @@ impl SeedMapEngine {
         }
         self.in_flight.clear();
         self.tiles.clear();
+        self.nearest_state = NearestSearchState::Idle;
+        self.nearest_rx = None;
+    }
+
+    pub fn nearest_state(&self) -> &NearestSearchState {
+        &self.nearest_state
+    }
+
+    pub fn clear_nearest_results(&mut self) {
+        self.nearest_state = NearestSearchState::Idle;
+        self.nearest_rx = None;
+    }
+
+    /// Launches a non-blocking radial search for the nearest structures or biomes from `origin`.
+    pub fn start_nearest_search(
+        &mut self,
+        dim: Dimension,
+        target: NearestTarget,
+        origin: (i32, i32),
+        max_radius: i32,
+        max_results: usize,
+        lang: Language,
+    ) {
+        let seed = self.seed;
+        let mc_version = self.mc_version;
+        let large_biomes = self.large_biomes;
+        self.nearest_state = NearestSearchState::Searching;
+        let (tx, rx) = mpsc::channel();
+        self.nearest_rx = Some(rx);
+        thread::Builder::new()
+            .name("cubiomes-nearest-finder".to_string())
+            .spawn(move || {
+                let mut world = OwnedWorld::new(seed, mc_version, large_biomes);
+                let hits = run_nearest_search_on_world(
+                    &mut world,
+                    dim,
+                    target,
+                    origin,
+                    max_radius,
+                    max_results,
+                    lang,
+                );
+                let _ = tx.send(NearestSearchState::Ready { hits });
+            })
+            .expect("spawn nearest finder thread");
+    }
+
+    /// Polls any in-flight nearest finder thread. Returns true when new results arrive.
+    pub fn poll_nearest_search(&mut self) -> bool {
+        let Some(rx) = self.nearest_rx.as_ref() else {
+            return false;
+        };
+        if let Ok(done) = rx.try_recv() {
+            self.nearest_state = done;
+            self.nearest_rx = None;
+            return true;
+        }
+        false
+    }
+
+    /// Synchronous nearest search helper (primarily for deterministic unit testing).
+    #[allow(dead_code)]
+    pub fn find_nearest_sync(
+        &mut self,
+        dim: Dimension,
+        target: NearestTarget,
+        origin: (i32, i32),
+        max_radius: i32,
+        max_results: usize,
+        lang: Language,
+    ) -> Vec<NearestHit> {
+        run_nearest_search_on_world(
+            &mut self.world,
+            dim,
+            target,
+            origin,
+            max_radius,
+            max_results,
+            lang,
+        )
     }
 
     pub fn spawn_point(&self) -> (i32, i32) {
@@ -527,13 +840,22 @@ impl SeedMapEngine {
         let mut uploaded = false;
         while let Ok(res) = self.res_rx.try_recv() {
             self.in_flight.remove(&res.key);
-            if res.key.seed != self.seed || res.key.large_biomes != self.large_biomes {
+            if res.key.seed != self.seed
+                || res.key.mc_version != self.mc_version
+                || res.key.large_biomes != self.large_biomes
+            {
                 continue;
             }
             let image = ColorImage::from_rgba_unmultiplied([TILE_PX, TILE_PX], &res.rgba);
             let tex_name = format!(
-                "mc_tile_{}_{}_{}_{}_{}_{}",
-                res.key.seed, res.key.dim as i32, res.key.scale, res.key.style as i32, res.key.tx, res.key.tz
+                "mc_tile_{}_{}_{}_{}_{}_{}_{}",
+                res.key.seed,
+                res.key.mc_version,
+                res.key.dim as i32,
+                res.key.scale,
+                res.key.style as i32,
+                res.key.tx,
+                res.key.tz
             );
             let tex = ctx.load_texture(tex_name, image, TextureOptions::NEAREST);
             self.tiles.insert(
@@ -577,6 +899,7 @@ impl SeedMapEngine {
     ) -> Option<(&TextureHandle, Rect)> {
         let key = TileKey {
             seed: self.seed,
+            mc_version: self.mc_version,
             large_biomes: self.large_biomes,
             dim,
             scale,
@@ -627,6 +950,7 @@ impl SeedMapEngine {
             let c_tz = tz.div_euclid(factor);
             let key = TileKey {
                 seed: self.seed,
+                mc_version: self.mc_version,
                 large_biomes: self.large_biomes,
                 dim,
                 scale: c_scale,
@@ -688,7 +1012,16 @@ impl SeedMapEngine {
         let qmax_x = max_bx.div_euclid(512) * 512 + 1024;
         let qmax_z = max_bz.div_euclid(512) * 512 + 1024;
 
-        let scan_key = (self.seed, dim, mask, qmin_x, qmin_z, qmax_x, qmax_z);
+        let scan_key = StructureScanKey {
+            seed: self.seed,
+            mc_version: self.mc_version,
+            dim,
+            mask,
+            min_x: qmin_x,
+            min_z: qmin_z,
+            max_x: qmax_x,
+            max_z: qmax_z,
+        };
         if self.last_scan_key == Some(scan_key) {
             return &self.cached_structures;
         }
@@ -785,7 +1118,7 @@ impl SeedMapEngine {
 }
 
 fn tile_worker_loop(queue: Arc<(Mutex<TileQueueState>, Condvar)>, tx: Sender<TileResult>) {
-    let mut cached_world: Option<(i64, bool, OwnedWorld)> = None;
+    let mut cached_world: Option<(i64, i32, bool, OwnedWorld)> = None;
     let mut rgba_buf = vec![0u8; TILE_PX * TILE_PX * 4];
     let (lock, cvar) = &*queue;
 
@@ -811,17 +1144,20 @@ fn tile_worker_loop(queue: Arc<(Mutex<TileQueueState>, Condvar)>, tx: Sender<Til
         };
 
         let need_reinit = match &cached_world {
-            Some((s, lb, _)) => *s != job.key.seed || *lb != job.key.large_biomes,
+            Some((s, v, lb, _)) => {
+                *s != job.key.seed || *v != job.key.mc_version || *lb != job.key.large_biomes
+            }
             None => true,
         };
         if need_reinit {
             cached_world = Some((
                 job.key.seed,
+                job.key.mc_version,
                 job.key.large_biomes,
-                OwnedWorld::new(job.key.seed, job.key.large_biomes),
+                OwnedWorld::new(job.key.seed, job.key.mc_version, job.key.large_biomes),
             ));
         }
-        if let Some((_, _, ref world)) = cached_world {
+        if let Some((_, _, _, ref world)) = cached_world {
             let bx0 = job.key.tx.saturating_mul((TILE_PX as i32) * job.key.scale);
             let bz0 = job.key.tz.saturating_mul((TILE_PX as i32) * job.key.scale);
             unsafe {
@@ -846,6 +1182,100 @@ fn tile_worker_loop(queue: Arc<(Mutex<TileQueueState>, Condvar)>, tx: Sender<Til
             {
                 return;
             }
+        }
+    }
+}
+
+fn run_nearest_search_on_world(
+    world: &mut OwnedWorld,
+    dim: Dimension,
+    target: NearestTarget,
+    origin: (i32, i32),
+    max_radius: i32,
+    max_results: usize,
+    lang: Language,
+) -> Vec<NearestHit> {
+    let cap = max_results.clamp(1, 32);
+    match target {
+        NearestTarget::Structure(kind) => {
+            let Some((stype, only_ship)) = kind.to_c_query(dim) else {
+                return Vec::new();
+            };
+            let mut raw = vec![CMcStructureHit::default(); cap];
+            let n = unsafe {
+                mc_find_nearest_structures(
+                    world.ptr,
+                    dim as i32,
+                    stype,
+                    only_ship,
+                    origin.0,
+                    origin.1,
+                    max_radius,
+                    raw.as_mut_ptr(),
+                    cap as i32,
+                )
+            };
+            raw[..(n.max(0) as usize)]
+                .iter()
+                .map(|h| {
+                    let dx = (h.x as i64 - origin.0 as i64) as f64;
+                    let dz = (h.z as i64 - origin.1 as i64) as f64;
+                    let dist = dx.hypot(dz).round() as i32;
+                    let resolved_kind = if stype == -1 {
+                        StructureKind::Stronghold
+                    } else if only_ship != 0 {
+                        StructureKind::EndShip
+                    } else {
+                        map_c_struct_type(h.stype, h.variant).unwrap_or(kind)
+                    };
+                    NearestHit {
+                        x: h.x,
+                        z: h.z,
+                        dist_blocks: dist,
+                        label: resolved_kind.label(lang).to_string(),
+                        icon_id: resolved_kind.icon_id(),
+                        accent: resolved_kind.accent_color(),
+                        dim,
+                    }
+                })
+                .collect()
+        }
+        NearestTarget::Biome {
+            id,
+            slug,
+            icon_id,
+            accent,
+        } => {
+            let mut raw = vec![CMcBiomeHit::default(); cap];
+            let n = unsafe {
+                mc_find_nearest_biomes(
+                    world.ptr,
+                    dim as i32,
+                    id,
+                    origin.0,
+                    origin.1,
+                    max_radius,
+                    raw.as_mut_ptr(),
+                    cap as i32,
+                )
+            };
+            let label = localized_biome_name(slug, lang);
+            raw[..(n.max(0) as usize)]
+                .iter()
+                .map(|h| {
+                    let dx = (h.x as i64 - origin.0 as i64) as f64;
+                    let dz = (h.z as i64 - origin.1 as i64) as f64;
+                    NearestHit {
+                        x: h.x,
+                        z: h.z,
+                        dist_blocks: dx.hypot(dz).round() as i32,
+                        label: label.clone(),
+                        icon_id,
+                        accent,
+                        dim,
+                    }
+                })
+                .collect()
         }
     }
 }
@@ -1046,7 +1476,7 @@ mod tests {
 
     #[test]
     fn cubiomes_overworld_nether_end_queries() {
-        let mut engine = SeedMapEngine::new(1234567890i64, false);
+        let mut engine = SeedMapEngine::new(1234567890i64, 0, false);
         let (sx, sz) = engine.spawn_point();
         assert!(sx.abs() < 2048 && sz.abs() < 2048);
         assert_eq!(engine.strongholds().len(), 128);
@@ -1088,7 +1518,7 @@ mod tests {
 
     #[test]
     fn cubiomes_tile_scales_1_to_256_are_distinct_across_adjacent_tiles() {
-        let world = OwnedWorld::new(469686492058373120i64, false);
+        let world = OwnedWorld::new(469686492058373120i64, 0, false);
         for &dim in &[Dimension::Overworld, Dimension::Nether, Dimension::TheEnd] {
             for &scale in &[1i32, 4, 16, 64, 256] {
                 let mut t0 = vec![0u8; TILE_PX * TILE_PX * 4];
@@ -1167,7 +1597,7 @@ mod tests {
 
         let mut total_mansions = 0usize;
         for seed in 1i64..=5 {
-            let mut engine = SeedMapEngine::new(seed, false);
+            let mut engine = SeedMapEngine::new(seed, 0, false);
             let full_hits = engine.structures_in_view(
                 Dimension::Overworld,
                 -10_000,
@@ -1207,6 +1637,78 @@ mod tests {
             total_mansions >= 15,
             "Expected multiple Woodland Mansions across 5 seeds, got {}",
             total_mansions
+        );
+    }
+
+    #[test]
+    fn multi_version_and_nearest_structure_and_biome_finder() {
+        // 1.18.2 must NOT generate Trial Chambers or Ancient Cities, whereas 26.3 must find them
+        let mut old_engine = SeedMapEngine::new(1234567890i64, cubiomes_version_code("1.18.2"), false);
+        let old_trials = old_engine.find_nearest_sync(
+            Dimension::Overworld,
+            NearestTarget::Structure(StructureKind::TrialChambers),
+            (0, 0),
+            8000,
+            5,
+            Language::EnUs,
+        );
+        assert!(old_trials.is_empty(), "1.18.2 must not emit Trial Chambers");
+
+        let mut new_engine = SeedMapEngine::new(1234567890i64, cubiomes_version_code("26.3"), false);
+        let new_trials = new_engine.find_nearest_sync(
+            Dimension::Overworld,
+            NearestTarget::Structure(StructureKind::TrialChambers),
+            (0, 0),
+            8000,
+            5,
+            Language::EnUs,
+        );
+        assert!(
+            !new_trials.is_empty(),
+            "26.3 must find nearby Trial Chambers"
+        );
+        assert!(
+            new_trials.windows(2).all(|w| w[0].dist_blocks <= w[1].dist_blocks),
+            "Nearest structure results must be sorted ascending by distance"
+        );
+
+        // Biome finder: Cherry Grove does not exist in 1.18.2, exists in 26.3
+        let cherry = OVERWORLD_SEARCHABLE_BIOMES
+            .iter()
+            .find(|b| b.slug == "cherry_grove")
+            .unwrap();
+        let old_cherry = old_engine.find_nearest_sync(
+            Dimension::Overworld,
+            NearestTarget::Biome {
+                id: cherry.id,
+                slug: cherry.slug,
+                icon_id: cherry.icon_id,
+                accent: cherry.accent,
+            },
+            (0, 0),
+            16_000,
+            4,
+            Language::EnUs,
+        );
+        assert!(old_cherry.is_empty(), "1.18.2 must not emit Cherry Grove");
+
+        let new_cherry = new_engine.find_nearest_sync(
+            Dimension::Overworld,
+            NearestTarget::Biome {
+                id: cherry.id,
+                slug: cherry.slug,
+                icon_id: cherry.icon_id,
+                accent: cherry.accent,
+            },
+            (0, 0),
+            16_000,
+            4,
+            Language::EnUs,
+        );
+        assert!(!new_cherry.is_empty(), "26.3 must find Cherry Grove");
+        assert!(
+            new_cherry.windows(2).all(|w| w[0].dist_blocks <= w[1].dist_blocks),
+            "Nearest biome results must be sorted ascending by distance"
         );
     }
 }

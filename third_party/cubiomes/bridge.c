@@ -14,9 +14,22 @@ struct McWorldHandle {
     Generator g_end;
     SurfaceNoise sn_end;
     uint64_t seed;
+    int32_t mc_ver;
     int32_t large_biomes;
     uint8_t colors[256][3];
 };
+
+static int32_t resolve_cubiomes_mc_ver(int32_t code) {
+    switch (code) {
+        case 1182: return MC_1_18_2;
+        case 1192: return MC_1_19_2;
+        case 1194: return MC_1_19_4;
+        case 1206: return MC_1_20_6;
+        case 1211: return MC_1_21_1;
+        case 1213: return MC_1_21_3;
+        default:   return MC_NEWEST;
+    }
+}
 
 static inline int32_t floor_div_i32(int32_t a, int32_t b) {
     int32_t q = a / b;
@@ -88,22 +101,23 @@ static void init_rich_palette(uint8_t colors[256][3]) {
     colors[small_end_islands][0] = 22; colors[small_end_islands][1] = 16; colors[small_end_islands][2] = 36;
 }
 
-McWorldHandle *mc_world_new(uint64_t seed, int32_t large_biomes) {
+McWorldHandle *mc_world_new(uint64_t seed, int32_t mc_version_code, int32_t large_biomes) {
     McWorldHandle *h = (McWorldHandle *)calloc(1, sizeof(McWorldHandle));
     if (!h) return NULL;
     h->seed = seed;
+    h->mc_ver = resolve_cubiomes_mc_ver(mc_version_code);
     h->large_biomes = large_biomes ? 1 : 0;
 
     uint32_t flags = FORCE_OCEAN_VARIANTS;
     if (large_biomes) flags |= LARGE_BIOMES;
 
-    setupGenerator(&h->g_ow, MC_NEWEST, flags);
+    setupGenerator(&h->g_ow, h->mc_ver, flags);
     applySeed(&h->g_ow, DIM_OVERWORLD, seed);
 
-    setupGenerator(&h->g_net, MC_NEWEST, 0);
+    setupGenerator(&h->g_net, h->mc_ver, 0);
     applySeed(&h->g_net, DIM_NETHER, seed);
 
-    setupGenerator(&h->g_end, MC_NEWEST, 0);
+    setupGenerator(&h->g_end, h->mc_ver, 0);
     applySeed(&h->g_end, DIM_END, seed);
     initSurfaceNoise(&h->sn_end, DIM_END, seed);
 
@@ -546,7 +560,7 @@ int32_t mc_sample_point(
 
     if (out_height) *out_height = height;
     if (out_name && name_cap > 0) {
-        const char *s = biome2str(MC_NEWEST, id);
+        const char *s = biome2str(h->mc_ver, id);
         if (!s) s = "unknown";
         strncpy(out_name, s, (size_t)(name_cap - 1));
         out_name[name_cap - 1] = '\0';
@@ -564,7 +578,7 @@ void mc_get_spawn(McWorldHandle *h, int32_t *out_x, int32_t *out_z) {
 int32_t mc_get_strongholds(McWorldHandle *h, McStructureHit *out, int32_t max_out) {
     if (!h || !out || max_out <= 0) return 0;
     StrongholdIter sh;
-    initFirstStronghold(&sh, MC_NEWEST, h->seed);
+    initFirstStronghold(&sh, h->mc_ver, h->seed);
     int32_t count = 0;
     for (int32_t i = 0; i < 128 && count < max_out; i++) {
         if (nextStronghold(&sh, &h->g_ow) <= 0) break;
@@ -581,7 +595,7 @@ int32_t mc_get_strongholds(McWorldHandle *h, McStructureHit *out, int32_t max_ou
 int32_t mc_get_end_gateways(McWorldHandle *h, McStructureHit *out_inner_20, McStructureHit *out_linked_20) {
     if (!h || !out_inner_20 || !out_linked_20) return 0;
     Pos inner[20];
-    getFixedEndGateways(MC_NEWEST, h->seed, inner);
+    getFixedEndGateways(h->mc_ver, h->seed, inner);
     for (int i = 0; i < 20; i++) {
         Pos dst = getLinkedGatewayPos(&h->g_end.en, &h->sn_end, h->seed, inner[i]);
         out_inner_20[i].stype = End_Gateway;
@@ -612,7 +626,7 @@ static void scan_one_structure_type(
     int32_t *count
 ) {
     StructureConfig sconf;
-    if (!getStructureConfig(stype, MC_NEWEST, &sconf)) return;
+    if (!getStructureConfig(stype, h->mc_ver, &sconf)) return;
 
     int32_t reg_blocks = (int32_t)sconf.regionSize * 16;
     if (reg_blocks <= 0) return;
@@ -632,7 +646,7 @@ static void scan_one_structure_type(
     for (int32_t rz = rz0; rz <= rz1 && *count < max_out; rz++) {
         for (int32_t rx = rx0; rx <= rx1 && *count < max_out; rx++) {
             Pos pos;
-            if (!getStructurePos(stype, MC_NEWEST, h->seed, rx, rz, &pos)) continue;
+            if (!getStructurePos(stype, h->mc_ver, h->seed, rx, rz, &pos)) continue;
             if (pos.x < min_bx || pos.x > max_bx || pos.z < min_bz || pos.z > max_bz) continue;
             if (!isViableStructurePos(stype, g, pos.x, pos.z, 0)) continue;
 
@@ -655,7 +669,7 @@ static void scan_one_structure_type(
                 }
             } else if (stype == Village || stype == Igloo || stype == Ruined_Portal || stype == Ruined_Portal_N) {
                 StructureVariant sv;
-                if (getVariant(&sv, stype, MC_NEWEST, h->seed, pos.x, pos.z, biome)) {
+                if (getVariant(&sv, stype, h->mc_ver, h->seed, pos.x, pos.z, biome)) {
                     if (sv.abandoned || sv.basement || sv.giant) variant |= 1;
                     if (sv.underground) variant |= 2;
                 }
@@ -725,6 +739,273 @@ int32_t mc_scan_structures(
             scan_one_structure_type(h, &h->g_end, End_City, min_bx, min_bz, max_bx, max_bz, out, max_out, &count);
         if (mask & MC_MASK_END_GATEWAY)
             scan_one_structure_type(h, &h->g_end, End_Gateway, min_bx, min_bz, max_bx, max_bz, out, max_out, &count);
+    }
+
+    return count;
+}
+
+static void insert_nearest_hit(
+    McStructureHit *out,
+    int64_t *dists,
+    int32_t *count,
+    int32_t max_out,
+    McStructureHit hit,
+    int64_t dist2
+) {
+    if (*count == max_out && dist2 >= dists[max_out - 1]) {
+        return;
+    }
+    int32_t pos = *count;
+    if (pos < max_out) {
+        (*count)++;
+    } else {
+        pos = max_out - 1;
+    }
+    while (pos > 0 && dist2 < dists[pos - 1]) {
+        out[pos] = out[pos - 1];
+        dists[pos] = dists[pos - 1];
+        pos--;
+    }
+    out[pos] = hit;
+    dists[pos] = dist2;
+}
+
+int32_t mc_find_nearest_structures(
+    McWorldHandle *h,
+    int32_t dim,
+    int32_t stype,
+    int32_t only_end_ship,
+    int32_t origin_x,
+    int32_t origin_z,
+    int32_t max_radius,
+    McStructureHit *out,
+    int32_t max_out
+) {
+    if (!h || !out || max_out <= 0) return 0;
+    if (max_out > 64) max_out = 64;
+    if (max_radius < 512) max_radius = 512;
+    if (max_radius > 65536) max_radius = 65536;
+
+    int64_t max_r2 = (int64_t)max_radius * (int64_t)max_radius;
+    int64_t dists[64];
+    int32_t count = 0;
+
+    if (stype == -1) {
+        /* Strongholds */
+        McStructureHit all_sh[128];
+        int32_t n = mc_get_strongholds(h, all_sh, 128);
+        for (int32_t i = 0; i < n; i++) {
+            int64_t dx = (int64_t)all_sh[i].x - (int64_t)origin_x;
+            int64_t dz = (int64_t)all_sh[i].z - (int64_t)origin_z;
+            int64_t d2 = dx * dx + dz * dz;
+            if (d2 <= max_r2) {
+                insert_nearest_hit(out, dists, &count, max_out, all_sh[i], d2);
+            }
+        }
+        return count;
+    }
+
+    if (stype == End_Gateway && dim == DIM_END) {
+        McStructureHit inner[20], linked[20];
+        mc_get_end_gateways(h, inner, linked);
+        for (int32_t i = 0; i < 20; i++) {
+            int64_t dx = (int64_t)linked[i].x - (int64_t)origin_x;
+            int64_t dz = (int64_t)linked[i].z - (int64_t)origin_z;
+            int64_t d2 = dx * dx + dz * dz;
+            if (d2 <= max_r2) {
+                insert_nearest_hit(out, dists, &count, max_out, linked[i], d2);
+            }
+        }
+        return count;
+    }
+
+    Generator *g = (dim == DIM_NETHER) ? &h->g_net : ((dim == DIM_END) ? &h->g_end : &h->g_ow);
+    StructureConfig sconf;
+    if (!getStructureConfig(stype, h->mc_ver, &sconf)) return 0;
+
+    int32_t reg_blocks = (int32_t)sconf.regionSize * 16;
+    if (reg_blocks <= 0) return 0;
+
+    int32_t origin_rx = floor_div_i32(origin_x, reg_blocks);
+    int32_t origin_rz = floor_div_i32(origin_z, reg_blocks);
+    int32_t max_ring = (max_radius / reg_blocks) + 2;
+    if (max_ring > 72) max_ring = 72;
+
+    Piece end_pieces[END_CITY_PIECES_MAX];
+    int32_t budget = 16000;
+
+    for (int32_t ring = 0; ring <= max_ring && budget > 0; ring++) {
+        if (count == max_out && ring > 1) {
+            int64_t min_ring_dist = (int64_t)(ring - 1) * (int64_t)reg_blocks;
+            if (min_ring_dist * min_ring_dist > dists[max_out - 1]) {
+                break;
+            }
+        }
+
+        int32_t rz0 = origin_rz - ring;
+        int32_t rz1 = origin_rz + ring;
+        int32_t rx0 = origin_rx - ring;
+        int32_t rx1 = origin_rx + ring;
+
+        for (int32_t rz = rz0; rz <= rz1 && budget > 0; rz++) {
+            for (int32_t rx = rx0; rx <= rx1 && budget > 0; rx++) {
+                if (ring > 0 && rz != rz0 && rz != rz1 && rx != rx0 && rx != rx1) {
+                    continue;
+                }
+                budget--;
+
+                Pos pos;
+                if (!getStructurePos(stype, h->mc_ver, h->seed, rx, rz, &pos)) continue;
+
+                int64_t dx = (int64_t)pos.x - (int64_t)origin_x;
+                int64_t dz = (int64_t)pos.z - (int64_t)origin_z;
+                int64_t d2 = dx * dx + dz * dz;
+                if (d2 > max_r2) continue;
+                if (count == max_out && d2 >= dists[max_out - 1]) continue;
+
+                if (!isViableStructurePos(stype, g, pos.x, pos.z, 0)) continue;
+                if (stype == End_City) {
+                    if (!isViableEndCityTerrain(g, &h->sn_end, pos.x, pos.z)) continue;
+                } else if (g->dim == DIM_OVERWORLD) {
+                    if (!isViableStructureTerrain(stype, g, pos.x, pos.z)) continue;
+                }
+
+                int32_t variant = 0;
+                int32_t biome = getBiomeAt(g, 4, pos.x >> 2, 16, pos.z >> 2);
+
+                if (stype == End_City) {
+                    int npieces = getEndCityPieces(end_pieces, h->seed, pos.x >> 4, pos.z >> 4);
+                    for (int p = 0; p < npieces; p++) {
+                        if (end_pieces[p].type == END_SHIP) {
+                            variant |= 1;
+                            break;
+                        }
+                    }
+                    if (only_end_ship && !(variant & 1)) {
+                        continue;
+                    }
+                } else if (stype == Village || stype == Igloo || stype == Ruined_Portal || stype == Ruined_Portal_N) {
+                    StructureVariant sv;
+                    if (getVariant(&sv, stype, h->mc_ver, h->seed, pos.x, pos.z, biome)) {
+                        if (sv.abandoned || sv.basement || sv.giant) variant |= 1;
+                        if (sv.underground) variant |= 2;
+                    }
+                }
+
+                McStructureHit hit;
+                hit.stype = stype;
+                hit.x = pos.x;
+                hit.z = pos.z;
+                hit.variant = variant;
+                hit.biome = biome;
+                insert_nearest_hit(out, dists, &count, max_out, hit, d2);
+            }
+        }
+    }
+
+    return count;
+}
+
+int32_t mc_find_nearest_biomes(
+    const McWorldHandle *h,
+    int32_t dim,
+    int32_t target_biome_id,
+    int32_t origin_x,
+    int32_t origin_z,
+    int32_t max_radius,
+    McBiomeHit *out,
+    int32_t max_out
+) {
+    if (!h || !out || max_out <= 0) return 0;
+    if (!biomeExists(h->mc_ver, target_biome_id)) return 0;
+    if (max_out > 32) max_out = 32;
+    if (max_radius < 512) max_radius = 512;
+    if (max_radius > 24576) max_radius = 24576;
+
+    const Generator *g = (dim == DIM_NETHER) ? &h->g_net : ((dim == DIM_END) ? &h->g_end : &h->g_ow);
+    int32_t y_q = 16; /* Y=64 in 1:4 scale */
+    if (target_biome_id == deep_dark) {
+        y_q = -12; /* Y=-48 */
+    } else if (target_biome_id == lush_caves || target_biome_id == dripstone_caves) {
+        y_q = 4; /* Y=16 */
+    }
+
+    int64_t dists[32];
+    int32_t count = 0;
+    const int64_t min_sep2 = 384LL * 384LL;
+    int32_t budget = 90000;
+
+    /* Progressive concentric square rings with adaptive step for fast discovery */
+    for (int32_t r = 0; r <= max_radius && budget > 0; ) {
+        int32_t step = (r < 4096) ? 64 : ((r < 12288) ? 96 : 160);
+        if (count == max_out && r > step) {
+            int64_t min_r2 = (int64_t)(r - step) * (int64_t)(r - step);
+            if (min_r2 > dists[max_out - 1]) {
+                break;
+            }
+        }
+
+        if (r == 0) {
+            int32_t bid = getBiomeAt(g, 4, origin_x >> 2, y_q, origin_z >> 2);
+            budget--;
+            if (bid == target_biome_id) {
+                out[0].biome = bid;
+                out[0].x = origin_x;
+                out[0].z = origin_z;
+                dists[0] = 0;
+                count = 1;
+            }
+            r += step;
+            continue;
+        }
+
+        /* Walk the 4 perimeter edges of square [-r..r] */
+        for (int32_t side = 0; side < 4 && budget > 0; side++) {
+            for (int32_t t = -r; t < r && budget > 0; t += step) {
+                int32_t dx_b = 0, dz_b = 0;
+                if (side == 0)      { dx_b = t;  dz_b = -r; }
+                else if (side == 1) { dx_b = r;  dz_b = t;  }
+                else if (side == 2) { dx_b = -t; dz_b = r;  }
+                else                { dx_b = -r; dz_b = -t; }
+
+                int32_t bx = origin_x + dx_b;
+                int32_t bz = origin_z + dz_b;
+                budget--;
+
+                int32_t bid = getBiomeAt(g, 4, bx >> 2, y_q, bz >> 2);
+                if (bid != target_biome_id) continue;
+
+                int64_t d2 = (int64_t)dx_b * (int64_t)dx_b + (int64_t)dz_b * (int64_t)dz_b;
+                if (count == max_out && d2 >= dists[max_out - 1]) continue;
+
+                /* Deduplicate nearby samples belonging to the same biome patch */
+                int duplicate = 0;
+                for (int32_t k = 0; k < count; k++) {
+                    int64_t sx = (int64_t)out[k].x - (int64_t)bx;
+                    int64_t sz = (int64_t)out[k].z - (int64_t)bz;
+                    if (sx * sx + sz * sz < min_sep2) {
+                        duplicate = 1;
+                        break;
+                    }
+                }
+                if (duplicate) continue;
+
+                int32_t pos = count;
+                if (pos < max_out) count++;
+                else pos = max_out - 1;
+                while (pos > 0 && d2 < dists[pos - 1]) {
+                    out[pos] = out[pos - 1];
+                    dists[pos] = dists[pos - 1];
+                    pos--;
+                }
+                out[pos].biome = bid;
+                out[pos].x = bx;
+                out[pos].z = bz;
+                dists[pos] = d2;
+            }
+        }
+
+        r += step;
     }
 
     return count;

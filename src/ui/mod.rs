@@ -5,8 +5,10 @@ use crate::data::recipes::RecipeDatabase;
 use crate::ui::theme::McPalette;
 
 pub mod chrome;
+pub mod right_rail;
 pub mod tabs;
 pub mod theme;
+pub mod updater_modal;
 
 /// Borrowed immutable UI environment passed cleanly across top-level chrome and catalog tabs.
 #[derive(Clone, Copy)]

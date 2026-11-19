@@ -225,11 +225,21 @@ pub struct RecipeEntry {
 
 impl RecipeEntry {
     pub fn is_active_in(&self, versions: &VersionRegistry, active_ver: &str) -> bool {
-        versions.is_active(
+        if !versions.is_active(
             self.since_version.as_deref(),
             self.until_version.as_deref(),
             active_ver,
-        )
+        ) {
+            return false;
+        }
+        if !super::version_rules::is_item_active(versions, &self.result_id, active_ver) {
+            return false;
+        }
+        self.slots.iter().all(|slot| {
+            slot.is_empty()
+                || slot.starts_with('#')
+                || super::version_rules::is_item_active(versions, slot, active_ver)
+        })
     }
 }
 
@@ -355,6 +365,84 @@ impl RecipeDatabase {
         pretty_id(id_or_tag)
     }
 
+    /// Returns active concrete item variants for a `#tag` token in `active_ver`.
+    pub fn resolve_tag_in<'a>(
+        &'a self,
+        slot_token: &str,
+        versions: &VersionRegistry,
+        active_ver: &str,
+    ) -> Vec<&'a str> {
+        let Some(tag) = slot_token.strip_prefix('#') else {
+            return Vec::new();
+        };
+        self.tags
+            .get(tag)
+            .map(|list| {
+                list.iter()
+                    .map(|s| s.as_str())
+                    .filter(|id| super::version_rules::is_item_active(versions, id, active_ver))
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    /// Localized display name using active-version tag examples (never picks future blocks for `#tags`).
+    pub fn item_name_in(
+        &self,
+        id_or_tag: &str,
+        versions: &VersionRegistry,
+        active_ver: &str,
+        lang: Language,
+    ) -> String {
+        if let Some(tag) = id_or_tag.strip_prefix('#') {
+            let active_list = self.resolve_tag_in(id_or_tag, versions, active_ver);
+            if let Some(&first) = active_list.first() {
+                let prefix = match lang {
+                    Language::EnUs => "Any ",
+                    _ => "Cualquier ",
+                };
+                return format!("{}{} ({})", prefix, self.item_name(first, lang), tag);
+            }
+            return pretty_id(tag);
+        }
+        self.item_name(id_or_tag, lang)
+    }
+
+    /// Returns concrete item ID for a slot token at animation step `step`, respecting `active_ver`.
+    pub fn resolve_slot_icon_in(
+        &self,
+        slot_token: &str,
+        step: usize,
+        versions: &VersionRegistry,
+        active_ver: &str,
+    ) -> String {
+        if slot_token.starts_with('#') {
+            let variants = self.resolve_tag_in(slot_token, versions, active_ver);
+            if !variants.is_empty() {
+                return variants[step % variants.len()].to_string();
+            }
+        }
+        slot_token.to_string()
+    }
+
+    /// Returns `true` when recipe `idx` is active in `active_ver` (including `#tag` slots).
+    pub fn is_recipe_active(
+        &self,
+        idx: usize,
+        versions: &VersionRegistry,
+        active_ver: &str,
+    ) -> bool {
+        let Some(rec) = self.recipes.get(idx) else {
+            return false;
+        };
+        if !rec.is_active_in(versions, active_ver) {
+            return false;
+        }
+        rec.slots.iter().all(|slot| {
+            !slot.starts_with('#') || !self.resolve_tag_in(slot, versions, active_ver).is_empty()
+        })
+    }
+
     /// Returns concrete item ID for a slot token at animation step `tick_sec` (cycles `#tag` lists cleanly).
     pub fn resolve_slot_icon(&self, slot_token: &str, step: usize) -> String {
         if let Some(tag) = slot_token.strip_prefix('#') {
@@ -375,19 +463,22 @@ impl RecipeDatabase {
             .unwrap_or(&[])
     }
 
-    /// True if `item_id` has at least one recipe active in `active_ver` (or is a raw ingredient).
+    /// True if `item_id` existed in `active_ver` AND has an active recipe (or is a raw ingredient).
     pub fn item_active_in(
         &self,
         item_id: &str,
         versions: &VersionRegistry,
         active_ver: &str,
     ) -> bool {
+        if !super::version_rules::is_item_active(versions, item_id, active_ver) {
+            return false;
+        }
         let idxs = self.recipes_for(item_id);
         if idxs.is_empty() {
             return true;
         }
         idxs.iter()
-            .any(|&idx| self.recipes[idx].is_active_in(versions, active_ver))
+            .any(|&idx| self.is_recipe_active(idx, versions, active_ver))
     }
 
     /// Exact ID O(1) lookup for recipes consuming `item_id` (including `#tag` matches).
@@ -396,6 +487,20 @@ impl RecipeDatabase {
             .get(item_id)
             .map(|v| v.as_slice())
             .unwrap_or(&[])
+    }
+
+    /// Version-filtered lookup for active recipes consuming `item_id`.
+    pub fn uses_for_in(
+        &self,
+        item_id: &str,
+        versions: &VersionRegistry,
+        active_ver: &str,
+    ) -> Vec<usize> {
+        self.uses_for(item_id)
+            .iter()
+            .copied()
+            .filter(|&idx| self.is_recipe_active(idx, versions, active_ver))
+            .collect()
     }
 
     /// Picks the canonical recipe index (prefers standard Crafting Table over alternate smelting/stonecutting).
@@ -407,11 +512,59 @@ impl RecipeDatabase {
             .or_else(|| list.first().copied())
     }
 
+    /// Picks the canonical recipe index active inside `active_ver`.
+    pub fn primary_recipe_for_in(
+        &self,
+        item_id: &str,
+        versions: &VersionRegistry,
+        active_ver: &str,
+    ) -> Option<usize> {
+        let list = self.recipes_for(item_id);
+        list.iter()
+            .copied()
+            .filter(|&idx| self.is_recipe_active(idx, versions, active_ver))
+            .find(|&idx| self.recipes[idx].station == CraftingStation::Crafting)
+            .or_else(|| {
+                list.iter()
+                    .copied()
+                    .find(|&idx| self.is_recipe_active(idx, versions, active_ver))
+            })
+    }
+
     /// Computes EMI-style recursive bill of materials + raw base ingredients with cycle protection.
+    #[allow(dead_code)]
     pub fn build_craft_tree(&self, item_id: &str, quantity: u32) -> (CraftTreeNode, BTreeMap<String, u32>) {
         let mut raw_totals: BTreeMap<String, u32> = BTreeMap::new();
         let mut visiting = HashSet::new();
-        let tree = self.build_tree_rec(item_id, quantity.max(1), 0, &mut visiting, &mut raw_totals);
+        let tree = self.build_tree_rec(
+            item_id,
+            quantity.max(1),
+            0,
+            None,
+            &mut visiting,
+            &mut raw_totals,
+        );
+        (tree, raw_totals)
+    }
+
+    /// Version-aware recursive bill of materials respecting altered recipes (e.g. 1.18.2 vs 26.3).
+    pub fn build_craft_tree_in(
+        &self,
+        item_id: &str,
+        quantity: u32,
+        versions: &VersionRegistry,
+        active_ver: &str,
+    ) -> (CraftTreeNode, BTreeMap<String, u32>) {
+        let mut raw_totals: BTreeMap<String, u32> = BTreeMap::new();
+        let mut visiting = HashSet::new();
+        let tree = self.build_tree_rec(
+            item_id,
+            quantity.max(1),
+            0,
+            Some((versions, active_ver)),
+            &mut visiting,
+            &mut raw_totals,
+        );
         (tree, raw_totals)
     }
 
@@ -420,11 +573,14 @@ impl RecipeDatabase {
         item_id: &str,
         needed: u32,
         depth: usize,
+        ver_ctx: Option<(&VersionRegistry, &str)>,
         visiting: &mut HashSet<String>,
         raw_totals: &mut BTreeMap<String, u32>,
     ) -> CraftTreeNode {
-        // Resolve tag to canonical first item for tree calculation
-        let concrete = self.resolve_slot_icon(item_id, 0);
+        let concrete = match ver_ctx {
+            Some((versions, active_ver)) => self.resolve_slot_icon_in(item_id, 0, versions, active_ver),
+            None => self.resolve_slot_icon(item_id, 0),
+        };
 
         if depth >= 6 || visiting.contains(&concrete) {
             *raw_totals.entry(concrete.clone()).or_default() += needed;
@@ -437,7 +593,11 @@ impl RecipeDatabase {
             };
         }
 
-        let Some(rec_idx) = self.primary_recipe_for(&concrete) else {
+        let primary = match ver_ctx {
+            Some((versions, active_ver)) => self.primary_recipe_for_in(&concrete, versions, active_ver),
+            None => self.primary_recipe_for(&concrete),
+        };
+        let Some(rec_idx) = primary else {
             *raw_totals.entry(concrete.clone()).or_default() += needed;
             return CraftTreeNode {
                 item_id: concrete,
@@ -455,7 +615,12 @@ impl RecipeDatabase {
         let mut per_batch_inputs: BTreeMap<String, u32> = BTreeMap::new();
         for slot in &rec.slots {
             if !slot.is_empty() {
-                let canonical_in = self.resolve_slot_icon(slot, 0);
+                let canonical_in = match ver_ctx {
+                    Some((versions, active_ver)) => {
+                        self.resolve_slot_icon_in(slot, 0, versions, active_ver)
+                    }
+                    None => self.resolve_slot_icon(slot, 0),
+                };
                 *per_batch_inputs.entry(canonical_in).or_default() += 1;
             }
         }
@@ -468,6 +633,7 @@ impl RecipeDatabase {
                 &child_id,
                 per_batch * batches,
                 depth + 1,
+                ver_ctx,
                 visiting,
                 raw_totals,
             );

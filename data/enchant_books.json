@@ -1,1722 +1,2071 @@
 [
-  {
-    "id": "protection",
-    "category_key": "armor",
-    "icon": "netherite_chestplate",
-    "name": { "es_mx": "Protección", "es_es": "Protección", "en_us": "Protection" },
-    "max_level": "IV",
-    "max_level_num": 4,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Casco, Pechera, Pantalones y Botas (y caparazón de tortuga)",
-      "es_es": "Casco, Pechera, Grebas y Botas (y caparazón de tortuga)",
-      "en_us": "Helmet, Chestplate, Leggings, Boots & Turtle Shell"
+    {
+        "id":  "protection",
+        "category_key":  "armor",
+        "icon":  "netherite_chestplate",
+        "name":  {
+                     "es_mx":  "Protección",
+                     "es_es":  "Protección",
+                     "en_us":  "Protection"
+                 },
+        "max_level":  "IV",
+        "max_level_num":  4,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Casco, Pechera, Pantalones y Botas (y caparazón de tortuga)",
+                           "es_es":  "Casco, Pechera, Grebas y Botas (y caparazón de tortuga)",
+                           "en_us":  "Helmet, Chestplate, Leggings, Boots \u0026 Turtle Shell"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Prot. fuego, Prot. explosiones, Prot. proyectiles",
+                                  "es_es":  "Prot. contra el fuego, explosiones o proyectiles",
+                                  "en_us":  "Fire / Blast / Projectile Protection"
+                              },
+        "effect":  {
+                       "es_mx":  "Reduce casi todo tipo de daño recibido en +4% por nivel (+16% por pieza; hasta 64% total con 4 piezas).",
+                       "es_es":  "Reduce casi todo tipo de daño recibido en +4% por nivel (+16% por pieza; hasta 64% con el set completo).",
+                       "en_us":  "Reduces nearly all damage types by +4% per level (+16% per piece, 64% across full set)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Mazmorras, Templos, Ciudades del End y Bastiones",
+                                                "es_es":  "Mazmorras, Templos, Ciudades del End y Bastiones",
+                                                "en_us":  "Dungeons, Temples, End Cities \u0026 Bastions"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario (rompe y pon atril hasta sacar Protección IV directo) o Mesa Nivel 30 sobre piezas de diamante antes de mejorarlas a Netherite.",
+                            "es_es":  "Aldeano Bibliotecario (cambia el atril hasta obtener Protección IV directo) o Mesa Nivel 30 sobre diamante.",
+                            "en_us":  "Librarian Villager lectern reroll for direct Protection IV, or Level-30 Enchanting Table on Diamond armor."
+                        }
     },
-    "incompatible_with": {
-      "es_mx": "Prot. fuego, Prot. explosiones, Prot. proyectiles",
-      "es_es": "Prot. contra el fuego, explosiones o proyectiles",
-      "en_us": "Fire / Blast / Projectile Protection"
+    {
+        "id":  "fire_protection",
+        "category_key":  "armor",
+        "icon":  "netherite_chestplate",
+        "name":  {
+                     "es_mx":  "Protección contra el fuego",
+                     "es_es":  "Protección contra el fuego",
+                     "en_us":  "Fire Protection"
+                 },
+        "max_level":  "IV",
+        "max_level_num":  4,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Toda pieza de armadura",
+                           "es_es":  "Toda pieza de armadura",
+                           "en_us":  "Any armor piece"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Protección, Prot. explosiones, Prot. proyectiles",
+                                  "es_es":  "Protección, Prot. explosiones, Prot. proyectiles",
+                                  "en_us":  "Protection, Blast / Projectile Protection"
+                              },
+        "effect":  {
+                       "es_mx":  "Reduce daño de fuego/lava en 8% por nivel y acorta la duración del quemado (-15% por nivel, sin acumularse entre piezas).",
+                       "es_es":  "Reduce daño por fuego/lava un 8% por nivel y reduce el tiempo en llamas (-15% por nivel).",
+                       "en_us":  "Reduces fire/lava damage by 8% per level and shortens burn duration (-15% per level, max piece counts)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Fortalezas del Nether, Portal en ruinas y Mazmorras",
+                                                "es_es":  "Fortalezas del Nether, Portales en ruinas y Mazmorras",
+                                                "en_us":  "Nether Fortresses, Ruined Portals \u0026 Dungeons"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa de encantamientos Nivel 30 o Aldeano Bibliotecario; solo úsala en 1 pieza para el Nether si no quieres full Protección IV.",
+                            "es_es":  "Mesa de encantamientos Nivel 30 o Bibliotecario; recomendable máximo 1 pieza dedicada al Nether.",
+                            "en_us":  "Level-30 Enchanting Table or Librarian Villager; usually only worth swapping onto 1 Nether-utility piece."
+                        }
     },
-    "effect": {
-      "es_mx": "Reduce casi todo tipo de daño recibido en +4% por nivel (+16% por pieza; hasta 64% total con 4 piezas).",
-      "es_es": "Reduce casi todo tipo de daño recibido en +4% por nivel (+16% por pieza; hasta 64% con el set completo).",
-      "en_us": "Reduces nearly all damage types by +4% per level (+16% per piece, 64% across full set)."
+    {
+        "id":  "feather_falling",
+        "category_key":  "armor",
+        "icon":  "netherite_boots",
+        "name":  {
+                     "es_mx":  "Caída de pluma",
+                     "es_es":  "Caída de pluma",
+                     "en_us":  "Feather Falling"
+                 },
+        "max_level":  "IV",
+        "max_level_num":  4,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Botas",
+                           "es_es":  "Botas",
+                           "en_us":  "Boots"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno (compatible con Protección IV)",
+                                  "es_es":  "Ninguno (compatible con Protección IV)",
+                                  "en_us":  "None (stacks with Protection IV)"
+                              },
+        "effect":  {
+                       "es_mx":  "Reduce el daño de caída y de Perlas de Ender un 12% por nivel (48% directo, hasta 80% combinado con Protección IV).",
+                       "es_es":  "Reduce el daño de caída y de Perlas de Ender un 12% por nivel (hasta 80% total con Protección IV).",
+                       "en_us":  "Reduces fall and Ender Pearl damage by 12% per level (stacks with Protection up to the 80% cap)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ciudades del End, Mazmorras y Cámaras de Desafío",
+                                                "es_es":  "Ciudades del End, Mazmorras y Cámaras de Juicio",
+                                                "en_us":  "End Cities, Dungeons \u0026 Trial Chambers"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario con Caída de pluma IV o encantar botas en Mesa Nivel 30 (tiene probabilidad muy alta en botas).",
+                            "es_es":  "Aldeano Bibliotecario con Caída de pluma IV o encantar botas directamente en Mesa Nivel 30.",
+                            "en_us":  "Librarian Villager trade or Level-30 Enchanting Table directly on boots (very high boot roll odds)."
+                        }
     },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Mazmorras, Templos, Ciudades del End y Bastiones", "es_es": "Mazmorras, Templos, Ciudades del End y Bastiones", "en_us": "Dungeons, Temples, End Cities & Bastions" }
-      ]
+    {
+        "id":  "blast_protection",
+        "category_key":  "armor",
+        "icon":  "netherite_leggings",
+        "name":  {
+                     "es_mx":  "Protección contra explosiones",
+                     "es_es":  "Protección contra explosiones",
+                     "en_us":  "Blast Protection"
+                 },
+        "max_level":  "IV",
+        "max_level_num":  4,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Toda pieza de armadura",
+                           "es_es":  "Toda pieza de armadura",
+                           "en_us":  "Any armor piece"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Protección, Prot. fuego, Prot. proyectiles",
+                                  "es_es":  "Protección, Prot. fuego, Prot. proyectiles",
+                                  "en_us":  "Protection, Fire / Projectile Protection"
+                              },
+        "effect":  {
+                       "es_mx":  "Reduce daño de explosiones (Creepers, TNT, Cristales del End, Wither) +8% por nivel y reduce empuje explosivo.",
+                       "es_es":  "Reduce daño de explosiones (+8% por nivel) y disminuye fuertemente el retroceso explosivo.",
+                       "en_us":  "Reduces explosion damage (Creepers, End Crystals, Wither, TNT) +8% per level and cuts blast knockback."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Mazmorras, Templos y Ciudades del End",
+                                                "es_es":  "Mazmorras, Templos y Ciudades del End",
+                                                "en_us":  "Dungeons, Temples \u0026 End Cities"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario o Mesa Nivel 30. Ideal en 1 pieza (ej. pantalones) para PvP con cristales o matar Withers.",
+                            "es_es":  "Bibliotecario o Mesa Nivel 30. Ideal en grebas si haces PvP con cristales o cazas Withers.",
+                            "en_us":  "Librarian Villager or Level-30 Table; meta pick on Leggings for Crystal PvP or Wither fights."
+                        }
     },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario (rompe y pon atril hasta sacar Protección IV directo) o Mesa Nivel 30 sobre piezas de diamante antes de mejorarlas a Netherite.",
-      "es_es": "Aldeano Bibliotecario (cambia el atril hasta obtener Protección IV directo) o Mesa Nivel 30 sobre diamante.",
-      "en_us": "Librarian Villager lectern reroll for direct Protection IV, or Level-30 Enchanting Table on Diamond armor."
+    {
+        "id":  "projectile_protection",
+        "category_key":  "armor",
+        "icon":  "netherite_chestplate",
+        "name":  {
+                     "es_mx":  "Protección contra proyectiles",
+                     "es_es":  "Protección contra proyectiles",
+                     "en_us":  "Projectile Protection"
+                 },
+        "max_level":  "IV",
+        "max_level_num":  4,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Toda pieza de armadura",
+                           "es_es":  "Toda pieza de armadura",
+                           "en_us":  "Any armor piece"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Protección, Prot. fuego, Prot. explosiones",
+                                  "es_es":  "Protección, Prot. fuego, Prot. explosiones",
+                                  "en_us":  "Protection, Fire / Blast Protection"
+                              },
+        "effect":  {
+                       "es_mx":  "Reduce daño de flechas, tridentes, bolas de fuego y proyectiles shulker/breeze en 8% por nivel.",
+                       "es_es":  "Reduce el daño de flechas, tridentes y proyectiles en 8% por nivel.",
+                       "en_us":  "Reduces damage from arrows, tridents, ghast fireballs and shulker/breeze projectiles by 8% per level."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Puestos de Saqueadores, Mazmorras y Templos",
+                                                "es_es":  "Puestos de Saqueadores, Mazmorras y Templos",
+                                                "en_us":  "Pillager Outposts, Dungeons \u0026 Temples"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa Nivel 30 o Bibliotecario (Prot. general suele superarlo, salvo contra hordas de esqueletos/Wither).",
+                            "es_es":  "Mesa Nivel 30 o Bibliotecario (Protección IV suele ser mejor salvo para tanquear proyectiles puros).",
+                            "en_us":  "Enchanting Table or Librarian (standard Protection IV is generally better except for ranged tanking)."
+                        }
+    },
+    {
+        "id":  "respiration",
+        "category_key":  "armor",
+        "icon":  "netherite_helmet",
+        "name":  {
+                     "es_mx":  "Respiración",
+                     "es_es":  "Respiración",
+                     "en_us":  "Respiration"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Casco y caparazón de tortuga",
+                           "es_es":  "Casco y caparazón de tortuga",
+                           "en_us":  "Helmet \u0026 Turtle Shell"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno",
+                                  "es_es":  "Ninguno",
+                                  "en_us":  "None"
+                              },
+        "effect":  {
+                       "es_mx":  "Suma +15s de aire bajo el agua por nivel (60s con III), mejora la visión submarina y reduce el daño por ahogo.",
+                       "es_es":  "Añade +15s de oxígeno por nivel (60s con III), aclara la vista bajo el agua y retrasa el daño por ahogo.",
+                       "en_us":  "Adds +15s underwater breath per level (60s at III), improves underwater vision \u0026 reduces drowning rate."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ruinas oceánicas, Naufragios y Ciudades del End",
+                                                "es_es":  "Ruinas oceánicas, Barcos hundidos y Ciudades del End",
+                                                "en_us":  "Ocean Ruins, Shipwrecks \u0026 End Cities"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario (Respiración III) o Mesa Nivel 30 directo sobre casco.",
+                            "es_es":  "Bibliotecario (Respiración III) o Mesa Nivel 30 directo sobre el casco.",
+                            "en_us":  "Librarian Villager trade or Level-30 Enchanting Table directly on a helmet."
+                        }
+    },
+    {
+        "id":  "aqua_affinity",
+        "category_key":  "armor",
+        "icon":  "netherite_helmet",
+        "name":  {
+                     "es_mx":  "Afinidad acuática",
+                     "es_es":  "Afinidad acuática",
+                     "en_us":  "Aqua Affinity"
+                 },
+        "max_level":  "I",
+        "max_level_num":  1,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Casco y caparazón de tortuga",
+                           "es_es":  "Casco y caparazón de tortuga",
+                           "en_us":  "Helmet \u0026 Turtle Shell"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno",
+                                  "es_es":  "Ninguno",
+                                  "en_us":  "None"
+                              },
+        "effect":  {
+                       "es_mx":  "Elimina la penalización de velocidad al minar bajo el agua (5x más rápido mientras tocas el fondo).",
+                       "es_es":  "Elimina la penalización de velocidad al picar bajo el agua (mina igual que en tierra firme).",
+                       "en_us":  "Removes the 5x underwater mining speed penalty (mines at normal surface speed while grounded)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Naufragios, Ruinas submarinas y Cofres enterrados",
+                                                "es_es":  "Naufragios, Ruinas oceánicas y Tesoros enterrados",
+                                                "en_us":  "Shipwrecks, Ocean Ruins \u0026 Buried Treasure"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Muy fácil en Mesa Nivel 30 al encantar cascos (suele salir gratis de extra junto con Protección o Respiración).",
+                            "es_es":  "Muy común en Mesa Nivel 30 sobre cascos, o directo en un Bibliotecario.",
+                            "en_us":  "Rolls very commonly on Level-30 Helmets alongside Protection/Respiration, or cheap Librarian trade."
+                        }
+    },
+    {
+        "id":  "thorns",
+        "category_key":  "armor",
+        "icon":  "netherite_chestplate",
+        "name":  {
+                     "es_mx":  "Espinas",
+                     "es_es":  "Espinas",
+                     "en_us":  "Thorns"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  4,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Toda pieza de armadura",
+                           "es_es":  "Toda pieza de armadura",
+                           "en_us":  "Any armor piece"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno (precaución: rompe mobs en granjas/transporte y gasta más durabilidad)",
+                                  "es_es":  "Ninguno (cuidado al mover mobs/zombies o en PvP de larga duración)",
+                                  "en_us":  "None (warning: kills mob-farm/villager-cure zombies \u0026 drains extra durability)"
+                              },
+        "effect":  {
+                       "es_mx":  "Inflige 1 a 4 de daño reflejado al atacante (45% prob. por pieza nivel III). Gasta -2 durabilidad extra por activación.",
+                       "es_es":  "Refleja 1-4 de daño al atacante (45% prob. por pieza a nivel III), con coste extra de durabilidad.",
+                       "en_us":  "Reflects 1-4 damage to attackers (45% chance per piece at III); consumes 2 extra durability on hit."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Fortalezas, Mansiones, Ciudades del End y Mazmorras",
+                                                "es_es":  "Fortalezas, Mansiones, Ciudades del End y Mazmorras",
+                                                "en_us":  "Strongholds, Mansions, End Cities \u0026 Dungeons"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario (Espinas III); aplícalo solo en armadura de combate/PvP y deja un set técnico sin Espinas para mover aldeanos/zombies.",
+                            "es_es":  "Bibliotecario con Espinas III; recomendado solo en set de combate/PvP, no para mover mobs.",
+                            "en_us":  "Librarian Villager (Thorns III); put only on PvP/combat sets, omit on utility armor for moving mobs."
+                        }
+    },
+    {
+        "id":  "depth_strider",
+        "category_key":  "armor",
+        "icon":  "netherite_boots",
+        "name":  {
+                     "es_mx":  "Agilidad acuática",
+                     "es_es":  "Agilidad acuática",
+                     "en_us":  "Depth Strider"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Botas",
+                           "es_es":  "Botas",
+                           "en_us":  "Boots"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Paso helado (Frost Walker)",
+                                  "es_es":  "Paso helado (Frost Walker)",
+                                  "en_us":  "Frost Walker"
+                              },
+        "effect":  {
+                       "es_mx":  "Aumenta la velocidad al caminar/nadar en agua hasta igualar la velocidad en tierra firme (nivel III).",
+                       "es_es":  "Anula el frenado del agua al caminar y nadar; a nivel III te mueves casi igual que en tierra.",
+                       "en_us":  "Eliminates water movement slowdown (matches normal ground walking speed at III)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ruinas oceánicas, Ciudades del End y Cámaras de Desafío",
+                                                "es_es":  "Ruinas oceánicas, Ciudades del End y Cámaras de Juicio",
+                                                "en_us":  "Ocean Ruins, End Cities \u0026 Trial Chambers"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario (Agilidad acuática III) o Mesa Nivel 30 sobre botas; imprescindible sobre Paso helado para exploración general.",
+                            "es_es":  "Bibliotecario (Agilidad acuática III) o Mesa Nivel 30 en botas; muy superior a Paso helado en el día a día.",
+                            "en_us":  "Librarian Villager trade or Level-30 Table on boots; far better all-around choice than Frost Walker."
+                        }
+    },
+    {
+        "id":  "frost_walker",
+        "category_key":  "armor",
+        "icon":  "netherite_boots",
+        "name":  {
+                     "es_mx":  "Paso helado",
+                     "es_es":  "Paso helado",
+                     "en_us":  "Frost Walker"
+                 },
+        "max_level":  "II",
+        "max_level_num":  2,
+        "anvil_multiplier":  2,
+        "is_treasure":  true,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Botas",
+                           "es_es":  "Botas",
+                           "en_us":  "Boots"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Agilidad acuática (Depth Strider)",
+                                  "es_es":  "Agilidad acuática (Depth Strider)",
+                                  "en_us":  "Depth Strider"
+                              },
+        "effect":  {
+                       "es_mx":  "Congela temporalmente el agua bajo tus pies en hielo escarchado y te vuelve inmune al daño de bloques de magma.",
+                       "es_es":  "Convierte temporalmente el agua cercana en hielo escarchado y protege del daño de bloques de magma.",
+                       "en_us":  "Freezes water beneath your feet into temporary frosted ice and grants immunity to magma block damage."
+                   },
+        "sources":  {
+                        "enchanting_table":  false,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ciudades del End, Mazmorras, Naufragios y Pirámides",
+                                                "es_es":  "Ciudades del End, Mazmorras, Barcos hundidos y Pirámides",
+                                                "en_us":  "End Cities, Dungeons, Shipwrecks \u0026 Temples"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "TESORO (no sale en Mesa de encantamientos): consíguelo fácil en un Aldeano Bibliotecario (Paso helado II) cambiando el atril.",
+                            "es_es":  "TESORO (no aparece en Mesa): consíguelo rápido con Aldeano Bibliotecario (rompe y pon atril).",
+                            "en_us":  "TREASURE (never rolls on Enchanting Table): easiest via Librarian Villager lectern reroll (Frost Walker II)."
+                        }
+    },
+    {
+        "id":  "soul_speed",
+        "category_key":  "armor",
+        "icon":  "netherite_boots",
+        "name":  {
+                     "es_mx":  "Velocidad de alma",
+                     "es_es":  "Velocidad del alma",
+                     "en_us":  "Soul Speed"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  4,
+        "is_treasure":  true,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Botas",
+                           "es_es":  "Botas",
+                           "en_us":  "Boots"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno (se puede combinar con Agilidad acuática o Paso helado)",
+                                  "es_es":  "Ninguno (compatible con Agilidad acuática o Paso helado)",
+                                  "en_us":  "None (stacks cleanly with Depth Strider or Frost Walker)"
+                              },
+        "effect":  {
+                       "es_mx":  "Aumenta la velocidad al caminar sobre arena/tierra de almas hasta +61.5% (nivel III) con partículas de almas. Gasta leve durabilidad al andar.",
+                       "es_es":  "Acelera hasta +61,5% al caminar sobre arena/tierra de almas (nivel III) emitiendo partículas azules.",
+                       "en_us":  "Boosts speed on Soul Sand \u0026 Soul Soil by up to +61.5% (at III); small chance of consuming boot durability per block."
+                   },
+        "sources":  {
+                        "enchanting_table":  false,
+                        "librarian_villager":  false,
+                        "fishing":  false,
+                        "piglin_bartering":  true,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Cofres de Bastiones en Ruinas (Bastion Remnant)",
+                                                "es_es":  "Cofres de Bastiones en Ruinas",
+                                                "en_us":  "Bastion Remnant Chests"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "NO LO DAN ALDEANOS NI MESA NI PESCA: haz trueque masivo de lingotes de oro con Piglins (~1% libro / ~1.8% botas) o saquea cofres de Bastiones.",
+                            "es_es":  "NO LO VENDEN ALDEANOS NI SALE EN MESA/PESCA: solo trueque de oro con Piglins y cofres de Bastiones.",
+                            "en_us":  "NOT SOLD BY VILLAGERS (nor Table/Fishing): batch-barter Gold Ingots with Piglins (~1% book drop) or loot Bastion chests."
+                        }
+    },
+    {
+        "id":  "swift_sneak",
+        "category_key":  "armor",
+        "icon":  "warden_head",
+        "name":  {
+                     "es_mx":  "Sigilo rápido",
+                     "es_es":  "Sigilo veloz",
+                     "en_us":  "Swift Sneak"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  4,
+        "is_treasure":  true,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Pantalones",
+                           "es_es":  "Grebas (Pantalones)",
+                           "en_us":  "Leggings"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno",
+                                  "es_es":  "Ninguno",
+                                  "en_us":  "None"
+                              },
+        "effect":  {
+                       "es_mx":  "Permite moverte agachado (Shift) hasta al 75% de tu velocidad normal de caminata (en lugar del 30% base).",
+                       "es_es":  "Aumenta la velocidad al caminar agachado hasta el 75% de tu velocidad normal.",
+                       "en_us":  "Boosts sneaking movement speed from 30% up to 75% of normal walking speed at level III."
+                   },
+        "sources":  {
+                        "enchanting_table":  false,
+                        "librarian_villager":  false,
+                        "fishing":  false,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Exclusivo de cofres en Ciudades Antiguas (Deep Dark)",
+                                                "es_es":  "Exclusivo de cofres en Ciudades Antiguas (Oscuridad Profunda)",
+                                                "en_us":  "Ancient City Chests ONLY (Deep Dark)"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "NO LO DAN ALDEANOS NI MESA NI PESCA: única fuente son cofres de Ciudades Antiguas (~3.1% prob.; lleva azada con Eficiencia y lana para bloquear sensores).",
+                            "es_es":  "NO LO VENDEN ALDEANOS NI SALE EN MESA/PESCA: solo cofres de Ciudades Antiguas (lleva lana y Visión nocturna).",
+                            "en_us":  "NOT SOLD BY VILLAGERS (exclusive loot): only found in Ancient City chests (~3.1%); use seed map, wool \u0026 Efficiency Hoe."
+                        },
+        "since_version":  "1.19.4"
+    },
+    {
+        "id":  "sharpness",
+        "category_key":  "melee",
+        "icon":  "netherite_sword",
+        "name":  {
+                     "es_mx":  "Filo",
+                     "es_es":  "Filo",
+                     "en_us":  "Sharpness"
+                 },
+        "max_level":  "V",
+        "max_level_num":  5,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Espada, Hacha y Lanza",
+                           "es_es":  "Espada, Hacha y Lanza",
+                           "en_us":  "Sword, Axe \u0026 Spear"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Castigo (Smite), Perdición de los artrópodos",
+                                  "es_es":  "Golpeo (Smite), Perdición de los artrópodos",
+                                  "en_us":  "Smite, Bane of Arthropods"
+                              },
+        "effect":  {
+                       "es_mx":  "Suma +3 de daño cuerpo a cuerpo con Filo V (+0.5 base + 0.5 por nivel) contra todo tipo de enemigos.",
+                       "es_es":  "Añade +3 puntos de daño cuerpo a cuerpo a nivel V contra cualquier enemigo.",
+                       "en_us":  "Adds +3 melee damage at Sharpness V against all mobs and players."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ciudades del End, Mazmorras, Bastiones y Ruinas",
+                                                "es_es":  "Ciudades del End, Mazmorras, Bastiones y Ruinas",
+                                                "en_us":  "End Cities, Dungeons, Bastions \u0026 Ruins"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario con Filo V directo (barato y te evita combinar dos libros de Filo IV para ahorrar usos de yunque).",
+                            "es_es":  "Aldeano Bibliotecario con Filo V directo (ahorras XP y usos de yunque frente a combinar Filo IV + Filo IV).",
+                            "en_us":  "Librarian Villager trade for direct Sharpness V (saves Anvil uses over combining two Sharpness IV rolls)."
+                        }
+    },
+    {
+        "id":  "smite",
+        "category_key":  "melee",
+        "icon":  "netherite_sword",
+        "name":  {
+                     "es_mx":  "Castigo",
+                     "es_es":  "Golpeo",
+                     "en_us":  "Smite"
+                 },
+        "max_level":  "V",
+        "max_level_num":  5,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Espada, Hacha, Lanza y Maza",
+                           "es_es":  "Espada, Hacha, Lanza y Maza",
+                           "en_us":  "Sword, Axe, Spear \u0026 Mace"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Filo, Perdición artrópodos, Densidad, Brecha",
+                                  "es_es":  "Filo, Perdición artrópodos, Densidad, Brecha",
+                                  "en_us":  "Sharpness, Bane of Arthropods, Density, Breach"
+                              },
+        "effect":  {
+                       "es_mx":  "Suma +2.5 de daño por nivel (+12.5 con V!) a no-muertos: Zombies, Esqueletos, Wither, Piglins Zombificados y Ahogados.",
+                       "es_es":  "Añade +2,5 de daño por nivel (+12,5 con V) contra no-muertos (Zombis, Esqueletos, Wither y Ahogados).",
+                       "en_us":  "Adds +2.5 damage per level (+12.5 at V) against undead mobs (Zombies, Skeletons, Wither, Drowned)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Mazmorras, Templos, Ruinas y Cámaras de Desafío",
+                                                "es_es":  "Mazmorras, Templos, Ruinas y Cámaras de Juicio",
+                                                "en_us":  "Dungeons, Temples, Ruins \u0026 Trial Chambers"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Bibliotecario o Mesa Nivel 30 sobre tu Hacha de Netherite (mata esqueletos/zombies de 1 golpe y es meta contra el Wither).",
+                            "es_es":  "Bibliotecario o Mesa Nivel 30 para un Hacha dedicada (mata no-muertos de 1 golpe y al Wither rápido).",
+                            "en_us":  "Librarian or Level-30 Table on a secondary Netherite Axe/Sword (one-shots undead \u0026 melts Wither boss)."
+                        }
+    },
+    {
+        "id":  "bane_of_arthropods",
+        "category_key":  "melee",
+        "icon":  "netherite_sword",
+        "name":  {
+                     "es_mx":  "Perdición de los artrópodos",
+                     "es_es":  "Perdición de los artrópodos",
+                     "en_us":  "Bane of Arthropods"
+                 },
+        "max_level":  "V",
+        "max_level_num":  5,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Espada, Hacha, Lanza y Maza",
+                           "es_es":  "Espada, Hacha, Lanza y Maza",
+                           "en_us":  "Sword, Axe, Spear \u0026 Mace"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Filo, Castigo, Densidad, Brecha",
+                                  "es_es":  "Filo, Golpeo, Densidad, Brecha",
+                                  "en_us":  "Sharpness, Smite, Density, Breach"
+                              },
+        "effect":  {
+                       "es_mx":  "Suma +2.5 de daño por nivel (+12.5 con V) + Lentitud IV a arañas, pececillos de plata, endermites y abejas.",
+                       "es_es":  "Añade +2,5 de daño por nivel y aplica Lentitud IV contra artrópodos (arañas, lepismas, abejas).",
+                       "en_us":  "Adds +2.5 damage per level + Slowness IV against arthropods (spiders, silverfish, endermites, bees)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Minas abandonadas, Mazmorras y Templos",
+                                                "es_es":  "Minas abandonadas, Mazmorras y Templos",
+                                                "en_us":  "Mineshafts, Dungeons \u0026 Temples"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa Nivel 30 (sale muy seguido como libro de descarte); solo util en granjas de arañas de cueva o spawners específicos.",
+                            "es_es":  "Mesa Nivel 30 o Bibliotecario; solo recomendable en armas dedicadas a granjas de arañas.",
+                            "en_us":  "Common Level-30 roll or cheap Librarian; niche outside spider/cave-spider XP farms."
+                        }
+    },
+    {
+        "id":  "knockback",
+        "category_key":  "melee",
+        "icon":  "netherite_sword",
+        "name":  {
+                     "es_mx":  "Empuje",
+                     "es_es":  "Empuje",
+                     "en_us":  "Knockback"
+                 },
+        "max_level":  "II",
+        "max_level_num":  2,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Espada y Lanza",
+                           "es_es":  "Espada y Lanza",
+                           "en_us":  "Sword \u0026 Spear"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno (opcional: dificulta encadenar combos y aleja esqueletos que disparan)",
+                                  "es_es":  "Ninguno (algunos jugadores lo omiten para no alejar esqueletos ni cortar combos)",
+                                  "en_us":  "None (often omitted intentionally so skeletons aren\u0027t knocked into bow range)"
+                              },
+        "effect":  {
+                       "es_mx":  "Aumenta el retroceso de los golpes (+3 bloques por nivel aprox.) para alejar Creepers o tirar rivales de plataformas.",
+                       "es_es":  "Aumenta el retroceso por golpe para alejar Creepers rápidamente o empujar objetivos.",
+                       "en_us":  "Increases melee knockback significantly, pushing Creepers away safely or knocking targets off ledges."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Mazmorras, Cámaras de Desafío y Bastiones",
+                                                "es_es":  "Mazmorras, Cámaras de Juicio y Bastiones",
+                                                "en_us":  "Dungeons, Trial Chambers \u0026 Bastions"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa de encantamientos Nivel 30 (sale frecuentemente al encantar espadas) o Bibliotecario Empuje II.",
+                            "es_es":  "Mesa de encantamientos Nivel 30 en espadas o Bibliotecario con Empuje II.",
+                            "en_us":  "Level-30 Enchanting Table on swords/books or Librarian Villager (Knockback II)."
+                        }
+    },
+    {
+        "id":  "fire_aspect",
+        "category_key":  "melee",
+        "icon":  "netherite_sword",
+        "name":  {
+                     "es_mx":  "Aspecto ígneo",
+                     "es_es":  "Aspecto ígneo",
+                     "en_us":  "Fire Aspect"
+                 },
+        "max_level":  "II",
+        "max_level_num":  2,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Espada, Lanza y Maza",
+                           "es_es":  "Espada, Lanza y Maza",
+                           "en_us":  "Sword, Spear \u0026 Mace"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno (aviso: si un zombie en llamas te pega, te quema a ti también)",
+                                  "es_es":  "Ninguno (aviso: zombis ardiendo pueden prenderte fuego y hacer huir a Endermen)",
+                                  "en_us":  "None (note: burning zombies can ignite you \u0026 burning Endermen teleport rapidly)"
+                              },
+        "effect":  {
+                       "es_mx":  "Prende fuego al objetivo durante 4s (I) u 8s (II) e instantáneamente cocina carne al matar animales de granja.",
+                       "es_es":  "Incendia objetivos 4s (I) u 8s (II) y cocina al instante la carne de animales derrotados.",
+                       "en_us":  "Sets targets on fire (4s / 8s) and auto-cooks raw meat dropped by livestock."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Mazmorras, Cámaras de Desafío, Ciudades del End",
+                                                "es_es":  "Mazmorras, Cámaras de Juicio y Ciudades del End",
+                                                "en_us":  "Dungeons, Trial Chambers \u0026 End Cities"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario (Aspecto ígneo II) o Mesa Nivel 30 sobre Maza/Espada.",
+                            "es_es":  "Bibliotecario (Aspecto ígneo II) o Mesa Nivel 30 sobre Espada o Maza.",
+                            "en_us":  "Librarian Villager (Fire Aspect II) or Level-30 Enchanting Table roll."
+                        }
+    },
+    {
+        "id":  "looting",
+        "category_key":  "melee",
+        "icon":  "netherite_sword",
+        "name":  {
+                     "es_mx":  "Saqueo",
+                     "es_es":  "Botín",
+                     "en_us":  "Looting"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Espada y Lanza",
+                           "es_es":  "Espada y Lanza",
+                           "en_us":  "Sword \u0026 Spear"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno (funciona incluso sosteniendo el arma en la mano principal mientras lanzas flechas o tridente)",
+                                  "es_es":  "Ninguno (aplica también si lanzas arco/tridente con el arma en mano)",
+                                  "en_us":  "None (also applies while held in mainhand for bow/trident kills)"
+                              },
+        "effect":  {
+                       "es_mx":  "Multiplica drops comunes de mobs (+1 por nivel) y sube la probabilidad de drops raros como calaveras Wither, perlas y varas de blaze.",
+                       "es_es":  "Incrementa los botines comunes (+1 por nivel) y sube el porcentaje de drops raros (calaveras Wither, perlas, etc.).",
+                       "en_us":  "Boosts common mob drop caps by +1 per level and increases rare drop rates (Wither skulls, pearls, blaze rods)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ciudades del End, Mazmorras y Cámaras de Desafío",
+                                                "es_es":  "Ciudades del End, Mazmorras y Cámaras de Juicio",
+                                                "en_us":  "End Cities, Dungeons \u0026 Trial Chambers"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario con Saqueo III directo: es uno de los 3 primeros libros que conviene asegurar con atril.",
+                            "es_es":  "Aldeano Bibliotecario con Botín III directo; prioridad absoluta junto con Fortuna y Reparación.",
+                            "en_us":  "Librarian Villager lectern reroll for Looting III; top-3 early priority book alongside Fortune \u0026 Mending."
+                        }
+    },
+    {
+        "id":  "sweeping_edge",
+        "category_key":  "melee",
+        "icon":  "netherite_sword",
+        "name":  {
+                     "es_mx":  "Barrido",
+                     "es_es":  "Barrido",
+                     "en_us":  "Sweeping Edge"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Espada (exclusivo de Java Edition)",
+                           "es_es":  "Espada (exclusivo de Java Edition)",
+                           "en_us":  "Sword (Java Edition exclusive)"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno",
+                                  "es_es":  "Ninguno",
+                                  "en_us":  "None"
+                              },
+        "effect":  {
+                       "es_mx":  "Sube el daño del ataque en área de la espada de 1 HP al 75% del daño total del golpe (nivel III). Indispensable para granjas de XP.",
+                       "es_es":  "Eleva el daño del ataque en arco al 75% del golpe principal a nivel III; clave para granjas de mobs.",
+                       "en_us":  "Raises sweep AoE damage from 1 HP up to 75% of base hit damage at level III; essential for mob farms."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ciudades del End, Mazmorras y Portal en ruinas",
+                                                "es_es":  "Ciudades del End, Mazmorras y Portales",
+                                                "en_us":  "End Cities, Dungeons \u0026 Ruined Portals"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Bibliotecario con Barrido III o Mesa Nivel 30 sobre espadas.",
+                            "es_es":  "Aldeano Bibliotecario con Barrido III o Mesa Nivel 30 sobre espadas.",
+                            "en_us":  "Librarian Villager (Sweeping Edge III) or Level-30 Enchanting Table on Swords."
+                        }
+    },
+    {
+        "id":  "density",
+        "category_key":  "melee",
+        "icon":  "mace",
+        "name":  {
+                     "es_mx":  "Densidad",
+                     "es_es":  "Densidad",
+                     "en_us":  "Density"
+                 },
+        "max_level":  "V",
+        "max_level_num":  5,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Maza",
+                           "es_es":  "Maza",
+                           "en_us":  "Mace"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Brecha (Breach), Castigo, Perdición de los artrópodos",
+                                  "es_es":  "Brecha (Breach), Golpeo, Perdición de los artrópodos",
+                                  "en_us":  "Breach, Smite, Bane of Arthropods"
+                              },
+        "effect":  {
+                       "es_mx":  "Suma +0.5 de daño por bloque caído por cada nivel (+2.5 por bloque en Densidad V), permitiendo eliminar Wardens/Jefes de 1 smash.",
+                       "es_es":  "Añade +0,5 de daño por bloque caído por nivel (+2,5 por bloque a nivel V), brutal contra jefes.",
+                       "en_us":  "Adds +0.5 smash damage per block fallen per level (+2.5 per block at V), capable of one-shotting Wardens."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Bóvedas normales de Cámaras de Desafío",
+                                                "es_es":  "Bóvedas normales de Cámaras de Juicio",
+                                                "en_us":  "Trial Chamber Vaults"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario con Densidad V directo (mucho más rápido que buscar 5 libros en Cámaras de Desafío).",
+                            "es_es":  "Aldeano Bibliotecario con Densidad V directo o encantando la Maza en Mesa Nivel 30.",
+                            "en_us":  "Librarian Villager (Density V) or Level-30 Enchanting Table directly on the Mace."
+                        },
+        "since_version":  "1.21.1"
+    },
+    {
+        "id":  "breach",
+        "category_key":  "melee",
+        "icon":  "mace",
+        "name":  {
+                     "es_mx":  "Brecha",
+                     "es_es":  "Brecha",
+                     "en_us":  "Breach"
+                 },
+        "max_level":  "IV",
+        "max_level_num":  4,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Maza",
+                           "es_es":  "Maza",
+                           "en_us":  "Mace"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Densidad (Density), Castigo, Perdición de los artrópodos",
+                                  "es_es":  "Densidad (Density), Golpeo, Perdición de los artrópodos",
+                                  "en_us":  "Density, Smite, Bane of Arthropods"
+                              },
+        "effect":  {
+                       "es_mx":  "Ignora un 15% de la armadura del enemigo por nivel (60% de perforación con Brecha IV); letal en PvP contra Netherite Protección IV.",
+                       "es_es":  "Ignora un 15% de la efectividad de armadura por nivel (60% en nivel IV); devastador en PvP.",
+                       "en_us":  "Bypasses 15% armor damage reduction per level (60% armor pierce at IV); lethal in armored PvP."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Bóvedas Ominosas en Cámaras de Desafío",
+                                                "es_es":  "Bóvedas Ominosas en Cámaras de Juicio",
+                                                "en_us":  "Trial Chamber Ominous Vaults"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario (Brecha IV) o Mesa Nivel 30 sobre Maza. Si juegas Survival PvE, Densidad V suele rendir más.",
+                            "es_es":  "Bibliotecario (Brecha IV) o Mesa Nivel 30. Para PvE usa Densidad V; para PvP con armadura, Brecha IV.",
+                            "en_us":  "Librarian Villager (Breach IV) or Level-30 Table on Mace (best for PvP; choose Density V for PvE)."
+                        },
+        "since_version":  "1.21.1"
+    },
+    {
+        "id":  "wind_burst",
+        "category_key":  "melee",
+        "icon":  "mace",
+        "name":  {
+                     "es_mx":  "Aeroimpulso",
+                     "es_es":  "Aeroimpulso",
+                     "en_us":  "Wind Burst"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  2,
+        "is_treasure":  true,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Maza",
+                           "es_es":  "Maza",
+                           "en_us":  "Mace"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno (se combina perfecto con Densidad V o Brecha IV)",
+                                  "es_es":  "Ninguno (compatible con Densidad V o Brecha IV)",
+                                  "en_us":  "None (stacks with Density V or Breach IV)"
+                              },
+        "effect":  {
+                       "es_mx":  "Al acertar un golpe de caída con Maza te catapulta de nuevo al cielo (I = ~7 blq, II = ~14 blq, III = ~24 blq) para encadenar golpes infinitos.",
+                       "es_es":  "Al asestar un smash con Maza te lanza hacia arriba (~24 bloques con III) para encadenar ataques aéreos.",
+                       "en_us":  "Launches you skyward after a Mace smash (~24 blocks high at III) to chain aerial slams cleanly."
+                   },
+        "sources":  {
+                        "enchanting_table":  false,
+                        "librarian_villager":  false,
+                        "fishing":  false,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Exclusivo de Bóvedas Ominosas en Cámaras de Desafío (~5.5%, siempre Nivel I)",
+                                                "es_es":  "Exclusivo de Bóvedas Ominosas en Cámaras de Juicio (~5,5%, siempre Nivel I)",
+                                                "en_us":  "Trial Chamber Ominous Vaults ONLY (~5.5% drop, always Level I)"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "NO LO DAN ALDEANOS NI MESA NI PESCA: bebe Botella Ominosa, farméa Llaves Ominosas en Cámaras y abre Bóvedas Ominosas. Junta 4 libros I (I+I=II, I+I=II, II+II=III).",
+                            "es_es":  "NO LO VENDEN ALDEANOS NI SALE EN MESA/PESCA: solo Bóvedas Ominosas con Llave Ominosa. Necesitas 4 libros de Aeroimpulso I para subir a III en el yunque.",
+                            "en_us":  "NOT SOLD BY VILLAGERS (exclusive drop): trigger Ominous Trials for Ominous Keys -\u003e unlock Ominous Vaults; combine 4 Wind Burst I books into III."
+                        },
+        "since_version":  "1.21.1"
+    },
+    {
+        "id":  "lunge",
+        "category_key":  "melee",
+        "icon":  "netherite_spear",
+        "name":  {
+                     "es_mx":  "Estocada",
+                     "es_es":  "Estocada",
+                     "en_us":  "Lunge"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Lanzas (Madera a Netherite)",
+                           "es_es":  "Lanzas (Madera a Netherita)",
+                           "en_us":  "Spears (Wood to Netherite)"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno (funciona junto con Filo, Saqueo, Empuje, Aspecto ígneo)",
+                                  "es_es":  "Ninguno (compatible con Filo, Botín, Empuje, Aspecto ígneo)",
+                                  "en_us":  "None (combines cleanly with Sharpness, Looting, Knockback \u0026 Fire Aspect)"
+                              },
+        "effect":  {
+                       "es_mx":  "Al hacer un ataque rápido de lanza te impulsa horizontalmente hacia adelante (dash); consume 1 durabilidad y puntos de hambre al activarse.",
+                       "es_es":  "Impulsa al jugador hacia delante al atacar con la lanza; consume hambre y durabilidad por cada embiste.",
+                       "en_us":  "Propels you forward horizontally on a Spear jab attack; consumes saturation/hunger points and durability per dash."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Cofres de botín generales y estructuras",
+                                                "es_es":  "Cofres de estructuras con libros encantados",
+                                                "en_us":  "Structure Loot Chests"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario con Estocada III o Mesa Nivel 30 directamente sobre Lanza de diamante antes de mejorarla.",
+                            "es_es":  "Aldeano Bibliotecario (Estocada III) o Mesa Nivel 30 directamente sobre una lanza.",
+                            "en_us":  "Librarian Villager lectern reroll (Lunge III) or Level-30 Enchanting Table directly on a Diamond Spear."
+                        },
+        "since_version":  "26.3"
+    },
+    {
+        "id":  "power",
+        "category_key":  "ranged",
+        "icon":  "bow",
+        "name":  {
+                     "es_mx":  "Poder",
+                     "es_es":  "Poder",
+                     "en_us":  "Power"
+                 },
+        "max_level":  "V",
+        "max_level_num":  5,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Arco",
+                           "es_es":  "Arco",
+                           "en_us":  "Bow"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno",
+                                  "es_es":  "Ninguno",
+                                  "en_us":  "None"
+                              },
+        "effect":  {
+                       "es_mx":  "Dispara flechas hasta +150% más letales (+25% x (Nivel + 1)) con Poder V.",
+                       "es_es":  "Aumenta el daño de flechas hasta un +150% a nivel V.",
+                       "en_us":  "Increases bow arrow damage up to +150% at Power V."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Mazmorras, Ciudades del End y Bastiones",
+                                                "es_es":  "Mazmorras, Ciudades del End y Bastiones",
+                                                "en_us":  "Dungeons, End Cities \u0026 Bastions"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario con Poder V directo o combina arcos encantados sacados de granja de esqueletos / pesca AFK.",
+                            "es_es":  "Bibliotecario (Poder V) o fusionando arcos encantados de pesca / granja de esqueletos.",
+                            "en_us":  "Librarian Villager (Power V) or combining enchanted bows dropped by Fishing \u0026 Skeleton farms."
+                        }
+    },
+    {
+        "id":  "punch",
+        "category_key":  "ranged",
+        "icon":  "bow",
+        "name":  {
+                     "es_mx":  "Retroceso",
+                     "es_es":  "Retroceso",
+                     "en_us":  "Punch"
+                 },
+        "max_level":  "II",
+        "max_level_num":  2,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Arco",
+                           "es_es":  "Arco",
+                           "en_us":  "Bow"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno",
+                                  "es_es":  "Ninguno",
+                                  "en_us":  "None"
+                              },
+        "effect":  {
+                       "es_mx":  "Añade empuje masivo a tus flechas (esencial para mantener distancia contra Creepers y hacer bow-boosting con Élitros en Punch II).",
+                       "es_es":  "Incrementa mucho el empuje de las flechas (útil contra enemigos rápidos y para bow-boosting con Élitros).",
+                       "en_us":  "Adds strong arrow knockback (great crowd-control and Elytra mid-air bow boosting)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Mazmorras, Templos y Puestos de Saqueadores",
+                                                "es_es":  "Mazmorras, Templos y Puestos de Saqueadores",
+                                                "en_us":  "Dungeons, Temples \u0026 Pillager Outposts"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa Nivel 30 sobre arcos (sale frecuentemente junto a Poder IV) o Bibliotecario Retroceso II.",
+                            "es_es":  "Mesa Nivel 30 en arcos o Bibliotecario con Retroceso II.",
+                            "en_us":  "Level-30 Enchanting Table on bows or Librarian Villager (Punch II)."
+                        }
+    },
+    {
+        "id":  "flame",
+        "category_key":  "ranged",
+        "icon":  "bow",
+        "name":  {
+                     "es_mx":  "Llama",
+                     "es_es":  "Fuego",
+                     "en_us":  "Flame"
+                 },
+        "max_level":  "I",
+        "max_level_num":  1,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Arco",
+                           "es_es":  "Arco",
+                           "en_us":  "Bow"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno",
+                                  "es_es":  "Ninguno",
+                                  "en_us":  "None"
+                              },
+        "effect":  {
+                       "es_mx":  "Dispara flechas en llamas que incendian mobs 5s, detonan TNT a distancia y prenden fogatas.",
+                       "es_es":  "Dispara flechas ardientes (5s de fuego), cocina animales al matarlos y enciende bloques de TNT.",
+                       "en_us":  "Fires flaming arrows that burn targets for 5s, light TNT/campfires from range \u0026 auto-cook meat."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Mazmorras, Portales en ruinas y Ciudades del End",
+                                                "es_es":  "Mazmorras, Portales en ruinas y Ciudades del End",
+                                                "en_us":  "Dungeons, Ruined Portals \u0026 End Cities"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa Nivel 30 sobre un arco o Bibliotecario Llama (es nivel único I, muy fácil de conseguir).",
+                            "es_es":  "Mesa Nivel 30 sobre un arco o Bibliotecario (es nivel único, sale rápido).",
+                            "en_us":  "Level-30 Enchanting Table on bows or single-roll Librarian trade."
+                        }
+    },
+    {
+        "id":  "infinity",
+        "category_key":  "ranged",
+        "icon":  "bow",
+        "name":  {
+                     "es_mx":  "Infinidad",
+                     "es_es":  "Infinidad",
+                     "en_us":  "Infinity"
+                 },
+        "max_level":  "I",
+        "max_level_num":  1,
+        "anvil_multiplier":  4,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Arco",
+                           "es_es":  "Arco",
+                           "en_us":  "Bow"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Reparación (Mending)",
+                                  "es_es":  "Reparación (Mending)",
+                                  "en_us":  "Mending"
+                              },
+        "effect":  {
+                       "es_mx":  "Permite disparar flechas normales infinitas teniendo solo 1 en el inventario (no aplica a flechas con efecto o espectrales).",
+                       "es_es":  "Dispara flechas normales infinitas llevando al menos 1 en el inventario.",
+                       "en_us":  "Fires unlimited regular arrows as long as at least 1 normal arrow sits in your inventory."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Mazmorras, Ciudades del End y Mansiones",
+                                                "es_es":  "Mazmorras, Ciudades del End y Mansiones",
+                                                "en_us":  "Dungeons, End Cities \u0026 Mansions"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario (saca también arcos limpios con Infinidad en la Mesa para reemplazar cuando ya no pueda repararse en yunque).",
+                            "es_es":  "Bibliotecario o Mesa Nivel 30; guarda un arco de respaldo porque no es compatible con Reparación.",
+                            "en_us":  "Librarian Villager or Level-30 Bow rolls (note: you\u0027ll repair bows using fresh bows on Anvil since it blocks Mending)."
+                        }
+    },
+    {
+        "id":  "multishot",
+        "category_key":  "ranged",
+        "icon":  "crossbow",
+        "name":  {
+                     "es_mx":  "Multidisparo",
+                     "es_es":  "Multidisparo",
+                     "en_us":  "Multishot"
+                 },
+        "max_level":  "I",
+        "max_level_num":  1,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Ballesta",
+                           "es_es":  "Ballesta",
+                           "en_us":  "Crossbow"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Perforación (Piercing)",
+                                  "es_es":  "Perforación (Piercing)",
+                                  "en_us":  "Piercing"
+                              },
+        "effect":  {
+                       "es_mx":  "Dispara 3 flechas o cohetes explosivos en abanico gastando solo 1 proyectil del cargador.",
+                       "es_es":  "Dispara 3 proyectiles (flechas o cohetes explosivos) en abanico consumiendo solo 1 munición.",
+                       "en_us":  "Fires 3 arrows or firework rockets in a spread while consuming only 1 projectile."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Puestos de Saqueadores, Bastiones y Mazmorras",
+                                                "es_es":  "Puestos de Saqueadores, Bastiones y Mazmorras",
+                                                "en_us":  "Pillager Outposts, Bastions \u0026 Dungeons"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa Nivel 30 directa sobre una ballesta (tiene un pool muy corto de encantamientos y sale rápido) o Bibliotecario.",
+                            "es_es":  "Mesa Nivel 30 directamente sobre ballesta o Bibliotecario (es nivel único I).",
+                            "en_us":  "Level-30 Enchanting Table directly on Crossbows (tiny enchant pool rolls fast!) or Librarian Villager."
+                        }
+    },
+    {
+        "id":  "quick_charge",
+        "category_key":  "ranged",
+        "icon":  "crossbow",
+        "name":  {
+                     "es_mx":  "Carga rápida",
+                     "es_es":  "Carga rápida",
+                     "en_us":  "Quick Charge"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Ballesta",
+                           "es_es":  "Ballesta",
+                           "en_us":  "Crossbow"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno",
+                                  "es_es":  "Ninguno",
+                                  "en_us":  "None"
+                              },
+        "effect":  {
+                       "es_mx":  "Reduce el tiempo de recarga en -0.25s por nivel (recarga en 0.5s con Carga rápida III vs 1.25s base).",
+                       "es_es":  "Recarga la ballesta en 0,5s a nivel III (vs 1,25s sin encantar).",
+                       "en_us":  "Cuts Crossbow reload time by 0.25s per level (down to 0.5s at III vs 1.25s base)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Bastiones, Puestos de Saqueadores y Mazmorras",
+                                                "es_es":  "Bastiones, Puestos de Saqueadores y Mazmorras",
+                                                "en_us":  "Bastions, Pillager Outposts \u0026 Dungeons"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa Nivel 30 sobre ballesta (Carga rápida III es común en Nivel 30) o Bibliotecario.",
+                            "es_es":  "Mesa Nivel 30 sobre ballesta o Aldeano Bibliotecario con Carga rápida III.",
+                            "en_us":  "Level-30 Enchanting Table on Crossbows or Librarian Villager (Quick Charge III)."
+                        }
+    },
+    {
+        "id":  "piercing",
+        "category_key":  "ranged",
+        "icon":  "crossbow",
+        "name":  {
+                     "es_mx":  "Perforación",
+                     "es_es":  "Perforación",
+                     "en_us":  "Piercing"
+                 },
+        "max_level":  "IV",
+        "max_level_num":  4,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Ballesta",
+                           "es_es":  "Ballesta",
+                           "en_us":  "Crossbow"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Multidisparo (Multishot)",
+                                  "es_es":  "Multidisparo (Multishot)",
+                                  "en_us":  "Multishot"
+                              },
+        "effect":  {
+                       "es_mx":  "Las flechas atraviesan escudos y hasta 5 enemigos en fila (Nivel IV), pudiendo recogerlas intactas del suelo después.",
+                       "es_es":  "Atraviesa escudos y hasta 5 entidades en línea; permite recoger las flechas disparadas (incluso con efecto).",
+                       "en_us":  "Arrows pierce shields \u0026 up to 5 targets in a line, and remain collectible afterward (even tipped arrows!)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Puestos de Saqueadores, Bastiones y Cámaras de Desafío",
+                                                "es_es":  "Puestos de Saqueadores, Bastiones y Cámaras de Juicio",
+                                                "en_us":  "Pillager Outposts, Bastions \u0026 Trial Chambers"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa Nivel 30 sobre ballesta o Bibliotecario Perforación IV (excelente contra jugadores con escudo o mobs en línea).",
+                            "es_es":  "Mesa Nivel 30 en ballesta o Bibliotecario con Perforación IV (ideal en PvP contra escudos).",
+                            "en_us":  "Level-30 Table on Crossbow or Librarian (Piercing IV) — counter to Shields in PvP."
+                        }
+    },
+    {
+        "id":  "loyalty",
+        "category_key":  "ranged",
+        "icon":  "trident",
+        "name":  {
+                     "es_mx":  "Lealtad",
+                     "es_es":  "Lealtad",
+                     "en_us":  "Loyalty"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Tridente",
+                           "es_es":  "Tridente",
+                           "en_us":  "Trident"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Propulsión acuática (Riptide)",
+                                  "es_es":  "Propulsión acuática (Riptide)",
+                                  "en_us":  "Riptide"
+                              },
+        "effect":  {
+                       "es_mx":  "El tridente lanzado regresa automáticamente a tu inventario incluso desde el Vacío del End.",
+                       "es_es":  "Hace que el tridente regrese volando a tu mano tras lanzarlo (incluso si cae al Vacío).",
+                       "en_us":  "Causes thrown Trident to return automatically to your inventory (even when thrown into the End void!)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ruinas oceánicas, Cámaras de Desafío y Naufragios",
+                                                "es_es":  "Ruinas oceánicas, Cámaras de Juicio y Naufragios",
+                                                "en_us":  "Ocean Ruins, Trial Chambers \u0026 Shipwrecks"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa Nivel 30 directo sobre el Tridente (casi siempre te da Lealtad III + Empalamiento) o Bibliotecario.",
+                            "es_es":  "Mesa Nivel 30 sobre Tridente o Aldeano Bibliotecario con Lealtad III.",
+                            "en_us":  "Level-30 Enchanting Table on Trident or Librarian Villager (Loyalty III)."
+                        }
+    },
+    {
+        "id":  "impaling",
+        "category_key":  "ranged",
+        "icon":  "trident",
+        "name":  {
+                     "es_mx":  "Empalamiento",
+                     "es_es":  "Empalamiento",
+                     "en_us":  "Impaling"
+                 },
+        "max_level":  "V",
+        "max_level_num":  5,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Tridente",
+                           "es_es":  "Tridente",
+                           "en_us":  "Trident"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno (funciona igual con Lealtad que con Propulsión acuática)",
+                                  "es_es":  "Ninguno (compatible con Lealtad y con Propulsión acuática)",
+                                  "en_us":  "None (stacks with both Loyalty \u0026 Riptide)"
+                              },
+        "effect":  {
+                       "es_mx":  "Suma +2.5 de daño por nivel (+12.5 con V) contra criaturas acuáticas (Guardianes, Guardianes Ancianos, Ahogados/Peces/Calamares en agua).",
+                       "es_es":  "Añade +2,5 de daño por nivel (+12,5 con V) contra mobs acuáticos (Guardianes, Ancianos, etc.).",
+                       "en_us":  "Deals +2.5 extra damage per level (+12.5 at V) against aquatic mobs (Guardians, Elder Guardians, etc.)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ruinas oceánicas, Naufragios y Monumentos",
+                                                "es_es":  "Ruinas oceánicas, Naufragios y Monumentos",
+                                                "en_us":  "Ocean Ruins, Shipwrecks \u0026 Monuments"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario con Empalamiento V directo (evitas gastar niveles combinando Empalamiento IV).",
+                            "es_es":  "Aldeano Bibliotecario (Empalamiento V) o Mesa Nivel 30 sobre tridente.",
+                            "en_us":  "Librarian Villager (Impaling V) directly, or Level-30 roll on Trident."
+                        }
+    },
+    {
+        "id":  "riptide",
+        "category_key":  "ranged",
+        "icon":  "trident",
+        "name":  {
+                     "es_mx":  "Propulsión acuática",
+                     "es_es":  "Propulsión acuática",
+                     "en_us":  "Riptide"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Tridente",
+                           "es_es":  "Tridente",
+                           "en_us":  "Trident"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Lealtad (Loyalty), Conductividad (Channeling)",
+                                  "es_es":  "Lealtad (Loyalty), Conductividad (Channeling)",
+                                  "en_us":  "Loyalty, Channeling"
+                              },
+        "effect":  {
+                       "es_mx":  "Te propulsa violentamente por el agua o bajo la lluvia. Combinado con Élitros logra el desplazamiento más rápido de Minecraft sin gastar cohetes.",
+                       "es_es":  "Te impulsa a gran velocidad dentro del agua o bajo la lluvia; junto a Élitros supera la velocidad de cohetes.",
+                       "en_us":  "Propels you through water or rain; paired with Elytra gives fastest air travel without rockets."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ruinas oceánicas y Cámaras de Desafío",
+                                                "es_es":  "Ruinas oceánicas y Cámaras de Juicio",
+                                                "en_us":  "Ocean Ruins \u0026 Trial Chambers"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario (Propulsión acuática III) o Mesa Nivel 30; siempre ten 2 tridentes (uno con Propulsión, otro con Lealtad + Conductividad).",
+                            "es_es":  "Bibliotecario o Mesa Nivel 30; recomendable llevar un Tridente dedicado solo a Propulsión acuática III + Reparación.",
+                            "en_us":  "Librarian Villager (Riptide III) or Level-30 Table; craft a dedicated second Trident for travel."
+                        }
+    },
+    {
+        "id":  "channeling",
+        "category_key":  "ranged",
+        "icon":  "trident",
+        "name":  {
+                     "es_mx":  "Conductividad",
+                     "es_es":  "Conductividad",
+                     "en_us":  "Channeling"
+                 },
+        "max_level":  "I",
+        "max_level_num":  1,
+        "anvil_multiplier":  4,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Tridente",
+                           "es_es":  "Tridente",
+                           "en_us":  "Trident"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Propulsión acuática (Riptide)",
+                                  "es_es":  "Propulsión acuática (Riptide)",
+                                  "en_us":  "Riptide"
+                              },
+        "effect":  {
+                       "es_mx":  "Durante tormentas eléctricas invoca un rayo donde impacta el tridente (o sobre pararrayos); permite farmear cabezas de mobs con Creepers Cargados.",
+                       "es_es":  "Invoca un rayo al lanzar durante tormentas eléctricas (clave para cargar Creepers y conseguir cabezas).",
+                       "en_us":  "Strikes target with lightning during thunderstorms (essential for Charged Creepers \u0026 mob head farming)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ruinas oceánicas, Templos y Ciudades del End",
+                                                "es_es":  "Ruinas oceánicas, Templos y Ciudades del End",
+                                                "en_us":  "Ocean Ruins, Temples \u0026 End Cities"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa Nivel 30 directa en Tridente (sale muy seguido junto con Lealtad III) o Bibliotecario.",
+                            "es_es":  "Mesa Nivel 30 en Tridente o Aldeano Bibliotecario (es nivel único I).",
+                            "en_us":  "Level-30 Enchanting Table on Trident or single-level Librarian trade."
+                        }
+    },
+    {
+        "id":  "efficiency",
+        "category_key":  "tool",
+        "icon":  "netherite_pickaxe",
+        "name":  {
+                     "es_mx":  "Eficiencia",
+                     "es_es":  "Eficiencia",
+                     "en_us":  "Efficiency"
+                 },
+        "max_level":  "V",
+        "max_level_num":  5,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Pico, Pala, Hacha, Azada y Tijeras",
+                           "es_es":  "Pico, Pala, Hacha, Azada y Tijeras",
+                           "en_us":  "Pickaxe, Shovel, Axe, Hoe \u0026 Shears"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno",
+                                  "es_es":  "Ninguno",
+                                  "en_us":  "None"
+                              },
+        "effect":  {
+                       "es_mx":  "Acelera drásticamente el minado; Eficiencia V + Faro Prisa II mina Piedra al instante (instamine).",
+                       "es_es":  "Incrementa mucho la velocidad de minado; con Eficiencia V + Faro Prisa II picas piedra al instante.",
+                       "en_us":  "Massively boosts mining speed; Efficiency V + Beacon Haste II insta-mines Stone."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ciudades del End, Minas abandonadas y Mazmorras",
+                                                "es_es":  "Ciudades del End, Minas abandonadas y Mazmorras",
+                                                "en_us":  "End Cities, Mineshafts \u0026 Dungeons"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario con Eficiencia V directo (necesitarás varios para pico de Fortuna, pico de Toque, hacha, pala y azada).",
+                            "es_es":  "Bibliotecario con Eficiencia V directo; lo usarás en todas tus herramientas principales.",
+                            "en_us":  "Librarian Villager (Efficiency V) — infinite supply for Silk Pick, Fortune Pick, Axe, Shovel \u0026 Hoe."
+                        }
+    },
+    {
+        "id":  "silk_touch",
+        "category_key":  "tool",
+        "icon":  "netherite_pickaxe",
+        "name":  {
+                     "es_mx":  "Toque de seda",
+                     "es_es":  "Toque de seda",
+                     "en_us":  "Silk Touch"
+                 },
+        "max_level":  "I",
+        "max_level_num":  1,
+        "anvil_multiplier":  4,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Pico, Pala, Hacha, Azada y Tijeras (solo yunque en Tijeras)",
+                           "es_es":  "Pico, Pala, Hacha, Azada y Tijeras (yunque en Tijeras)",
+                           "en_us":  "Pickaxe, Shovel, Axe, Hoe \u0026 Shears (Anvil on Shears)"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Fortuna (Fortune)",
+                                  "es_es":  "Fortuna (Fortune)",
+                                  "en_us":  "Fortune"
+                              },
+        "effect":  {
+                       "es_mx":  "Extrae bloques en su forma original: Vidrio, Hielo compacto, Piedra, Colmenas con abejas, Sensores Sculk y Cofres de Ender.",
+                       "es_es":  "Recoge bloques intactos: Cristal, Hielo, Piedra, Colmenas habitadas, Sensores Sculk y Cofres de Ender.",
+                       "en_us":  "Drops blocks intact instead of breaking them down (Glass, Ice, Stone, Bee Nests, Sculk Sensors, Ender Chests)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ciudades del End, Minas y Mazmorras",
+                                                "es_es":  "Ciudades del End, Minas y Mazmorras",
+                                                "en_us":  "End Cities, Mineshafts \u0026 Dungeons"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario (es nivel único I, suele aparecer rápido en atril) o Mesa Nivel 30 en picos.",
+                            "es_es":  "Bibliotecario o Mesa Nivel 30 sobre pico (nivel único, rotación rápida en atril).",
+                            "en_us":  "Librarian Villager lectern reroll or Level-30 Pickaxe rolls (single-level roll)."
+                        }
+    },
+    {
+        "id":  "fortune",
+        "category_key":  "tool",
+        "icon":  "netherite_pickaxe",
+        "name":  {
+                     "es_mx":  "Fortuna",
+                     "es_es":  "Fortuna",
+                     "en_us":  "Fortune"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Pico, Pala, Hacha y Azada (multiplicando cultivos/hojas)",
+                           "es_es":  "Pico, Pala, Hacha y Azada",
+                           "en_us":  "Pickaxe, Shovel, Axe \u0026 Hoe (crop/leaf drops too)"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Toque de seda (Silk Touch)",
+                                  "es_es":  "Toque de seda (Silk Touch)",
+                                  "en_us":  "Silk Touch"
+                              },
+        "effect":  {
+                       "es_mx":  "Multiplica diamantes, hierro crudo, oro, carbón, lapislázuli, pedernal y cultivos/manzanas de hojas hasta 4x (promedio 2.2x en diamantes con III).",
+                       "es_es":  "Multiplica menas (diamante, hierro crudo, carbón) hasta x4 y aumenta drops de cultivos/hojas con Azada.",
+                       "en_us":  "Multiplies ore yields (Diamonds, Raw Iron/Gold, Coal) up to 4x (2.2x avg) \u0026 boosts Hoe/crop harvest yields."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ciudades del End, Mazmorras y Cámaras de Desafío",
+                                                "es_es":  "Ciudades del End, Mazmorras y Cámaras de Juicio",
+                                                "en_us":  "End Cities, Dungeons \u0026 Trial Chambers"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario con Fortuna III o Mesa Nivel 30 sobre Pico de diamante al inicio del survival.",
+                            "es_es":  "Aldeano Bibliotecario (Fortuna III) o Mesa Nivel 30 sobre pico en el early-game.",
+                            "en_us":  "Librarian Villager (Fortune III) or Level-30 Diamond Pickaxe early game (also great on a Hoe for farming)."
+                        }
+    },
+    {
+        "id":  "luck_of_the_sea",
+        "category_key":  "tool",
+        "icon":  "fishing_rod",
+        "name":  {
+                     "es_mx":  "Suerte marina",
+                     "es_es":  "Suerte marina",
+                     "en_us":  "Luck of the Sea"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Caña de pescar",
+                           "es_es":  "Caña de pescar",
+                           "en_us":  "Fishing Rod"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno",
+                                  "es_es":  "Ninguno",
+                                  "en_us":  "None"
+                              },
+        "effect":  {
+                       "es_mx":  "Aumenta el porcentaje de pesca de tesoros (libros encantados, arcos, monturas, etiquetas) y reduce basura (+2.1% tesoro por nivel en agua abierta).",
+                       "es_es":  "Aumenta la probabilidad de pescar tesoros (libros, etiquetas, monturas) en cuerpos de agua abiertos.",
+                       "en_us":  "Raises treasure catch odds (enchanted books, bows, name tags, saddles) \u0026 lowers junk in open water."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ruinas oceánicas, Naufragios y Pirámides",
+                                                "es_es":  "Ruinas oceánicas, Naufragios y Templos",
+                                                "en_us":  "Ocean Ruins, Shipwrecks \u0026 Temples"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa Nivel 30 sobre Caña de pescar (la caña solo tiene 4 encantamientos, sale casi siempre en 1-2 tiradas) o pesca cañas encantadas.",
+                            "es_es":  "Mesa Nivel 30 sobre Caña de pescar (pool mínimo de encantamientos) o pesca combinada.",
+                            "en_us":  "Level-30 Enchanting Table directly on Fishing Rods (tiny enchant pool!) or combine fished rods."
+                        }
+    },
+    {
+        "id":  "lure",
+        "category_key":  "tool",
+        "icon":  "fishing_rod",
+        "name":  {
+                     "es_mx":  "Atracción",
+                     "es_es":  "Atracción",
+                     "en_us":  "Lure"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  2,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Caña de pescar",
+                           "es_es":  "Caña de pescar",
+                           "en_us":  "Fishing Rod"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno",
+                                  "es_es":  "Ninguno",
+                                  "en_us":  "None"
+                              },
+        "effect":  {
+                       "es_mx":  "Reduce el tiempo de espera hasta que muerda el anzuelo en -5 segundos por nivel (-15s en Atracción III).",
+                       "es_es":  "Recorta el tiempo de picada en -5s por nivel (-15s con nivel III); duplica el ritmo de pesca.",
+                       "en_us":  "Cuts fishing bite wait times by 5s per level (15s faster at Lure III)."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ruinas oceánicas y Mazmorras",
+                                                "es_es":  "Ruinas oceánicas y Mazmorras",
+                                                "en_us":  "Ocean Ruins \u0026 Dungeons"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Mesa Nivel 30 sobre caña de pescar o Bibliotecario Atracción III.",
+                            "es_es":  "Mesa Nivel 30 en caña o Bibliotecario (Atracción III).",
+                            "en_us":  "Level-30 Enchanting Table on Fishing Rods or Librarian Villager (Lure III)."
+                        }
+    },
+    {
+        "id":  "unbreaking",
+        "category_key":  "universal",
+        "icon":  "enchanted_book",
+        "name":  {
+                     "es_mx":  "Irrompibilidad",
+                     "es_es":  "Irrompibilidad",
+                     "en_us":  "Unbreaking"
+                 },
+        "max_level":  "III",
+        "max_level_num":  3,
+        "anvil_multiplier":  1,
+        "is_treasure":  false,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Casi todo objeto con durabilidad (incluyendo Élitros, Escudo, Mechero, Tijeras y Armadura)",
+                           "es_es":  "Casi todo ítem con durabilidad (Élitros, Escudo, Mechero, Tijeras, Herramientas y Armadura)",
+                           "en_us":  "Virtually any durability item (Gear, Elytra, Shield, Flint \u0026 Steel, Brush, Shears)"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno",
+                                  "es_es":  "Ninguno",
+                                  "en_us":  "None"
+                              },
+        "effect":  {
+                       "es_mx":  "Da probabilidad de evitar gastar durabilidad al usar el objeto: dura x4 en herramientas/armas/Élitros y ~43% extra en armadura (nivel III).",
+                       "es_es":  "Cuadriplica la vida útil de herramientas, armas y Élitros (y aumenta un ~43% la de armaduras) a nivel III.",
+                       "en_us":  "4x effective durability on tools, weapons \u0026 Elytra (~43% longer on armor) at Unbreaking III."
+                   },
+        "sources":  {
+                        "enchanting_table":  true,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ciudades del End, Bastiones, Mazmorras y Cámaras",
+                                                "es_es":  "Ciudades del End, Bastiones, Mazmorras y Cámaras",
+                                                "en_us":  "End Cities, Bastions, Dungeons \u0026 Chambers"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "Aldeano Bibliotecario con Irrompibilidad III obligado: necesitarás decenas de copias para todas tus piezas, Élitros y escudos.",
+                            "es_es":  "Aldeano Bibliotecario con Irrompibilidad III imprescindible para Élitros, herramientas, escudos y armaduras.",
+                            "en_us":  "Dedicated Librarian Villager with Unbreaking III — you\u0027ll need many books across tools, armor, Shield \u0026 Elytra."
+                        }
+    },
+    {
+        "id":  "mending",
+        "category_key":  "universal",
+        "icon":  "enchanted_book",
+        "name":  {
+                     "es_mx":  "Reparación",
+                     "es_es":  "Reparación",
+                     "en_us":  "Mending"
+                 },
+        "max_level":  "I",
+        "max_level_num":  1,
+        "anvil_multiplier":  2,
+        "is_treasure":  true,
+        "is_curse":  false,
+        "applies_to":  {
+                           "es_mx":  "Casi todo objeto con durabilidad (Herramientas, Armadura, Élitros, Escudo, Lanza, Maza)",
+                           "es_es":  "Casi todo objeto con durabilidad (Herramientas, Armadura, Élitros, Escudo, Lanza, Maza)",
+                           "en_us":  "Virtually all durability gear (Tools, Armor, Elytra, Shield, Spear, Mace)"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Infinidad (Infinity) en Arcos",
+                                  "es_es":  "Infinidad (Infinity) en Arcos",
+                                  "en_us":  "Infinity (on Bows)"
+                              },
+        "effect":  {
+                       "es_mx":  "Cada orbe de experiencia recogida mientras sostienes o vistes el objeto repara +2 puntos de durabilidad por cada 1 XP.",
+                       "es_es":  "Convierte orbes de XP recogidos en +2 de durabilidad por cada punto de XP (equipo infinito).",
+                       "en_us":  "Uses collected XP orbs to repair worn/held gear (+2 durability per 1 XP), making gear last forever."
+                   },
+        "sources":  {
+                        "enchanting_table":  false,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ciudades del End, Ciudades Antiguas, Cámaras de Desafío y Bóvedas",
+                                                "es_es":  "Ciudades del End, Ciudades Antiguas y Cámaras de Juicio",
+                                                "en_us":  "End Cities, Ancient Cities \u0026 Trial Chambers"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "TESORO (NUNCA sale en Mesa): el mejor método sin duda es un Aldeano Bibliotecario (rompe y pon atril hasta sacar Reparación a 10-16 esmeraldas, o 1 esmeralda tras curarlo).",
+                            "es_es":  "TESORO (NO sale en Mesa): Aldeano Bibliotecario rompiendo el atril hasta que ofrezca Reparación en el primer intercambio (1 esmeralda al zombificar y curar).",
+                            "en_us":  "TREASURE (never in Table): break \u0026 place a Lectern on a fresh Novice Villager until Mending appears in slot 1 (drop price to 1 Emerald after curing)."
+                        }
+    },
+    {
+        "id":  "binding_curse",
+        "category_key":  "universal",
+        "icon":  "carved_pumpkin",
+        "name":  {
+                     "es_mx":  "Maldición de ligamiento",
+                     "es_es":  "Maldición de ligamiento",
+                     "en_us":  "Curse of Binding"
+                 },
+        "max_level":  "I",
+        "max_level_num":  1,
+        "anvil_multiplier":  4,
+        "is_treasure":  true,
+        "is_curse":  true,
+        "applies_to":  {
+                           "es_mx":  "Armadura, Élitros y Calabaza tallada / Cabezas",
+                           "es_es":  "Armadura, Élitros y Calabazas talladas / Cabezas",
+                           "en_us":  "Armor, Elytra, Carved Pumpkin \u0026 Mob Heads"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno (siempre aparece con texto rojo; NO se quita en Piedra de afilar)",
+                                  "es_es":  "Ninguno (las maldiciones NO pueden eliminarse en el Afilador)",
+                                  "en_us":  "None (red text warning; curses CANNOT be removed at a Grindstone)"
+                              },
+        "effect":  {
+                       "es_mx":  "Impide quitarte la pieza equipada hasta que muera el jugador (puedes quedar atrapado en Hardcore si llevas calabaza o armadura rota) o se rompa.",
+                       "es_es":  "Bloquea la pieza equipada en tu inventario hasta morir o hasta que se rompa su durabilidad.",
+                       "en_us":  "Prevents unequipping the worn item until death or breakage (famous Hardcore prank with Carved Pumpkins!)."
+                   },
+        "sources":  {
+                        "enchanting_table":  false,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ciudades del End, Ciudades Antiguas, Mansiones y Naufragios",
+                                                "es_es":  "Ciudades del End, Ciudades Antiguas y Mansiones",
+                                                "en_us":  "End Cities, Ancient Cities \u0026 Mansions"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "TESORO / MALDICIÓN: Pesca AFK, Bibliotecario o cofres de botín (solo úsalo para bromas con dispensador + calabaza tallada; evita equiparlo por accidente en Hardcore).",
+                            "es_es":  "TESORO / MALDICIÓN: Bibliotecario, pesca o cofres. Precaución extrema en modo Extremo (Hardcore).",
+                            "en_us":  "TREASURE CURSE: Librarian, Fishing or Loot Chests (only useful for dispenser traps; watch out in Hardcore!)."
+                        }
+    },
+    {
+        "id":  "vanishing_curse",
+        "category_key":  "universal",
+        "icon":  "wither_skeleton_skull",
+        "name":  {
+                     "es_mx":  "Maldición de desaparición",
+                     "es_es":  "Maldición de desaparición",
+                     "en_us":  "Curse of Vanishing"
+                 },
+        "max_level":  "I",
+        "max_level_num":  1,
+        "anvil_multiplier":  4,
+        "is_treasure":  true,
+        "is_curse":  true,
+        "applies_to":  {
+                           "es_mx":  "Cualquier equipamiento, herramientas, armas o brújulas",
+                           "es_es":  "Cualquier armadura, herramienta, arma o brújula",
+                           "en_us":  "Any armor, weapon, tool or compass"
+                       },
+        "incompatible_with":  {
+                                  "es_mx":  "Ninguno (NO se puede quitar en el Afilador)",
+                                  "es_es":  "Ninguno (no se borra en el Afilador)",
+                                  "en_us":  "None (permanent; cannot be stripped with a Grindstone)"
+                              },
+        "effect":  {
+                       "es_mx":  "Destruye permanentemente el objeto al morir en lugar de soltarlo al suelo. En PvP evita que el enemigo robe tu botín (en Hardcore da igual si mueres).",
+                       "es_es":  "Destruye el objeto al morir para que nadie pueda saquearlo (popular en servidores PvP/Anarquía; inocuo en Hardcore).",
+                       "en_us":  "Destroys the item on death instead of dropping it (PvP anti-loot strategy; harmless in Hardcore!)."
+                   },
+        "sources":  {
+                        "enchanting_table":  false,
+                        "librarian_villager":  true,
+                        "fishing":  true,
+                        "piglin_bartering":  false,
+                        "loot_chests":  [
+                                            {
+                                                "es_mx":  "Ciudades del End, Ciudades Antiguas, Cámaras de Desafío y Tesoros",
+                                                "es_es":  "Ciudades del End, Ciudades Antiguas y Cámaras de Juicio",
+                                                "en_us":  "End Cities, Ancient Cities \u0026 Trial Chambers"
+                                            }
+                                        ]
+                    },
+        "best_method":  {
+                            "es_mx":  "TESORO / MALDICIÓN: Aldeano Bibliotecario, cofres o pesca. En Hardcore es irrelevante; en SMP/PvP protege tu equipo de caer en manos rivales.",
+                            "es_es":  "TESORO / MALDICIÓN: Bibliotecario, cofres o pesca; útil únicamente en PvP para negar loot.",
+                            "en_us":  "TREASURE CURSE: Librarian, Fishing or Loot Chests (only desired in PvP/anarchy servers to deny gear loot)."
+                        }
     }
-  },
-  {
-    "id": "fire_protection",
-    "category_key": "armor",
-    "icon": "netherite_chestplate",
-    "name": { "es_mx": "Protección contra el fuego", "es_es": "Protección contra el fuego", "en_us": "Fire Protection" },
-    "max_level": "IV",
-    "max_level_num": 4,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Toda pieza de armadura",
-      "es_es": "Toda pieza de armadura",
-      "en_us": "Any armor piece"
-    },
-    "incompatible_with": {
-      "es_mx": "Protección, Prot. explosiones, Prot. proyectiles",
-      "es_es": "Protección, Prot. explosiones, Prot. proyectiles",
-      "en_us": "Protection, Blast / Projectile Protection"
-    },
-    "effect": {
-      "es_mx": "Reduce daño de fuego/lava en 8% por nivel y acorta la duración del quemado (-15% por nivel, sin acumularse entre piezas).",
-      "es_es": "Reduce daño por fuego/lava un 8% por nivel y reduce el tiempo en llamas (-15% por nivel).",
-      "en_us": "Reduces fire/lava damage by 8% per level and shortens burn duration (-15% per level, max piece counts)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Fortalezas del Nether, Portal en ruinas y Mazmorras", "es_es": "Fortalezas del Nether, Portales en ruinas y Mazmorras", "en_us": "Nether Fortresses, Ruined Portals & Dungeons" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa de encantamientos Nivel 30 o Aldeano Bibliotecario; solo úsala en 1 pieza para el Nether si no quieres full Protección IV.",
-      "es_es": "Mesa de encantamientos Nivel 30 o Bibliotecario; recomendable máximo 1 pieza dedicada al Nether.",
-      "en_us": "Level-30 Enchanting Table or Librarian Villager; usually only worth swapping onto 1 Nether-utility piece."
-    }
-  },
-  {
-    "id": "feather_falling",
-    "category_key": "armor",
-    "icon": "netherite_boots",
-    "name": { "es_mx": "Caída de pluma", "es_es": "Caída de pluma", "en_us": "Feather Falling" },
-    "max_level": "IV",
-    "max_level_num": 4,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Botas",
-      "es_es": "Botas",
-      "en_us": "Boots"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno (compatible con Protección IV)",
-      "es_es": "Ninguno (compatible con Protección IV)",
-      "en_us": "None (stacks with Protection IV)"
-    },
-    "effect": {
-      "es_mx": "Reduce el daño de caída y de Perlas de Ender un 12% por nivel (48% directo, hasta 80% combinado con Protección IV).",
-      "es_es": "Reduce el daño de caída y de Perlas de Ender un 12% por nivel (hasta 80% total con Protección IV).",
-      "en_us": "Reduces fall and Ender Pearl damage by 12% per level (stacks with Protection up to the 80% cap)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ciudades del End, Mazmorras y Cámaras de Desafío", "es_es": "Ciudades del End, Mazmorras y Cámaras de Juicio", "en_us": "End Cities, Dungeons & Trial Chambers" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario con Caída de pluma IV o encantar botas en Mesa Nivel 30 (tiene probabilidad muy alta en botas).",
-      "es_es": "Aldeano Bibliotecario con Caída de pluma IV o encantar botas directamente en Mesa Nivel 30.",
-      "en_us": "Librarian Villager trade or Level-30 Enchanting Table directly on boots (very high boot roll odds)."
-    }
-  },
-  {
-    "id": "blast_protection",
-    "category_key": "armor",
-    "icon": "netherite_leggings",
-    "name": { "es_mx": "Protección contra explosiones", "es_es": "Protección contra explosiones", "en_us": "Blast Protection" },
-    "max_level": "IV",
-    "max_level_num": 4,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Toda pieza de armadura",
-      "es_es": "Toda pieza de armadura",
-      "en_us": "Any armor piece"
-    },
-    "incompatible_with": {
-      "es_mx": "Protección, Prot. fuego, Prot. proyectiles",
-      "es_es": "Protección, Prot. fuego, Prot. proyectiles",
-      "en_us": "Protection, Fire / Projectile Protection"
-    },
-    "effect": {
-      "es_mx": "Reduce daño de explosiones (Creepers, TNT, Cristales del End, Wither) +8% por nivel y reduce empuje explosivo.",
-      "es_es": "Reduce daño de explosiones (+8% por nivel) y disminuye fuertemente el retroceso explosivo.",
-      "en_us": "Reduces explosion damage (Creepers, End Crystals, Wither, TNT) +8% per level and cuts blast knockback."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Mazmorras, Templos y Ciudades del End", "es_es": "Mazmorras, Templos y Ciudades del End", "en_us": "Dungeons, Temples & End Cities" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario o Mesa Nivel 30. Ideal en 1 pieza (ej. pantalones) para PvP con cristales o matar Withers.",
-      "es_es": "Bibliotecario o Mesa Nivel 30. Ideal en grebas si haces PvP con cristales o cazas Withers.",
-      "en_us": "Librarian Villager or Level-30 Table; meta pick on Leggings for Crystal PvP or Wither fights."
-    }
-  },
-  {
-    "id": "projectile_protection",
-    "category_key": "armor",
-    "icon": "netherite_chestplate",
-    "name": { "es_mx": "Protección contra proyectiles", "es_es": "Protección contra proyectiles", "en_us": "Projectile Protection" },
-    "max_level": "IV",
-    "max_level_num": 4,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Toda pieza de armadura",
-      "es_es": "Toda pieza de armadura",
-      "en_us": "Any armor piece"
-    },
-    "incompatible_with": {
-      "es_mx": "Protección, Prot. fuego, Prot. explosiones",
-      "es_es": "Protección, Prot. fuego, Prot. explosiones",
-      "en_us": "Protection, Fire / Blast Protection"
-    },
-    "effect": {
-      "es_mx": "Reduce daño de flechas, tridentes, bolas de fuego y proyectiles shulker/breeze en 8% por nivel.",
-      "es_es": "Reduce el daño de flechas, tridentes y proyectiles en 8% por nivel.",
-      "en_us": "Reduces damage from arrows, tridents, ghast fireballs and shulker/breeze projectiles by 8% per level."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Puestos de Saqueadores, Mazmorras y Templos", "es_es": "Puestos de Saqueadores, Mazmorras y Templos", "en_us": "Pillager Outposts, Dungeons & Temples" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa Nivel 30 o Bibliotecario (Prot. general suele superarlo, salvo contra hordas de esqueletos/Wither).",
-      "es_es": "Mesa Nivel 30 o Bibliotecario (Protección IV suele ser mejor salvo para tanquear proyectiles puros).",
-      "en_us": "Enchanting Table or Librarian (standard Protection IV is generally better except for ranged tanking)."
-    }
-  },
-  {
-    "id": "respiration",
-    "category_key": "armor",
-    "icon": "netherite_helmet",
-    "name": { "es_mx": "Respiración", "es_es": "Respiración", "en_us": "Respiration" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Casco y caparazón de tortuga",
-      "es_es": "Casco y caparazón de tortuga",
-      "en_us": "Helmet & Turtle Shell"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno",
-      "es_es": "Ninguno",
-      "en_us": "None"
-    },
-    "effect": {
-      "es_mx": "Suma +15s de aire bajo el agua por nivel (60s con III), mejora la visión submarina y reduce el daño por ahogo.",
-      "es_es": "Añade +15s de oxígeno por nivel (60s con III), aclara la vista bajo el agua y retrasa el daño por ahogo.",
-      "en_us": "Adds +15s underwater breath per level (60s at III), improves underwater vision & reduces drowning rate."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ruinas oceánicas, Naufragios y Ciudades del End", "es_es": "Ruinas oceánicas, Barcos hundidos y Ciudades del End", "en_us": "Ocean Ruins, Shipwrecks & End Cities" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario (Respiración III) o Mesa Nivel 30 directo sobre casco.",
-      "es_es": "Bibliotecario (Respiración III) o Mesa Nivel 30 directo sobre el casco.",
-      "en_us": "Librarian Villager trade or Level-30 Enchanting Table directly on a helmet."
-    }
-  },
-  {
-    "id": "aqua_affinity",
-    "category_key": "armor",
-    "icon": "netherite_helmet",
-    "name": { "es_mx": "Afinidad acuática", "es_es": "Afinidad acuática", "en_us": "Aqua Affinity" },
-    "max_level": "I",
-    "max_level_num": 1,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Casco y caparazón de tortuga",
-      "es_es": "Casco y caparazón de tortuga",
-      "en_us": "Helmet & Turtle Shell"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno",
-      "es_es": "Ninguno",
-      "en_us": "None"
-    },
-    "effect": {
-      "es_mx": "Elimina la penalización de velocidad al minar bajo el agua (5x más rápido mientras tocas el fondo).",
-      "es_es": "Elimina la penalización de velocidad al picar bajo el agua (mina igual que en tierra firme).",
-      "en_us": "Removes the 5x underwater mining speed penalty (mines at normal surface speed while grounded)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Naufragios, Ruinas submarinas y Cofres enterrados", "es_es": "Naufragios, Ruinas oceánicas y Tesoros enterrados", "en_us": "Shipwrecks, Ocean Ruins & Buried Treasure" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Muy fácil en Mesa Nivel 30 al encantar cascos (suele salir gratis de extra junto con Protección o Respiración).",
-      "es_es": "Muy común en Mesa Nivel 30 sobre cascos, o directo en un Bibliotecario.",
-      "en_us": "Rolls very commonly on Level-30 Helmets alongside Protection/Respiration, or cheap Librarian trade."
-    }
-  },
-  {
-    "id": "thorns",
-    "category_key": "armor",
-    "icon": "netherite_chestplate",
-    "name": { "es_mx": "Espinas", "es_es": "Espinas", "en_us": "Thorns" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 4,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Toda pieza de armadura",
-      "es_es": "Toda pieza de armadura",
-      "en_us": "Any armor piece"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno (precaución: rompe mobs en granjas/transporte y gasta más durabilidad)",
-      "es_es": "Ninguno (cuidado al mover mobs/zombies o en PvP de larga duración)",
-      "en_us": "None (warning: kills mob-farm/villager-cure zombies & drains extra durability)"
-    },
-    "effect": {
-      "es_mx": "Inflige 1 a 4 de daño reflejado al atacante (45% prob. por pieza nivel III). Gasta -2 durabilidad extra por activación.",
-      "es_es": "Refleja 1-4 de daño al atacante (45% prob. por pieza a nivel III), con coste extra de durabilidad.",
-      "en_us": "Reflects 1-4 damage to attackers (45% chance per piece at III); consumes 2 extra durability on hit."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Fortalezas, Mansiones, Ciudades del End y Mazmorras", "es_es": "Fortalezas, Mansiones, Ciudades del End y Mazmorras", "en_us": "Strongholds, Mansions, End Cities & Dungeons" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario (Espinas III); aplícalo solo en armadura de combate/PvP y deja un set técnico sin Espinas para mover aldeanos/zombies.",
-      "es_es": "Bibliotecario con Espinas III; recomendado solo en set de combate/PvP, no para mover mobs.",
-      "en_us": "Librarian Villager (Thorns III); put only on PvP/combat sets, omit on utility armor for moving mobs."
-    }
-  },
-  {
-    "id": "depth_strider",
-    "category_key": "armor",
-    "icon": "netherite_boots",
-    "name": { "es_mx": "Agilidad acuática", "es_es": "Agilidad acuática", "en_us": "Depth Strider" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Botas",
-      "es_es": "Botas",
-      "en_us": "Boots"
-    },
-    "incompatible_with": {
-      "es_mx": "Paso helado (Frost Walker)",
-      "es_es": "Paso helado (Frost Walker)",
-      "en_us": "Frost Walker"
-    },
-    "effect": {
-      "es_mx": "Aumenta la velocidad al caminar/nadar en agua hasta igualar la velocidad en tierra firme (nivel III).",
-      "es_es": "Anula el frenado del agua al caminar y nadar; a nivel III te mueves casi igual que en tierra.",
-      "en_us": "Eliminates water movement slowdown (matches normal ground walking speed at III)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ruinas oceánicas, Ciudades del End y Cámaras de Desafío", "es_es": "Ruinas oceánicas, Ciudades del End y Cámaras de Juicio", "en_us": "Ocean Ruins, End Cities & Trial Chambers" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario (Agilidad acuática III) o Mesa Nivel 30 sobre botas; imprescindible sobre Paso helado para exploración general.",
-      "es_es": "Bibliotecario (Agilidad acuática III) o Mesa Nivel 30 en botas; muy superior a Paso helado en el día a día.",
-      "en_us": "Librarian Villager trade or Level-30 Table on boots; far better all-around choice than Frost Walker."
-    }
-  },
-  {
-    "id": "frost_walker",
-    "category_key": "armor",
-    "icon": "netherite_boots",
-    "name": { "es_mx": "Paso helado", "es_es": "Paso helado", "en_us": "Frost Walker" },
-    "max_level": "II",
-    "max_level_num": 2,
-    "anvil_multiplier": 2,
-    "is_treasure": true,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Botas",
-      "es_es": "Botas",
-      "en_us": "Boots"
-    },
-    "incompatible_with": {
-      "es_mx": "Agilidad acuática (Depth Strider)",
-      "es_es": "Agilidad acuática (Depth Strider)",
-      "en_us": "Depth Strider"
-    },
-    "effect": {
-      "es_mx": "Congela temporalmente el agua bajo tus pies en hielo escarchado y te vuelve inmune al daño de bloques de magma.",
-      "es_es": "Convierte temporalmente el agua cercana en hielo escarchado y protege del daño de bloques de magma.",
-      "en_us": "Freezes water beneath your feet into temporary frosted ice and grants immunity to magma block damage."
-    },
-    "sources": {
-      "enchanting_table": false,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ciudades del End, Mazmorras, Naufragios y Pirámides", "es_es": "Ciudades del End, Mazmorras, Barcos hundidos y Pirámides", "en_us": "End Cities, Dungeons, Shipwrecks & Temples" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "TESORO (no sale en Mesa de encantamientos): consíguelo fácil en un Aldeano Bibliotecario (Paso helado II) cambiando el atril.",
-      "es_es": "TESORO (no aparece en Mesa): consíguelo rápido con Aldeano Bibliotecario (rompe y pon atril).",
-      "en_us": "TREASURE (never rolls on Enchanting Table): easiest via Librarian Villager lectern reroll (Frost Walker II)."
-    }
-  },
-  {
-    "id": "soul_speed",
-    "category_key": "armor",
-    "icon": "netherite_boots",
-    "name": { "es_mx": "Velocidad de alma", "es_es": "Velocidad del alma", "en_us": "Soul Speed" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 4,
-    "is_treasure": true,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Botas",
-      "es_es": "Botas",
-      "en_us": "Boots"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno (se puede combinar con Agilidad acuática o Paso helado)",
-      "es_es": "Ninguno (compatible con Agilidad acuática o Paso helado)",
-      "en_us": "None (stacks cleanly with Depth Strider or Frost Walker)"
-    },
-    "effect": {
-      "es_mx": "Aumenta la velocidad al caminar sobre arena/tierra de almas hasta +61.5% (nivel III) con partículas de almas. Gasta leve durabilidad al andar.",
-      "es_es": "Acelera hasta +61,5% al caminar sobre arena/tierra de almas (nivel III) emitiendo partículas azules.",
-      "en_us": "Boosts speed on Soul Sand & Soul Soil by up to +61.5% (at III); small chance of consuming boot durability per block."
-    },
-    "sources": {
-      "enchanting_table": false,
-      "librarian_villager": false,
-      "fishing": false,
-      "piglin_bartering": true,
-      "loot_chests": [
-        { "es_mx": "Cofres de Bastiones en Ruinas (Bastion Remnant)", "es_es": "Cofres de Bastiones en Ruinas", "en_us": "Bastion Remnant Chests" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "NO LO DAN ALDEANOS NI MESA NI PESCA: haz trueque masivo de lingotes de oro con Piglins (~1% libro / ~1.8% botas) o saquea cofres de Bastiones.",
-      "es_es": "NO LO VENDEN ALDEANOS NI SALE EN MESA/PESCA: solo trueque de oro con Piglins y cofres de Bastiones.",
-      "en_us": "NOT SOLD BY VILLAGERS (nor Table/Fishing): batch-barter Gold Ingots with Piglins (~1% book drop) or loot Bastion chests."
-    }
-  },
-  {
-    "id": "swift_sneak",
-    "category_key": "armor",
-    "icon": "warden_head",
-    "name": { "es_mx": "Sigilo rápido", "es_es": "Sigilo veloz", "en_us": "Swift Sneak" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 4,
-    "is_treasure": true,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Pantalones",
-      "es_es": "Grebas (Pantalones)",
-      "en_us": "Leggings"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno",
-      "es_es": "Ninguno",
-      "en_us": "None"
-    },
-    "effect": {
-      "es_mx": "Permite moverte agachado (Shift) hasta al 75% de tu velocidad normal de caminata (en lugar del 30% base).",
-      "es_es": "Aumenta la velocidad al caminar agachado hasta el 75% de tu velocidad normal.",
-      "en_us": "Boosts sneaking movement speed from 30% up to 75% of normal walking speed at level III."
-    },
-    "sources": {
-      "enchanting_table": false,
-      "librarian_villager": false,
-      "fishing": false,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Exclusivo de cofres en Ciudades Antiguas (Deep Dark)", "es_es": "Exclusivo de cofres en Ciudades Antiguas (Oscuridad Profunda)", "en_us": "Ancient City Chests ONLY (Deep Dark)" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "NO LO DAN ALDEANOS NI MESA NI PESCA: única fuente son cofres de Ciudades Antiguas (~3.1% prob.; lleva azada con Eficiencia y lana para bloquear sensores).",
-      "es_es": "NO LO VENDEN ALDEANOS NI SALE EN MESA/PESCA: solo cofres de Ciudades Antiguas (lleva lana y Visión nocturna).",
-      "en_us": "NOT SOLD BY VILLAGERS (exclusive loot): only found in Ancient City chests (~3.1%); use seed map, wool & Efficiency Hoe."
-    }
-  },
-  {
-    "id": "sharpness",
-    "category_key": "melee",
-    "icon": "netherite_sword",
-    "name": { "es_mx": "Filo", "es_es": "Filo", "en_us": "Sharpness" },
-    "max_level": "V",
-    "max_level_num": 5,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Espada, Hacha y Lanza",
-      "es_es": "Espada, Hacha y Lanza",
-      "en_us": "Sword, Axe & Spear"
-    },
-    "incompatible_with": {
-      "es_mx": "Castigo (Smite), Perdición de los artrópodos",
-      "es_es": "Golpeo (Smite), Perdición de los artrópodos",
-      "en_us": "Smite, Bane of Arthropods"
-    },
-    "effect": {
-      "es_mx": "Suma +3 de daño cuerpo a cuerpo con Filo V (+0.5 base + 0.5 por nivel) contra todo tipo de enemigos.",
-      "es_es": "Añade +3 puntos de daño cuerpo a cuerpo a nivel V contra cualquier enemigo.",
-      "en_us": "Adds +3 melee damage at Sharpness V against all mobs and players."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ciudades del End, Mazmorras, Bastiones y Ruinas", "es_es": "Ciudades del End, Mazmorras, Bastiones y Ruinas", "en_us": "End Cities, Dungeons, Bastions & Ruins" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario con Filo V directo (barato y te evita combinar dos libros de Filo IV para ahorrar usos de yunque).",
-      "es_es": "Aldeano Bibliotecario con Filo V directo (ahorras XP y usos de yunque frente a combinar Filo IV + Filo IV).",
-      "en_us": "Librarian Villager trade for direct Sharpness V (saves Anvil uses over combining two Sharpness IV rolls)."
-    }
-  },
-  {
-    "id": "smite",
-    "category_key": "melee",
-    "icon": "netherite_sword",
-    "name": { "es_mx": "Castigo", "es_es": "Golpeo", "en_us": "Smite" },
-    "max_level": "V",
-    "max_level_num": 5,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Espada, Hacha, Lanza y Maza",
-      "es_es": "Espada, Hacha, Lanza y Maza",
-      "en_us": "Sword, Axe, Spear & Mace"
-    },
-    "incompatible_with": {
-      "es_mx": "Filo, Perdición artrópodos, Densidad, Brecha",
-      "es_es": "Filo, Perdición artrópodos, Densidad, Brecha",
-      "en_us": "Sharpness, Bane of Arthropods, Density, Breach"
-    },
-    "effect": {
-      "es_mx": "Suma +2.5 de daño por nivel (+12.5 con V!) a no-muertos: Zombies, Esqueletos, Wither, Piglins Zombificados y Ahogados.",
-      "es_es": "Añade +2,5 de daño por nivel (+12,5 con V) contra no-muertos (Zombis, Esqueletos, Wither y Ahogados).",
-      "en_us": "Adds +2.5 damage per level (+12.5 at V) against undead mobs (Zombies, Skeletons, Wither, Drowned)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Mazmorras, Templos, Ruinas y Cámaras de Desafío", "es_es": "Mazmorras, Templos, Ruinas y Cámaras de Juicio", "en_us": "Dungeons, Temples, Ruins & Trial Chambers" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Bibliotecario o Mesa Nivel 30 sobre tu Hacha de Netherite (mata esqueletos/zombies de 1 golpe y es meta contra el Wither).",
-      "es_es": "Bibliotecario o Mesa Nivel 30 para un Hacha dedicada (mata no-muertos de 1 golpe y al Wither rápido).",
-      "en_us": "Librarian or Level-30 Table on a secondary Netherite Axe/Sword (one-shots undead & melts Wither boss)."
-    }
-  },
-  {
-    "id": "bane_of_arthropods",
-    "category_key": "melee",
-    "icon": "netherite_sword",
-    "name": { "es_mx": "Perdición de los artrópodos", "es_es": "Perdición de los artrópodos", "en_us": "Bane of Arthropods" },
-    "max_level": "V",
-    "max_level_num": 5,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Espada, Hacha, Lanza y Maza",
-      "es_es": "Espada, Hacha, Lanza y Maza",
-      "en_us": "Sword, Axe, Spear & Mace"
-    },
-    "incompatible_with": {
-      "es_mx": "Filo, Castigo, Densidad, Brecha",
-      "es_es": "Filo, Golpeo, Densidad, Brecha",
-      "en_us": "Sharpness, Smite, Density, Breach"
-    },
-    "effect": {
-      "es_mx": "Suma +2.5 de daño por nivel (+12.5 con V) + Lentitud IV a arañas, pececillos de plata, endermites y abejas.",
-      "es_es": "Añade +2,5 de daño por nivel y aplica Lentitud IV contra artrópodos (arañas, lepismas, abejas).",
-      "en_us": "Adds +2.5 damage per level + Slowness IV against arthropods (spiders, silverfish, endermites, bees)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Minas abandonadas, Mazmorras y Templos", "es_es": "Minas abandonadas, Mazmorras y Templos", "en_us": "Mineshafts, Dungeons & Temples" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa Nivel 30 (sale muy seguido como libro de descarte); solo util en granjas de arañas de cueva o spawners específicos.",
-      "es_es": "Mesa Nivel 30 o Bibliotecario; solo recomendable en armas dedicadas a granjas de arañas.",
-      "en_us": "Common Level-30 roll or cheap Librarian; niche outside spider/cave-spider XP farms."
-    }
-  },
-  {
-    "id": "knockback",
-    "category_key": "melee",
-    "icon": "netherite_sword",
-    "name": { "es_mx": "Empuje", "es_es": "Empuje", "en_us": "Knockback" },
-    "max_level": "II",
-    "max_level_num": 2,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Espada y Lanza",
-      "es_es": "Espada y Lanza",
-      "en_us": "Sword & Spear"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno (opcional: dificulta encadenar combos y aleja esqueletos que disparan)",
-      "es_es": "Ninguno (algunos jugadores lo omiten para no alejar esqueletos ni cortar combos)",
-      "en_us": "None (often omitted intentionally so skeletons aren't knocked into bow range)"
-    },
-    "effect": {
-      "es_mx": "Aumenta el retroceso de los golpes (+3 bloques por nivel aprox.) para alejar Creepers o tirar rivales de plataformas.",
-      "es_es": "Aumenta el retroceso por golpe para alejar Creepers rápidamente o empujar objetivos.",
-      "en_us": "Increases melee knockback significantly, pushing Creepers away safely or knocking targets off ledges."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Mazmorras, Cámaras de Desafío y Bastiones", "es_es": "Mazmorras, Cámaras de Juicio y Bastiones", "en_us": "Dungeons, Trial Chambers & Bastions" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa de encantamientos Nivel 30 (sale frecuentemente al encantar espadas) o Bibliotecario Empuje II.",
-      "es_es": "Mesa de encantamientos Nivel 30 en espadas o Bibliotecario con Empuje II.",
-      "en_us": "Level-30 Enchanting Table on swords/books or Librarian Villager (Knockback II)."
-    }
-  },
-  {
-    "id": "fire_aspect",
-    "category_key": "melee",
-    "icon": "netherite_sword",
-    "name": { "es_mx": "Aspecto ígneo", "es_es": "Aspecto ígneo", "en_us": "Fire Aspect" },
-    "max_level": "II",
-    "max_level_num": 2,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Espada, Lanza y Maza",
-      "es_es": "Espada, Lanza y Maza",
-      "en_us": "Sword, Spear & Mace"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno (aviso: si un zombie en llamas te pega, te quema a ti también)",
-      "es_es": "Ninguno (aviso: zombis ardiendo pueden prenderte fuego y hacer huir a Endermen)",
-      "en_us": "None (note: burning zombies can ignite you & burning Endermen teleport rapidly)"
-    },
-    "effect": {
-      "es_mx": "Prende fuego al objetivo durante 4s (I) u 8s (II) e instantáneamente cocina carne al matar animales de granja.",
-      "es_es": "Incendia objetivos 4s (I) u 8s (II) y cocina al instante la carne de animales derrotados.",
-      "en_us": "Sets targets on fire (4s / 8s) and auto-cooks raw meat dropped by livestock."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Mazmorras, Cámaras de Desafío, Ciudades del End", "es_es": "Mazmorras, Cámaras de Juicio y Ciudades del End", "en_us": "Dungeons, Trial Chambers & End Cities" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario (Aspecto ígneo II) o Mesa Nivel 30 sobre Maza/Espada.",
-      "es_es": "Bibliotecario (Aspecto ígneo II) o Mesa Nivel 30 sobre Espada o Maza.",
-      "en_us": "Librarian Villager (Fire Aspect II) or Level-30 Enchanting Table roll."
-    }
-  },
-  {
-    "id": "looting",
-    "category_key": "melee",
-    "icon": "netherite_sword",
-    "name": { "es_mx": "Saqueo", "es_es": "Botín", "en_us": "Looting" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Espada y Lanza",
-      "es_es": "Espada y Lanza",
-      "en_us": "Sword & Spear"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno (funciona incluso sosteniendo el arma en la mano principal mientras lanzas flechas o tridente)",
-      "es_es": "Ninguno (aplica también si lanzas arco/tridente con el arma en mano)",
-      "en_us": "None (also applies while held in mainhand for bow/trident kills)"
-    },
-    "effect": {
-      "es_mx": "Multiplica drops comunes de mobs (+1 por nivel) y sube la probabilidad de drops raros como calaveras Wither, perlas y varas de blaze.",
-      "es_es": "Incrementa los botines comunes (+1 por nivel) y sube el porcentaje de drops raros (calaveras Wither, perlas, etc.).",
-      "en_us": "Boosts common mob drop caps by +1 per level and increases rare drop rates (Wither skulls, pearls, blaze rods)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ciudades del End, Mazmorras y Cámaras de Desafío", "es_es": "Ciudades del End, Mazmorras y Cámaras de Juicio", "en_us": "End Cities, Dungeons & Trial Chambers" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario con Saqueo III directo: es uno de los 3 primeros libros que conviene asegurar con atril.",
-      "es_es": "Aldeano Bibliotecario con Botín III directo; prioridad absoluta junto con Fortuna y Reparación.",
-      "en_us": "Librarian Villager lectern reroll for Looting III; top-3 early priority book alongside Fortune & Mending."
-    }
-  },
-  {
-    "id": "sweeping_edge",
-    "category_key": "melee",
-    "icon": "netherite_sword",
-    "name": { "es_mx": "Barrido", "es_es": "Barrido", "en_us": "Sweeping Edge" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Espada (exclusivo de Java Edition)",
-      "es_es": "Espada (exclusivo de Java Edition)",
-      "en_us": "Sword (Java Edition exclusive)"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno",
-      "es_es": "Ninguno",
-      "en_us": "None"
-    },
-    "effect": {
-      "es_mx": "Sube el daño del ataque en área de la espada de 1 HP al 75% del daño total del golpe (nivel III). Indispensable para granjas de XP.",
-      "es_es": "Eleva el daño del ataque en arco al 75% del golpe principal a nivel III; clave para granjas de mobs.",
-      "en_us": "Raises sweep AoE damage from 1 HP up to 75% of base hit damage at level III; essential for mob farms."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ciudades del End, Mazmorras y Portal en ruinas", "es_es": "Ciudades del End, Mazmorras y Portales", "en_us": "End Cities, Dungeons & Ruined Portals" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Bibliotecario con Barrido III o Mesa Nivel 30 sobre espadas.",
-      "es_es": "Aldeano Bibliotecario con Barrido III o Mesa Nivel 30 sobre espadas.",
-      "en_us": "Librarian Villager (Sweeping Edge III) or Level-30 Enchanting Table on Swords."
-    }
-  },
-  {
-    "id": "density",
-    "category_key": "melee",
-    "icon": "mace",
-    "name": { "es_mx": "Densidad", "es_es": "Densidad", "en_us": "Density" },
-    "max_level": "V",
-    "max_level_num": 5,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Maza",
-      "es_es": "Maza",
-      "en_us": "Mace"
-    },
-    "incompatible_with": {
-      "es_mx": "Brecha (Breach), Castigo, Perdición de los artrópodos",
-      "es_es": "Brecha (Breach), Golpeo, Perdición de los artrópodos",
-      "en_us": "Breach, Smite, Bane of Arthropods"
-    },
-    "effect": {
-      "es_mx": "Suma +0.5 de daño por bloque caído por cada nivel (+2.5 por bloque en Densidad V), permitiendo eliminar Wardens/Jefes de 1 smash.",
-      "es_es": "Añade +0,5 de daño por bloque caído por nivel (+2,5 por bloque a nivel V), brutal contra jefes.",
-      "en_us": "Adds +0.5 smash damage per block fallen per level (+2.5 per block at V), capable of one-shotting Wardens."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Bóvedas normales de Cámaras de Desafío", "es_es": "Bóvedas normales de Cámaras de Juicio", "en_us": "Trial Chamber Vaults" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario con Densidad V directo (mucho más rápido que buscar 5 libros en Cámaras de Desafío).",
-      "es_es": "Aldeano Bibliotecario con Densidad V directo o encantando la Maza en Mesa Nivel 30.",
-      "en_us": "Librarian Villager (Density V) or Level-30 Enchanting Table directly on the Mace."
-    }
-  },
-  {
-    "id": "breach",
-    "category_key": "melee",
-    "icon": "mace",
-    "name": { "es_mx": "Brecha", "es_es": "Brecha", "en_us": "Breach" },
-    "max_level": "IV",
-    "max_level_num": 4,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Maza",
-      "es_es": "Maza",
-      "en_us": "Mace"
-    },
-    "incompatible_with": {
-      "es_mx": "Densidad (Density), Castigo, Perdición de los artrópodos",
-      "es_es": "Densidad (Density), Golpeo, Perdición de los artrópodos",
-      "en_us": "Density, Smite, Bane of Arthropods"
-    },
-    "effect": {
-      "es_mx": "Ignora un 15% de la armadura del enemigo por nivel (60% de perforación con Brecha IV); letal en PvP contra Netherite Protección IV.",
-      "es_es": "Ignora un 15% de la efectividad de armadura por nivel (60% en nivel IV); devastador en PvP.",
-      "en_us": "Bypasses 15% armor damage reduction per level (60% armor pierce at IV); lethal in armored PvP."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Bóvedas Ominosas en Cámaras de Desafío", "es_es": "Bóvedas Ominosas en Cámaras de Juicio", "en_us": "Trial Chamber Ominous Vaults" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario (Brecha IV) o Mesa Nivel 30 sobre Maza. Si juegas Survival PvE, Densidad V suele rendir más.",
-      "es_es": "Bibliotecario (Brecha IV) o Mesa Nivel 30. Para PvE usa Densidad V; para PvP con armadura, Brecha IV.",
-      "en_us": "Librarian Villager (Breach IV) or Level-30 Table on Mace (best for PvP; choose Density V for PvE)."
-    }
-  },
-  {
-    "id": "wind_burst",
-    "category_key": "melee",
-    "icon": "mace",
-    "name": { "es_mx": "Aeroimpulso", "es_es": "Aeroimpulso", "en_us": "Wind Burst" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 2,
-    "is_treasure": true,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Maza",
-      "es_es": "Maza",
-      "en_us": "Mace"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno (se combina perfecto con Densidad V o Brecha IV)",
-      "es_es": "Ninguno (compatible con Densidad V o Brecha IV)",
-      "en_us": "None (stacks with Density V or Breach IV)"
-    },
-    "effect": {
-      "es_mx": "Al acertar un golpe de caída con Maza te catapulta de nuevo al cielo (I = ~7 blq, II = ~14 blq, III = ~24 blq) para encadenar golpes infinitos.",
-      "es_es": "Al asestar un smash con Maza te lanza hacia arriba (~24 bloques con III) para encadenar ataques aéreos.",
-      "en_us": "Launches you skyward after a Mace smash (~24 blocks high at III) to chain aerial slams cleanly."
-    },
-    "sources": {
-      "enchanting_table": false,
-      "librarian_villager": false,
-      "fishing": false,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Exclusivo de Bóvedas Ominosas en Cámaras de Desafío (~5.5%, siempre Nivel I)", "es_es": "Exclusivo de Bóvedas Ominosas en Cámaras de Juicio (~5,5%, siempre Nivel I)", "en_us": "Trial Chamber Ominous Vaults ONLY (~5.5% drop, always Level I)" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "NO LO DAN ALDEANOS NI MESA NI PESCA: bebe Botella Ominosa, farméa Llaves Ominosas en Cámaras y abre Bóvedas Ominosas. Junta 4 libros I (I+I=II, I+I=II, II+II=III).",
-      "es_es": "NO LO VENDEN ALDEANOS NI SALE EN MESA/PESCA: solo Bóvedas Ominosas con Llave Ominosa. Necesitas 4 libros de Aeroimpulso I para subir a III en el yunque.",
-      "en_us": "NOT SOLD BY VILLAGERS (exclusive drop): trigger Ominous Trials for Ominous Keys -> unlock Ominous Vaults; combine 4 Wind Burst I books into III."
-    }
-  },
-  {
-    "id": "lunge",
-    "category_key": "melee",
-    "icon": "netherite_spear",
-    "name": { "es_mx": "Estocada", "es_es": "Estocada", "en_us": "Lunge" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Lanzas (Madera a Netherite)",
-      "es_es": "Lanzas (Madera a Netherita)",
-      "en_us": "Spears (Wood to Netherite)"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno (funciona junto con Filo, Saqueo, Empuje, Aspecto ígneo)",
-      "es_es": "Ninguno (compatible con Filo, Botín, Empuje, Aspecto ígneo)",
-      "en_us": "None (combines cleanly with Sharpness, Looting, Knockback & Fire Aspect)"
-    },
-    "effect": {
-      "es_mx": "Al hacer un ataque rápido de lanza te impulsa horizontalmente hacia adelante (dash); consume 1 durabilidad y puntos de hambre al activarse.",
-      "es_es": "Impulsa al jugador hacia delante al atacar con la lanza; consume hambre y durabilidad por cada embiste.",
-      "en_us": "Propels you forward horizontally on a Spear jab attack; consumes saturation/hunger points and durability per dash."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Cofres de botín generales y estructuras", "es_es": "Cofres de estructuras con libros encantados", "en_us": "Structure Loot Chests" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario con Estocada III o Mesa Nivel 30 directamente sobre Lanza de diamante antes de mejorarla.",
-      "es_es": "Aldeano Bibliotecario (Estocada III) o Mesa Nivel 30 directamente sobre una lanza.",
-      "en_us": "Librarian Villager lectern reroll (Lunge III) or Level-30 Enchanting Table directly on a Diamond Spear."
-    }
-  },
-  {
-    "id": "power",
-    "category_key": "ranged",
-    "icon": "bow",
-    "name": { "es_mx": "Poder", "es_es": "Poder", "en_us": "Power" },
-    "max_level": "V",
-    "max_level_num": 5,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Arco",
-      "es_es": "Arco",
-      "en_us": "Bow"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno",
-      "es_es": "Ninguno",
-      "en_us": "None"
-    },
-    "effect": {
-      "es_mx": "Dispara flechas hasta +150% más letales (+25% x (Nivel + 1)) con Poder V.",
-      "es_es": "Aumenta el daño de flechas hasta un +150% a nivel V.",
-      "en_us": "Increases bow arrow damage up to +150% at Power V."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Mazmorras, Ciudades del End y Bastiones", "es_es": "Mazmorras, Ciudades del End y Bastiones", "en_us": "Dungeons, End Cities & Bastions" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario con Poder V directo o combina arcos encantados sacados de granja de esqueletos / pesca AFK.",
-      "es_es": "Bibliotecario (Poder V) o fusionando arcos encantados de pesca / granja de esqueletos.",
-      "en_us": "Librarian Villager (Power V) or combining enchanted bows dropped by Fishing & Skeleton farms."
-    }
-  },
-  {
-    "id": "punch",
-    "category_key": "ranged",
-    "icon": "bow",
-    "name": { "es_mx": "Retroceso", "es_es": "Retroceso", "en_us": "Punch" },
-    "max_level": "II",
-    "max_level_num": 2,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Arco",
-      "es_es": "Arco",
-      "en_us": "Bow"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno",
-      "es_es": "Ninguno",
-      "en_us": "None"
-    },
-    "effect": {
-      "es_mx": "Añade empuje masivo a tus flechas (esencial para mantener distancia contra Creepers y hacer bow-boosting con Élitros en Punch II).",
-      "es_es": "Incrementa mucho el empuje de las flechas (útil contra enemigos rápidos y para bow-boosting con Élitros).",
-      "en_us": "Adds strong arrow knockback (great crowd-control and Elytra mid-air bow boosting)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Mazmorras, Templos y Puestos de Saqueadores", "es_es": "Mazmorras, Templos y Puestos de Saqueadores", "en_us": "Dungeons, Temples & Pillager Outposts" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa Nivel 30 sobre arcos (sale frecuentemente junto a Poder IV) o Bibliotecario Retroceso II.",
-      "es_es": "Mesa Nivel 30 en arcos o Bibliotecario con Retroceso II.",
-      "en_us": "Level-30 Enchanting Table on bows or Librarian Villager (Punch II)."
-    }
-  },
-  {
-    "id": "flame",
-    "category_key": "ranged",
-    "icon": "bow",
-    "name": { "es_mx": "Llama", "es_es": "Fuego", "en_us": "Flame" },
-    "max_level": "I",
-    "max_level_num": 1,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Arco",
-      "es_es": "Arco",
-      "en_us": "Bow"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno",
-      "es_es": "Ninguno",
-      "en_us": "None"
-    },
-    "effect": {
-      "es_mx": "Dispara flechas en llamas que incendian mobs 5s, detonan TNT a distancia y prenden fogatas.",
-      "es_es": "Dispara flechas ardientes (5s de fuego), cocina animales al matarlos y enciende bloques de TNT.",
-      "en_us": "Fires flaming arrows that burn targets for 5s, light TNT/campfires from range & auto-cook meat."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Mazmorras, Portales en ruinas y Ciudades del End", "es_es": "Mazmorras, Portales en ruinas y Ciudades del End", "en_us": "Dungeons, Ruined Portals & End Cities" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa Nivel 30 sobre un arco o Bibliotecario Llama (es nivel único I, muy fácil de conseguir).",
-      "es_es": "Mesa Nivel 30 sobre un arco o Bibliotecario (es nivel único, sale rápido).",
-      "en_us": "Level-30 Enchanting Table on bows or single-roll Librarian trade."
-    }
-  },
-  {
-    "id": "infinity",
-    "category_key": "ranged",
-    "icon": "bow",
-    "name": { "es_mx": "Infinidad", "es_es": "Infinidad", "en_us": "Infinity" },
-    "max_level": "I",
-    "max_level_num": 1,
-    "anvil_multiplier": 4,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Arco",
-      "es_es": "Arco",
-      "en_us": "Bow"
-    },
-    "incompatible_with": {
-      "es_mx": "Reparación (Mending)",
-      "es_es": "Reparación (Mending)",
-      "en_us": "Mending"
-    },
-    "effect": {
-      "es_mx": "Permite disparar flechas normales infinitas teniendo solo 1 en el inventario (no aplica a flechas con efecto o espectrales).",
-      "es_es": "Dispara flechas normales infinitas llevando al menos 1 en el inventario.",
-      "en_us": "Fires unlimited regular arrows as long as at least 1 normal arrow sits in your inventory."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Mazmorras, Ciudades del End y Mansiones", "es_es": "Mazmorras, Ciudades del End y Mansiones", "en_us": "Dungeons, End Cities & Mansions" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario (saca también arcos limpios con Infinidad en la Mesa para reemplazar cuando ya no pueda repararse en yunque).",
-      "es_es": "Bibliotecario o Mesa Nivel 30; guarda un arco de respaldo porque no es compatible con Reparación.",
-      "en_us": "Librarian Villager or Level-30 Bow rolls (note: you'll repair bows using fresh bows on Anvil since it blocks Mending)."
-    }
-  },
-  {
-    "id": "multishot",
-    "category_key": "ranged",
-    "icon": "crossbow",
-    "name": { "es_mx": "Multidisparo", "es_es": "Multidisparo", "en_us": "Multishot" },
-    "max_level": "I",
-    "max_level_num": 1,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Ballesta",
-      "es_es": "Ballesta",
-      "en_us": "Crossbow"
-    },
-    "incompatible_with": {
-      "es_mx": "Perforación (Piercing)",
-      "es_es": "Perforación (Piercing)",
-      "en_us": "Piercing"
-    },
-    "effect": {
-      "es_mx": "Dispara 3 flechas o cohetes explosivos en abanico gastando solo 1 proyectil del cargador.",
-      "es_es": "Dispara 3 proyectiles (flechas o cohetes explosivos) en abanico consumiendo solo 1 munición.",
-      "en_us": "Fires 3 arrows or firework rockets in a spread while consuming only 1 projectile."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Puestos de Saqueadores, Bastiones y Mazmorras", "es_es": "Puestos de Saqueadores, Bastiones y Mazmorras", "en_us": "Pillager Outposts, Bastions & Dungeons" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa Nivel 30 directa sobre una ballesta (tiene un pool muy corto de encantamientos y sale rápido) o Bibliotecario.",
-      "es_es": "Mesa Nivel 30 directamente sobre ballesta o Bibliotecario (es nivel único I).",
-      "en_us": "Level-30 Enchanting Table directly on Crossbows (tiny enchant pool rolls fast!) or Librarian Villager."
-    }
-  },
-  {
-    "id": "quick_charge",
-    "category_key": "ranged",
-    "icon": "crossbow",
-    "name": { "es_mx": "Carga rápida", "es_es": "Carga rápida", "en_us": "Quick Charge" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Ballesta",
-      "es_es": "Ballesta",
-      "en_us": "Crossbow"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno",
-      "es_es": "Ninguno",
-      "en_us": "None"
-    },
-    "effect": {
-      "es_mx": "Reduce el tiempo de recarga en -0.25s por nivel (recarga en 0.5s con Carga rápida III vs 1.25s base).",
-      "es_es": "Recarga la ballesta en 0,5s a nivel III (vs 1,25s sin encantar).",
-      "en_us": "Cuts Crossbow reload time by 0.25s per level (down to 0.5s at III vs 1.25s base)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Bastiones, Puestos de Saqueadores y Mazmorras", "es_es": "Bastiones, Puestos de Saqueadores y Mazmorras", "en_us": "Bastions, Pillager Outposts & Dungeons" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa Nivel 30 sobre ballesta (Carga rápida III es común en Nivel 30) o Bibliotecario.",
-      "es_es": "Mesa Nivel 30 sobre ballesta o Aldeano Bibliotecario con Carga rápida III.",
-      "en_us": "Level-30 Enchanting Table on Crossbows or Librarian Villager (Quick Charge III)."
-    }
-  },
-  {
-    "id": "piercing",
-    "category_key": "ranged",
-    "icon": "crossbow",
-    "name": { "es_mx": "Perforación", "es_es": "Perforación", "en_us": "Piercing" },
-    "max_level": "IV",
-    "max_level_num": 4,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Ballesta",
-      "es_es": "Ballesta",
-      "en_us": "Crossbow"
-    },
-    "incompatible_with": {
-      "es_mx": "Multidisparo (Multishot)",
-      "es_es": "Multidisparo (Multishot)",
-      "en_us": "Multishot"
-    },
-    "effect": {
-      "es_mx": "Las flechas atraviesan escudos y hasta 5 enemigos en fila (Nivel IV), pudiendo recogerlas intactas del suelo después.",
-      "es_es": "Atraviesa escudos y hasta 5 entidades en línea; permite recoger las flechas disparadas (incluso con efecto).",
-      "en_us": "Arrows pierce shields & up to 5 targets in a line, and remain collectible afterward (even tipped arrows!)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Puestos de Saqueadores, Bastiones y Cámaras de Desafío", "es_es": "Puestos de Saqueadores, Bastiones y Cámaras de Juicio", "en_us": "Pillager Outposts, Bastions & Trial Chambers" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa Nivel 30 sobre ballesta o Bibliotecario Perforación IV (excelente contra jugadores con escudo o mobs en línea).",
-      "es_es": "Mesa Nivel 30 en ballesta o Bibliotecario con Perforación IV (ideal en PvP contra escudos).",
-      "en_us": "Level-30 Table on Crossbow or Librarian (Piercing IV) — counter to Shields in PvP."
-    }
-  },
-  {
-    "id": "loyalty",
-    "category_key": "ranged",
-    "icon": "trident",
-    "name": { "es_mx": "Lealtad", "es_es": "Lealtad", "en_us": "Loyalty" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Tridente",
-      "es_es": "Tridente",
-      "en_us": "Trident"
-    },
-    "incompatible_with": {
-      "es_mx": "Propulsión acuática (Riptide)",
-      "es_es": "Propulsión acuática (Riptide)",
-      "en_us": "Riptide"
-    },
-    "effect": {
-      "es_mx": "El tridente lanzado regresa automáticamente a tu inventario incluso desde el Vacío del End.",
-      "es_es": "Hace que el tridente regrese volando a tu mano tras lanzarlo (incluso si cae al Vacío).",
-      "en_us": "Causes thrown Trident to return automatically to your inventory (even when thrown into the End void!)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ruinas oceánicas, Cámaras de Desafío y Naufragios", "es_es": "Ruinas oceánicas, Cámaras de Juicio y Naufragios", "en_us": "Ocean Ruins, Trial Chambers & Shipwrecks" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa Nivel 30 directo sobre el Tridente (casi siempre te da Lealtad III + Empalamiento) o Bibliotecario.",
-      "es_es": "Mesa Nivel 30 sobre Tridente o Aldeano Bibliotecario con Lealtad III.",
-      "en_us": "Level-30 Enchanting Table on Trident or Librarian Villager (Loyalty III)."
-    }
-  },
-  {
-    "id": "impaling",
-    "category_key": "ranged",
-    "icon": "trident",
-    "name": { "es_mx": "Empalamiento", "es_es": "Empalamiento", "en_us": "Impaling" },
-    "max_level": "V",
-    "max_level_num": 5,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Tridente",
-      "es_es": "Tridente",
-      "en_us": "Trident"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno (funciona igual con Lealtad que con Propulsión acuática)",
-      "es_es": "Ninguno (compatible con Lealtad y con Propulsión acuática)",
-      "en_us": "None (stacks with both Loyalty & Riptide)"
-    },
-    "effect": {
-      "es_mx": "Suma +2.5 de daño por nivel (+12.5 con V) contra criaturas acuáticas (Guardianes, Guardianes Ancianos, Ahogados/Peces/Calamares en agua).",
-      "es_es": "Añade +2,5 de daño por nivel (+12,5 con V) contra mobs acuáticos (Guardianes, Ancianos, etc.).",
-      "en_us": "Deals +2.5 extra damage per level (+12.5 at V) against aquatic mobs (Guardians, Elder Guardians, etc.)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ruinas oceánicas, Naufragios y Monumentos", "es_es": "Ruinas oceánicas, Naufragios y Monumentos", "en_us": "Ocean Ruins, Shipwrecks & Monuments" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario con Empalamiento V directo (evitas gastar niveles combinando Empalamiento IV).",
-      "es_es": "Aldeano Bibliotecario (Empalamiento V) o Mesa Nivel 30 sobre tridente.",
-      "en_us": "Librarian Villager (Impaling V) directly, or Level-30 roll on Trident."
-    }
-  },
-  {
-    "id": "riptide",
-    "category_key": "ranged",
-    "icon": "trident",
-    "name": { "es_mx": "Propulsión acuática", "es_es": "Propulsión acuática", "en_us": "Riptide" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Tridente",
-      "es_es": "Tridente",
-      "en_us": "Trident"
-    },
-    "incompatible_with": {
-      "es_mx": "Lealtad (Loyalty), Conductividad (Channeling)",
-      "es_es": "Lealtad (Loyalty), Conductividad (Channeling)",
-      "en_us": "Loyalty, Channeling"
-    },
-    "effect": {
-      "es_mx": "Te propulsa violentamente por el agua o bajo la lluvia. Combinado con Élitros logra el desplazamiento más rápido de Minecraft sin gastar cohetes.",
-      "es_es": "Te impulsa a gran velocidad dentro del agua o bajo la lluvia; junto a Élitros supera la velocidad de cohetes.",
-      "en_us": "Propels you through water or rain; paired with Elytra gives fastest air travel without rockets."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ruinas oceánicas y Cámaras de Desafío", "es_es": "Ruinas oceánicas y Cámaras de Juicio", "en_us": "Ocean Ruins & Trial Chambers" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario (Propulsión acuática III) o Mesa Nivel 30; siempre ten 2 tridentes (uno con Propulsión, otro con Lealtad + Conductividad).",
-      "es_es": "Bibliotecario o Mesa Nivel 30; recomendable llevar un Tridente dedicado solo a Propulsión acuática III + Reparación.",
-      "en_us": "Librarian Villager (Riptide III) or Level-30 Table; craft a dedicated second Trident for travel."
-    }
-  },
-  {
-    "id": "channeling",
-    "category_key": "ranged",
-    "icon": "trident",
-    "name": { "es_mx": "Conductividad", "es_es": "Conductividad", "en_us": "Channeling" },
-    "max_level": "I",
-    "max_level_num": 1,
-    "anvil_multiplier": 4,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Tridente",
-      "es_es": "Tridente",
-      "en_us": "Trident"
-    },
-    "incompatible_with": {
-      "es_mx": "Propulsión acuática (Riptide)",
-      "es_es": "Propulsión acuática (Riptide)",
-      "en_us": "Riptide"
-    },
-    "effect": {
-      "es_mx": "Durante tormentas eléctricas invoca un rayo donde impacta el tridente (o sobre pararrayos); permite farmear cabezas de mobs con Creepers Cargados.",
-      "es_es": "Invoca un rayo al lanzar durante tormentas eléctricas (clave para cargar Creepers y conseguir cabezas).",
-      "en_us": "Strikes target with lightning during thunderstorms (essential for Charged Creepers & mob head farming)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ruinas oceánicas, Templos y Ciudades del End", "es_es": "Ruinas oceánicas, Templos y Ciudades del End", "en_us": "Ocean Ruins, Temples & End Cities" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa Nivel 30 directa en Tridente (sale muy seguido junto con Lealtad III) o Bibliotecario.",
-      "es_es": "Mesa Nivel 30 en Tridente o Aldeano Bibliotecario (es nivel único I).",
-      "en_us": "Level-30 Enchanting Table on Trident or single-level Librarian trade."
-    }
-  },
-  {
-    "id": "efficiency",
-    "category_key": "tool",
-    "icon": "netherite_pickaxe",
-    "name": { "es_mx": "Eficiencia", "es_es": "Eficiencia", "en_us": "Efficiency" },
-    "max_level": "V",
-    "max_level_num": 5,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Pico, Pala, Hacha, Azada y Tijeras",
-      "es_es": "Pico, Pala, Hacha, Azada y Tijeras",
-      "en_us": "Pickaxe, Shovel, Axe, Hoe & Shears"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno",
-      "es_es": "Ninguno",
-      "en_us": "None"
-    },
-    "effect": {
-      "es_mx": "Acelera drásticamente el minado; Eficiencia V + Faro Prisa II mina Piedra al instante (instamine).",
-      "es_es": "Incrementa mucho la velocidad de minado; con Eficiencia V + Faro Prisa II picas piedra al instante.",
-      "en_us": "Massively boosts mining speed; Efficiency V + Beacon Haste II insta-mines Stone."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ciudades del End, Minas abandonadas y Mazmorras", "es_es": "Ciudades del End, Minas abandonadas y Mazmorras", "en_us": "End Cities, Mineshafts & Dungeons" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario con Eficiencia V directo (necesitarás varios para pico de Fortuna, pico de Toque, hacha, pala y azada).",
-      "es_es": "Bibliotecario con Eficiencia V directo; lo usarás en todas tus herramientas principales.",
-      "en_us": "Librarian Villager (Efficiency V) — infinite supply for Silk Pick, Fortune Pick, Axe, Shovel & Hoe."
-    }
-  },
-  {
-    "id": "silk_touch",
-    "category_key": "tool",
-    "icon": "netherite_pickaxe",
-    "name": { "es_mx": "Toque de seda", "es_es": "Toque de seda", "en_us": "Silk Touch" },
-    "max_level": "I",
-    "max_level_num": 1,
-    "anvil_multiplier": 4,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Pico, Pala, Hacha, Azada y Tijeras (solo yunque en Tijeras)",
-      "es_es": "Pico, Pala, Hacha, Azada y Tijeras (yunque en Tijeras)",
-      "en_us": "Pickaxe, Shovel, Axe, Hoe & Shears (Anvil on Shears)"
-    },
-    "incompatible_with": {
-      "es_mx": "Fortuna (Fortune)",
-      "es_es": "Fortuna (Fortune)",
-      "en_us": "Fortune"
-    },
-    "effect": {
-      "es_mx": "Extrae bloques en su forma original: Vidrio, Hielo compacto, Piedra, Colmenas con abejas, Sensores Sculk y Cofres de Ender.",
-      "es_es": "Recoge bloques intactos: Cristal, Hielo, Piedra, Colmenas habitadas, Sensores Sculk y Cofres de Ender.",
-      "en_us": "Drops blocks intact instead of breaking them down (Glass, Ice, Stone, Bee Nests, Sculk Sensors, Ender Chests)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ciudades del End, Minas y Mazmorras", "es_es": "Ciudades del End, Minas y Mazmorras", "en_us": "End Cities, Mineshafts & Dungeons" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario (es nivel único I, suele aparecer rápido en atril) o Mesa Nivel 30 en picos.",
-      "es_es": "Bibliotecario o Mesa Nivel 30 sobre pico (nivel único, rotación rápida en atril).",
-      "en_us": "Librarian Villager lectern reroll or Level-30 Pickaxe rolls (single-level roll)."
-    }
-  },
-  {
-    "id": "fortune",
-    "category_key": "tool",
-    "icon": "netherite_pickaxe",
-    "name": { "es_mx": "Fortuna", "es_es": "Fortuna", "en_us": "Fortune" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Pico, Pala, Hacha y Azada (multiplicando cultivos/hojas)",
-      "es_es": "Pico, Pala, Hacha y Azada",
-      "en_us": "Pickaxe, Shovel, Axe & Hoe (crop/leaf drops too)"
-    },
-    "incompatible_with": {
-      "es_mx": "Toque de seda (Silk Touch)",
-      "es_es": "Toque de seda (Silk Touch)",
-      "en_us": "Silk Touch"
-    },
-    "effect": {
-      "es_mx": "Multiplica diamantes, hierro crudo, oro, carbón, lapislázuli, pedernal y cultivos/manzanas de hojas hasta 4x (promedio 2.2x en diamantes con III).",
-      "es_es": "Multiplica menas (diamante, hierro crudo, carbón) hasta x4 y aumenta drops de cultivos/hojas con Azada.",
-      "en_us": "Multiplies ore yields (Diamonds, Raw Iron/Gold, Coal) up to 4x (2.2x avg) & boosts Hoe/crop harvest yields."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ciudades del End, Mazmorras y Cámaras de Desafío", "es_es": "Ciudades del End, Mazmorras y Cámaras de Juicio", "en_us": "End Cities, Dungeons & Trial Chambers" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario con Fortuna III o Mesa Nivel 30 sobre Pico de diamante al inicio del survival.",
-      "es_es": "Aldeano Bibliotecario (Fortuna III) o Mesa Nivel 30 sobre pico en el early-game.",
-      "en_us": "Librarian Villager (Fortune III) or Level-30 Diamond Pickaxe early game (also great on a Hoe for farming)."
-    }
-  },
-  {
-    "id": "luck_of_the_sea",
-    "category_key": "tool",
-    "icon": "fishing_rod",
-    "name": { "es_mx": "Suerte marina", "es_es": "Suerte marina", "en_us": "Luck of the Sea" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Caña de pescar",
-      "es_es": "Caña de pescar",
-      "en_us": "Fishing Rod"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno",
-      "es_es": "Ninguno",
-      "en_us": "None"
-    },
-    "effect": {
-      "es_mx": "Aumenta el porcentaje de pesca de tesoros (libros encantados, arcos, monturas, etiquetas) y reduce basura (+2.1% tesoro por nivel en agua abierta).",
-      "es_es": "Aumenta la probabilidad de pescar tesoros (libros, etiquetas, monturas) en cuerpos de agua abiertos.",
-      "en_us": "Raises treasure catch odds (enchanted books, bows, name tags, saddles) & lowers junk in open water."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ruinas oceánicas, Naufragios y Pirámides", "es_es": "Ruinas oceánicas, Naufragios y Templos", "en_us": "Ocean Ruins, Shipwrecks & Temples" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa Nivel 30 sobre Caña de pescar (la caña solo tiene 4 encantamientos, sale casi siempre en 1-2 tiradas) o pesca cañas encantadas.",
-      "es_es": "Mesa Nivel 30 sobre Caña de pescar (pool mínimo de encantamientos) o pesca combinada.",
-      "en_us": "Level-30 Enchanting Table directly on Fishing Rods (tiny enchant pool!) or combine fished rods."
-    }
-  },
-  {
-    "id": "lure",
-    "category_key": "tool",
-    "icon": "fishing_rod",
-    "name": { "es_mx": "Atracción", "es_es": "Atracción", "en_us": "Lure" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 2,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Caña de pescar",
-      "es_es": "Caña de pescar",
-      "en_us": "Fishing Rod"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno",
-      "es_es": "Ninguno",
-      "en_us": "None"
-    },
-    "effect": {
-      "es_mx": "Reduce el tiempo de espera hasta que muerda el anzuelo en -5 segundos por nivel (-15s en Atracción III).",
-      "es_es": "Recorta el tiempo de picada en -5s por nivel (-15s con nivel III); duplica el ritmo de pesca.",
-      "en_us": "Cuts fishing bite wait times by 5s per level (15s faster at Lure III)."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ruinas oceánicas y Mazmorras", "es_es": "Ruinas oceánicas y Mazmorras", "en_us": "Ocean Ruins & Dungeons" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Mesa Nivel 30 sobre caña de pescar o Bibliotecario Atracción III.",
-      "es_es": "Mesa Nivel 30 en caña o Bibliotecario (Atracción III).",
-      "en_us": "Level-30 Enchanting Table on Fishing Rods or Librarian Villager (Lure III)."
-    }
-  },
-  {
-    "id": "unbreaking",
-    "category_key": "universal",
-    "icon": "enchanted_book",
-    "name": { "es_mx": "Irrompibilidad", "es_es": "Irrompibilidad", "en_us": "Unbreaking" },
-    "max_level": "III",
-    "max_level_num": 3,
-    "anvil_multiplier": 1,
-    "is_treasure": false,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Casi todo objeto con durabilidad (incluyendo Élitros, Escudo, Mechero, Tijeras y Armadura)",
-      "es_es": "Casi todo ítem con durabilidad (Élitros, Escudo, Mechero, Tijeras, Herramientas y Armadura)",
-      "en_us": "Virtually any durability item (Gear, Elytra, Shield, Flint & Steel, Brush, Shears)"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno",
-      "es_es": "Ninguno",
-      "en_us": "None"
-    },
-    "effect": {
-      "es_mx": "Da probabilidad de evitar gastar durabilidad al usar el objeto: dura x4 en herramientas/armas/Élitros y ~43% extra en armadura (nivel III).",
-      "es_es": "Cuadriplica la vida útil de herramientas, armas y Élitros (y aumenta un ~43% la de armaduras) a nivel III.",
-      "en_us": "4x effective durability on tools, weapons & Elytra (~43% longer on armor) at Unbreaking III."
-    },
-    "sources": {
-      "enchanting_table": true,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ciudades del End, Bastiones, Mazmorras y Cámaras", "es_es": "Ciudades del End, Bastiones, Mazmorras y Cámaras", "en_us": "End Cities, Bastions, Dungeons & Chambers" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "Aldeano Bibliotecario con Irrompibilidad III obligado: necesitarás decenas de copias para todas tus piezas, Élitros y escudos.",
-      "es_es": "Aldeano Bibliotecario con Irrompibilidad III imprescindible para Élitros, herramientas, escudos y armaduras.",
-      "en_us": "Dedicated Librarian Villager with Unbreaking III — you'll need many books across tools, armor, Shield & Elytra."
-    }
-  },
-  {
-    "id": "mending",
-    "category_key": "universal",
-    "icon": "enchanted_book",
-    "name": { "es_mx": "Reparación", "es_es": "Reparación", "en_us": "Mending" },
-    "max_level": "I",
-    "max_level_num": 1,
-    "anvil_multiplier": 2,
-    "is_treasure": true,
-    "is_curse": false,
-    "applies_to": {
-      "es_mx": "Casi todo objeto con durabilidad (Herramientas, Armadura, Élitros, Escudo, Lanza, Maza)",
-      "es_es": "Casi todo objeto con durabilidad (Herramientas, Armadura, Élitros, Escudo, Lanza, Maza)",
-      "en_us": "Virtually all durability gear (Tools, Armor, Elytra, Shield, Spear, Mace)"
-    },
-    "incompatible_with": {
-      "es_mx": "Infinidad (Infinity) en Arcos",
-      "es_es": "Infinidad (Infinity) en Arcos",
-      "en_us": "Infinity (on Bows)"
-    },
-    "effect": {
-      "es_mx": "Cada orbe de experiencia recogida mientras sostienes o vistes el objeto repara +2 puntos de durabilidad por cada 1 XP.",
-      "es_es": "Convierte orbes de XP recogidos en +2 de durabilidad por cada punto de XP (equipo infinito).",
-      "en_us": "Uses collected XP orbs to repair worn/held gear (+2 durability per 1 XP), making gear last forever."
-    },
-    "sources": {
-      "enchanting_table": false,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ciudades del End, Ciudades Antiguas, Cámaras de Desafío y Bóvedas", "es_es": "Ciudades del End, Ciudades Antiguas y Cámaras de Juicio", "en_us": "End Cities, Ancient Cities & Trial Chambers" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "TESORO (NUNCA sale en Mesa): el mejor método sin duda es un Aldeano Bibliotecario (rompe y pon atril hasta sacar Reparación a 10-16 esmeraldas, o 1 esmeralda tras curarlo).",
-      "es_es": "TESORO (NO sale en Mesa): Aldeano Bibliotecario rompiendo el atril hasta que ofrezca Reparación en el primer intercambio (1 esmeralda al zombificar y curar).",
-      "en_us": "TREASURE (never in Table): break & place a Lectern on a fresh Novice Villager until Mending appears in slot 1 (drop price to 1 Emerald after curing)."
-    }
-  },
-  {
-    "id": "binding_curse",
-    "category_key": "universal",
-    "icon": "carved_pumpkin",
-    "name": { "es_mx": "Maldición de ligamiento", "es_es": "Maldición de ligamiento", "en_us": "Curse of Binding" },
-    "max_level": "I",
-    "max_level_num": 1,
-    "anvil_multiplier": 4,
-    "is_treasure": true,
-    "is_curse": true,
-    "applies_to": {
-      "es_mx": "Armadura, Élitros y Calabaza tallada / Cabezas",
-      "es_es": "Armadura, Élitros y Calabazas talladas / Cabezas",
-      "en_us": "Armor, Elytra, Carved Pumpkin & Mob Heads"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno (siempre aparece con texto rojo; NO se quita en Piedra de afilar)",
-      "es_es": "Ninguno (las maldiciones NO pueden eliminarse en el Afilador)",
-      "en_us": "None (red text warning; curses CANNOT be removed at a Grindstone)"
-    },
-    "effect": {
-      "es_mx": "Impide quitarte la pieza equipada hasta que muera el jugador (puedes quedar atrapado en Hardcore si llevas calabaza o armadura rota) o se rompa.",
-      "es_es": "Bloquea la pieza equipada en tu inventario hasta morir o hasta que se rompa su durabilidad.",
-      "en_us": "Prevents unequipping the worn item until death or breakage (famous Hardcore prank with Carved Pumpkins!)."
-    },
-    "sources": {
-      "enchanting_table": false,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ciudades del End, Ciudades Antiguas, Mansiones y Naufragios", "es_es": "Ciudades del End, Ciudades Antiguas y Mansiones", "en_us": "End Cities, Ancient Cities & Mansions" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "TESORO / MALDICIÓN: Pesca AFK, Bibliotecario o cofres de botín (solo úsalo para bromas con dispensador + calabaza tallada; evita equiparlo por accidente en Hardcore).",
-      "es_es": "TESORO / MALDICIÓN: Bibliotecario, pesca o cofres. Precaución extrema en modo Extremo (Hardcore).",
-      "en_us": "TREASURE CURSE: Librarian, Fishing or Loot Chests (only useful for dispenser traps; watch out in Hardcore!)."
-    }
-  },
-  {
-    "id": "vanishing_curse",
-    "category_key": "universal",
-    "icon": "wither_skeleton_skull",
-    "name": { "es_mx": "Maldición de desaparición", "es_es": "Maldición de desaparición", "en_us": "Curse of Vanishing" },
-    "max_level": "I",
-    "max_level_num": 1,
-    "anvil_multiplier": 4,
-    "is_treasure": true,
-    "is_curse": true,
-    "applies_to": {
-      "es_mx": "Cualquier equipamiento, herramientas, armas o brújulas",
-      "es_es": "Cualquier armadura, herramienta, arma o brújula",
-      "en_us": "Any armor, weapon, tool or compass"
-    },
-    "incompatible_with": {
-      "es_mx": "Ninguno (NO se puede quitar en el Afilador)",
-      "es_es": "Ninguno (no se borra en el Afilador)",
-      "en_us": "None (permanent; cannot be stripped with a Grindstone)"
-    },
-    "effect": {
-      "es_mx": "Destruye permanentemente el objeto al morir en lugar de soltarlo al suelo. En PvP evita que el enemigo robe tu botín (en Hardcore da igual si mueres).",
-      "es_es": "Destruye el objeto al morir para que nadie pueda saquearlo (popular en servidores PvP/Anarquía; inocuo en Hardcore).",
-      "en_us": "Destroys the item on death instead of dropping it (PvP anti-loot strategy; harmless in Hardcore!)."
-    },
-    "sources": {
-      "enchanting_table": false,
-      "librarian_villager": true,
-      "fishing": true,
-      "piglin_bartering": false,
-      "loot_chests": [
-        { "es_mx": "Ciudades del End, Ciudades Antiguas, Cámaras de Desafío y Tesoros", "es_es": "Ciudades del End, Ciudades Antiguas y Cámaras de Juicio", "en_us": "End Cities, Ancient Cities & Trial Chambers" }
-      ]
-    },
-    "best_method": {
-      "es_mx": "TESORO / MALDICIÓN: Aldeano Bibliotecario, cofres o pesca. En Hardcore es irrelevante; en SMP/PvP protege tu equipo de caer en manos rivales.",
-      "es_es": "TESORO / MALDICIÓN: Bibliotecario, cofres o pesca; útil únicamente en PvP para negar loot.",
-      "en_us": "TREASURE CURSE: Librarian, Fishing or Loot Chests (only desired in PvP/anarchy servers to deny gear loot)."
-    }
-  }
 ]

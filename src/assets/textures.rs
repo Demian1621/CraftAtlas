@@ -161,8 +161,31 @@ mod tests {
             "knowledge_book",
             "red_bed",
             "warden_head",
+            "structure_block",
+            "shulker_box",
+            "paper",
         ] {
             assert!(meta.entries.contains_key(req), "Missing sprite: {}", req);
+        }
+
+        // Verify all Nearest Finder structure & biome icons resolve cleanly in the atlas
+        for dim in crate::data::seed_engine::Dimension::all() {
+            for &sk in crate::data::seed_engine::StructureKind::searchable_for_dim(dim) {
+                assert!(
+                    resolve_ok(sk.icon_id()),
+                    "Missing searchable structure icon '{}' for {:?}",
+                    sk.icon_id(),
+                    sk
+                );
+            }
+            for &b in crate::data::seed_engine::SearchableBiome::for_dim(dim) {
+                assert!(
+                    resolve_ok(b.icon_id),
+                    "Missing searchable biome icon '{}' for {}",
+                    b.icon_id,
+                    b.slug
+                );
+            }
         }
 
         let db = load_database().expect("valid database");

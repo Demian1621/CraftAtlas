@@ -5,9 +5,10 @@ use std::collections::BTreeMap;
 use crate::anim::ToastQueue;
 use crate::assets::ItemAtlas;
 use crate::audio::{AudioEngine, SoundCue};
+use crate::data::litematic::format_mc_quantity;
 use crate::data::models::{format_stack_breakdown, parse_material_qty, FarmItem, Language};
 use crate::i18n::{t, UiKey};
-use crate::state::{AppState, RecipeViewMode};
+use crate::state::{AppState, RecipeViewMode, RightRailTab};
 use crate::ui::chrome::render_inline_tab_search;
 use crate::ui::tabs::creators;
 use crate::ui::theme::{adaptive_sidebar_width, filter_chip, paint_mc_slot, McPalette, SlotStyle};
@@ -67,7 +68,7 @@ pub fn render(
         state.selected_farm_id = filtered[0].id.clone();
     }
 
-    // Filters Row + YT/Bilibili Creators Directory Toggle
+    // Filters Row + YT/Bilibili Creators Directory + Native .litematic Reader Toggle
     ui.horizontal_wrapped(|ui| {
         ui.spacing_mut().item_spacing = Vec2::new(5.0, 5.0);
         let mut in_creators = state.farms_creators_view;
@@ -82,9 +83,29 @@ pub fn render(
             audio,
             lang,
         );
-        state.farms_creators_view = in_creators;
+        if in_creators != state.farms_creators_view {
+            state.farms_creators_view = in_creators;
+            if in_creators {
+                state.farms_litematic_view = false;
+            }
+        }
 
-        if !showing_creators {
+        if !showing_creators
+            && filter_chip(
+                ui,
+                palette,
+                atlas,
+                Some("structure_block"),
+                t(lang, UiKey::LitematicViewBtn),
+                state.farms_litematic_view,
+            )
+            .clicked()
+        {
+            state.farms_litematic_view = !state.farms_litematic_view;
+            audio.play(SoundCue::Click);
+        }
+
+        if !showing_creators && !state.farms_litematic_view {
             ui.separator();
             if filter_chip(
                 ui,
@@ -125,7 +146,9 @@ pub fn render(
     });
 
     ui.add_space(6.0);
-    render_inline_tab_search(ui, state, palette, atlas, audio);
+    if !state.farms_litematic_view {
+        render_inline_tab_search(ui, state, palette, atlas, audio);
+    }
 
     if state.farms_creators_view {
         creators::render_creators_directory(
@@ -139,6 +162,11 @@ pub fn render(
             lang,
             &q_lower,
         );
+        return;
+    }
+
+    if state.farms_litematic_view {
+        render_litematic_reader(ui, state, rcx, toasts);
         return;
     }
 
@@ -425,6 +453,28 @@ fn render_farm_detail(
                             state.prefs.save();
                             audio.play(SoundCue::Click);
                         }
+
+                        if ui.button(t(lang, UiKey::ShoppingAddBtn)).clicked() {
+                            let batch: Vec<(String, String, u64)> = farm
+                                .materials
+                                .iter()
+                                .map(|m| {
+                                    let qty = parse_material_qty(&m.count).unwrap_or(1) as u64;
+                                    (m.icon.clone(), m.name.get(lang).to_string(), qty.max(1))
+                                })
+                                .collect();
+                            let src_title = farm.title.get(lang).to_string();
+                            state.prefs.add_shopping_items(&batch, &src_title);
+                            state.prefs.favorites_open = true;
+                            state.right_rail_tab = RightRailTab::ShoppingList;
+                            audio.play(SoundCue::LevelUp);
+                            toasts.push(
+                                "shulker_box",
+                                t(lang, UiKey::ShoppingAddedToastTitle),
+                                &src_title,
+                                palette.accent_xp,
+                            );
+                        }
                     });
                     ui.add_space(6.0);
 
@@ -571,6 +621,7 @@ fn render_farm_detail(
             ui.add_space(10.0);
 
             // Detected .minecraft/schematics (.litematic / .schem)
+            let mut open_schematic_path: Option<std::path::PathBuf> = None;
             egui::Frame::new()
                 .fill(palette.bg_panel)
                 .stroke(Stroke::new(1.0_f32, palette.border_subtle))
@@ -578,12 +629,22 @@ fn render_farm_detail(
                 .inner_margin(Margin::same(10))
                 .show(ui, |ui| {
                     ui.set_width(ui.available_width());
-                    ui.label(
-                        RichText::new(t(lang, UiKey::DetectedSchematics))
-                            .size(12.0)
-                            .strong()
-                            .color(palette.accent_primary),
-                    );
+                    ui.horizontal(|ui| {
+                        ui.label(
+                            RichText::new(t(lang, UiKey::DetectedSchematics))
+                                .size(12.0)
+                                .strong()
+                                .color(palette.accent_primary),
+                        );
+                        if ui.small_button(t(lang, UiKey::LitematicOpenFileBtn)).clicked() {
+                            if let Some(p) = rfd::FileDialog::new()
+                                .add_filter("Litematica", &["litematic"])
+                                .pick_file()
+                            {
+                                open_schematic_path = Some(p);
+                            }
+                        }
+                    });
                     if state.local_schematics.is_empty() {
                         ui.label(
                             RichText::new(t(lang, UiKey::NoSchematics))
@@ -592,19 +653,68 @@ fn render_farm_detail(
                         );
                     } else {
                         for sc in state.local_schematics.iter().take(12) {
-                            ui.label(
-                                RichText::new(format!(
-                                    "• {} ({} KB)",
-                                    sc.file_name,
-                                    (sc.size_bytes / 1024).max(1)
-                                ))
-                                .monospace()
-                                .size(11.0)
-                                .color(palette.text_primary),
+                            let is_litematic = sc
+                                .file_name
+                                .to_ascii_lowercase()
+                                .ends_with(".litematic");
+                            let lbl = format!(
+                                "• {} ({} KB)",
+                                sc.file_name,
+                                (sc.size_bytes / 1024).max(1)
                             );
+                            if is_litematic {
+                                if ui
+                                    .add(
+                                        egui::Button::new(
+                                            RichText::new(lbl)
+                                                .monospace()
+                                                .size(11.0)
+                                                .color(palette.accent_xp),
+                                        )
+                                        .frame(false),
+                                    )
+                                    .on_hover_cursor(egui::CursorIcon::PointingHand)
+                                    .clicked()
+                                {
+                                    open_schematic_path = Some(sc.full_path.clone());
+                                }
+                            } else {
+                                ui.label(
+                                    RichText::new(lbl)
+                                        .monospace()
+                                        .size(11.0)
+                                        .color(palette.text_primary),
+                                );
+                            }
                         }
                     }
                 });
+            if let Some(path) = open_schematic_path {
+                match state.load_litematic_path(&path) {
+                    Ok(()) => {
+                        audio.play(SoundCue::LevelUp);
+                        let name = state
+                            .active_litematic
+                            .as_ref()
+                            .map(|l| l.name.clone())
+                            .unwrap_or_default();
+                        toasts.push(
+                            "structure_block",
+                            t(lang, UiKey::LitematicLoadedToastTitle),
+                            &name,
+                            palette.accent_xp,
+                        );
+                    }
+                    Err(err) => {
+                        toasts.push(
+                            "barrier",
+                            t(lang, UiKey::LitematicErrorToastTitle),
+                            &err,
+                            palette.accent_danger,
+                        );
+                    }
+                }
+            }
 
             if !creators.is_empty() {
                 ui.add_space(10.0);
@@ -629,4 +739,302 @@ fn render_farm_detail(
                 }
             }
         });
+}
+
+fn render_litematic_reader(
+    ui: &mut egui::Ui,
+    state: &mut AppState,
+    rcx: &RenderContext<'_>,
+    toasts: &mut ToastQueue,
+) {
+    let RenderContext {
+        recipes,
+        palette,
+        atlas,
+        audio,
+        ..
+    } = *rcx;
+    let lang = state.prefs.language;
+
+    let mut pick_path: Option<std::path::PathBuf> = None;
+
+    egui::Frame::new()
+        .fill(palette.bg_panel)
+        .stroke(Stroke::new(1.0_f32, palette.border_subtle))
+        .corner_radius(CornerRadius::same(6))
+        .inner_margin(Margin::same(10))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.horizontal_wrapped(|ui| {
+                ui.add(atlas.ui_image("structure_block", 20.0));
+                ui.label(
+                    RichText::new(t(lang, UiKey::LitematicViewBtn))
+                        .size(14.0)
+                        .strong()
+                        .color(palette.accent_primary),
+                );
+                if ui.button(t(lang, UiKey::LitematicOpenFileBtn)).clicked() {
+                    audio.play(SoundCue::Click);
+                    if let Some(p) = rfd::FileDialog::new()
+                        .add_filter("Litematica", &["litematic"])
+                        .pick_file()
+                    {
+                        pick_path = Some(p);
+                    }
+                }
+                if ui.button(t(lang, UiKey::LitematicReloadBtn)).clicked() {
+                    audio.play(SoundCue::Click);
+                    state.reload_local_schematics();
+                }
+                if filter_chip(
+                    ui,
+                    palette,
+                    atlas,
+                    Some("shulker_box"),
+                    t(lang, UiKey::LitematicShulkerToggle),
+                    state.litematic_shulker_mode,
+                )
+                .clicked()
+                {
+                    state.litematic_shulker_mode = !state.litematic_shulker_mode;
+                    audio.play(SoundCue::Click);
+                }
+            });
+            ui.add_space(4.0);
+            ui.label(
+                RichText::new(t(lang, UiKey::LitematicDropHint))
+                    .size(11.5)
+                    .color(palette.text_muted),
+            );
+            if let Some(ref err) = state.litematic_error {
+                ui.add_space(4.0);
+                ui.label(RichText::new(err).size(11.5).color(palette.accent_danger));
+            }
+        });
+
+    ui.add_space(8.0);
+
+    // Quick clickable list of local .litematic files from .minecraft/schematics
+    let local_litematics: Vec<_> = state
+        .local_schematics
+        .iter()
+        .filter(|s| s.file_name.to_ascii_lowercase().ends_with(".litematic"))
+        .cloned()
+        .collect();
+    if !local_litematics.is_empty() {
+        ui.horizontal_wrapped(|ui| {
+            ui.spacing_mut().item_spacing = Vec2::new(5.0, 5.0);
+            for sc in local_litematics.iter().take(12) {
+                let selected = state
+                    .active_litematic
+                    .as_ref()
+                    .map(|l| l.file_path == sc.full_path)
+                    .unwrap_or(false);
+                if filter_chip(
+                    ui,
+                    palette,
+                    atlas,
+                    Some("paper"),
+                    &sc.file_name,
+                    selected,
+                )
+                .clicked()
+                {
+                    pick_path = Some(sc.full_path.clone());
+                }
+            }
+        });
+        ui.add_space(6.0);
+    }
+
+    if let Some(p) = pick_path {
+        match state.load_litematic_path(&p) {
+            Ok(()) => {
+                audio.play(SoundCue::LevelUp);
+                let name = state
+                    .active_litematic
+                    .as_ref()
+                    .map(|l| l.name.clone())
+                    .unwrap_or_default();
+                toasts.push(
+                    "structure_block",
+                    t(lang, UiKey::LitematicLoadedToastTitle),
+                    &name,
+                    palette.accent_xp,
+                );
+            }
+            Err(err) => {
+                toasts.push(
+                    "barrier",
+                    t(lang, UiKey::LitematicErrorToastTitle),
+                    &err,
+                    palette.accent_danger,
+                );
+            }
+        }
+    }
+
+    let Some(parsed) = state.active_litematic.clone() else {
+        return;
+    };
+
+    // Loaded Schematic Summary & Actions
+    egui::Frame::new()
+        .fill(palette.bg_card)
+        .stroke(Stroke::new(1.0_f32, palette.accent_primary))
+        .corner_radius(CornerRadius::same(6))
+        .inner_margin(Margin::same(10))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.horizontal_wrapped(|ui| {
+                ui.label(
+                    RichText::new(&parsed.name)
+                        .size(16.0)
+                        .strong()
+                        .color(palette.text_primary),
+                );
+                ui.label(
+                    RichText::new(format!(
+                        "· {}: {}  · {}: {}x{}x{} ({} reg)  · {}: {} ({} tipos)",
+                        t(lang, UiKey::LitematicAuthorLabel),
+                        parsed.author,
+                        t(lang, UiKey::LitematicDimsLabel),
+                        parsed.dims.0,
+                        parsed.dims.1,
+                        parsed.dims.2,
+                        parsed.region_count,
+                        t(lang, UiKey::LitematicBlocksLabel),
+                        format_mc_quantity(parsed.total_blocks, false, lang),
+                        parsed.materials.len(),
+                    ))
+                    .size(11.5)
+                    .color(palette.text_muted),
+                );
+            });
+            ui.add_space(6.0);
+            ui.horizontal_wrapped(|ui| {
+                ui.add(
+                    egui::TextEdit::singleline(&mut state.litematic_filter)
+                        .hint_text(t(lang, UiKey::LitematicFilterHint))
+                        .desired_width(220.0),
+                );
+                if ui.button(t(lang, UiKey::LitematicSendToListBtn)).clicked() {
+                    let batch: Vec<(String, String, u64)> = parsed
+                        .materials
+                        .iter()
+                        .map(|m| (m.item_id.clone(), recipes.item_name(&m.item_id, lang), m.count))
+                        .collect();
+                    state.prefs.add_shopping_items(&batch, &parsed.name);
+                    state.prefs.favorites_open = true;
+                    state.right_rail_tab = RightRailTab::ShoppingList;
+                    audio.play(SoundCue::LevelUp);
+                    toasts.push(
+                        "shulker_box",
+                        t(lang, UiKey::ShoppingAddedToastTitle),
+                        &parsed.name,
+                        palette.accent_xp,
+                    );
+                }
+            });
+        });
+
+    ui.add_space(6.0);
+
+    let filt = state.litematic_filter.trim().to_lowercase();
+    let shulker_mode = state.litematic_shulker_mode;
+    let file_key = parsed.name.clone();
+    let mut nav_recipe: Option<String> = None;
+
+    egui::ScrollArea::vertical()
+        .id_salt("litematic_materials_scroll")
+        .show(ui, |ui| {
+            for mat in &parsed.materials {
+                let localized = recipes.item_name(&mat.item_id, lang);
+                if !filt.is_empty()
+                    && !localized.to_lowercase().contains(&filt)
+                    && !mat.item_id.to_lowercase().contains(&filt)
+                {
+                    continue;
+                }
+                let ckey = format!("litematic::{}::{}", file_key, mat.item_id);
+                let mut checked = state.prefs.checked_materials.contains(&ckey);
+                let mut toggled = false;
+
+                egui::Frame::new()
+                    .fill(if checked {
+                        palette.bg_card.gamma_multiply(0.55)
+                    } else {
+                        palette.bg_card
+                    })
+                    .stroke(Stroke::new(1.0_f32, palette.border_subtle))
+                    .corner_radius(CornerRadius::same(4))
+                    .inner_margin(Margin::symmetric(8, 4))
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            if ui.checkbox(&mut checked, "").changed() {
+                                toggled = true;
+                            }
+                            let (sr, sresp) =
+                                ui.allocate_exact_size(Vec2::splat(26.0), egui::Sense::click());
+                            paint_mc_slot(
+                                ui.painter(),
+                                sr,
+                                palette,
+                                atlas,
+                                Some(&mat.item_id),
+                                SlotStyle::hovered(sresp.hovered()),
+                            );
+                            if sresp.clicked() {
+                                nav_recipe = Some(mat.item_id.clone());
+                            }
+                            let mut rt = RichText::new(&localized).size(12.5).color(if checked {
+                                palette.text_muted
+                            } else {
+                                palette.text_primary
+                            });
+                            if checked {
+                                rt = rt.strikethrough();
+                            }
+                            ui.label(rt);
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    ui.label(
+                                        RichText::new(format_mc_quantity(
+                                            mat.count,
+                                            shulker_mode,
+                                            lang,
+                                        ))
+                                        .monospace()
+                                        .strong()
+                                        .size(12.0)
+                                        .color(if checked {
+                                            palette.text_muted
+                                        } else {
+                                            palette.accent_gold
+                                        }),
+                                    );
+                                },
+                            );
+                        });
+                    });
+                ui.add_space(3.0);
+
+                if toggled {
+                    if checked {
+                        state.prefs.checked_materials.insert(ckey);
+                        audio.play(SoundCue::XpOrb);
+                    } else {
+                        state.prefs.checked_materials.remove(&ckey);
+                        audio.play(SoundCue::Click);
+                    }
+                    state.prefs.save();
+                }
+            }
+        });
+
+    if let Some(id) = nav_recipe {
+        state.open_recipe_item(&id, RecipeViewMode::RecipesFor);
+        audio.play(SoundCue::Click);
+    }
 }

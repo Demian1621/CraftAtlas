@@ -225,6 +225,10 @@ pub struct EnchantBookEntry {
     pub effect: LocalizedText,
     pub sources: EnchantBookSources,
     pub best_method: LocalizedText,
+    #[serde(default)]
+    pub since_version: Option<String>,
+    #[serde(default)]
+    pub until_version: Option<String>,
 }
 
 const ARMOR_ALL_ICONS: &[(&str, &str, &str)] = &[
@@ -364,6 +368,21 @@ impl EnchantBookEntry {
             _ => &[("enchanted_book", "Ítem compatible", "Compatible item")],
         }
     }
+
+    /// Version-filtered compatible item icons (omits Mace in <=1.20.6, Spear in <=1.21.4, Brush in <=1.19.4).
+    pub fn applicable_item_icons_in(
+        &self,
+        versions: &VersionRegistry,
+        active_ver: &str,
+    ) -> Vec<(&'static str, &'static str, &'static str)> {
+        self.applicable_item_icons()
+            .iter()
+            .copied()
+            .filter(|(icon_id, _, _)| {
+                crate::data::version_rules::is_item_active(versions, icon_id, active_ver)
+            })
+            .collect()
+    }
 }
 
 /// Root guide database bundled cleanly with extensible version filtering.
@@ -425,6 +444,34 @@ impl GearItem {
         }
         Cow::Owned(cloned)
     }
+
+    /// Resolves version text overrides AND filters out enchantments not yet introduced in `active_version`.
+    pub fn resolved_for<'a>(
+        &'a self,
+        versions: &VersionRegistry,
+        active_version: &str,
+    ) -> Cow<'a, GearItem> {
+        let base = self.resolved(active_version);
+        let has_inactive_ench = base.enchantments.iter().any(|e| {
+            let since = e
+                .since_version
+                .as_deref()
+                .or_else(|| crate::data::version_rules::enchant_since_version(&e.id));
+            !versions.is_active(since, e.until_version.as_deref(), active_version)
+        });
+        if !has_inactive_ench {
+            return base;
+        }
+        let mut owned = base.into_owned();
+        owned.enchantments.retain(|e| {
+            let since = e
+                .since_version
+                .as_deref()
+                .or_else(|| crate::data::version_rules::enchant_since_version(&e.id));
+            versions.is_active(since, e.until_version.as_deref(), active_version)
+        });
+        Cow::Owned(owned)
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -435,6 +482,10 @@ pub struct EnchantmentItem {
     pub level_num: u8,
     pub name: LocalizedText,
     pub desc: LocalizedText,
+    #[serde(default)]
+    pub since_version: Option<String>,
+    #[serde(default)]
+    pub until_version: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -910,5 +961,59 @@ mod tests {
             vec!["soul_speed", "swift_sneak", "wind_burst"],
             "Expected exact 3 non-villager enchanted books"
         );
+    }
+
+    #[test]
+    fn all_database_and_versions_have_non_empty_i18n_and_unique_ids() {
+        use crate::data::loader::{load_database, load_versions};
+        use std::collections::HashSet;
+
+        let versions = load_versions().expect("versions.json must load cleanly");
+        assert!(
+            versions.versions.len() >= 6,
+            "Expected multi-version registry (1.18.2 through 26.3)"
+        );
+        assert!(versions.find(&versions.default_version).is_some());
+        let mut ver_ids = HashSet::new();
+        for v in &versions.versions {
+            assert!(ver_ids.insert(v.id.clone()), "Duplicate version id: {}", v.id);
+            assert!(!v.label.trim().is_empty());
+            assert!(!v.cubiomes_mc.trim().is_empty());
+            for lang in Language::all() {
+                assert!(!v.subtitle.get(lang).trim().is_empty());
+            }
+        }
+
+        let db = load_database().expect("database.json must load cleanly");
+        let mut gear_ids = HashSet::new();
+        for g in &db.gear {
+            assert!(gear_ids.insert(g.id.clone()), "Duplicate gear id: {}", g.id);
+            for lang in Language::all() {
+                assert!(!g.name.get(lang).trim().is_empty());
+            }
+        }
+        let mut farm_ids = HashSet::new();
+        for f in &db.farms {
+            assert!(farm_ids.insert(f.id.clone()), "Duplicate farm id: {}", f.id);
+            for lang in Language::all() {
+                assert!(!f.title.get(lang).trim().is_empty());
+                assert!(!f.desc.get(lang).trim().is_empty());
+            }
+        }
+        let mut dupe_ids = HashSet::new();
+        for d in &db.dupes {
+            assert!(dupe_ids.insert(d.id.clone()), "Duplicate dupe id: {}", d.id);
+            for lang in Language::all() {
+                assert!(!d.title.get(lang).trim().is_empty());
+            }
+        }
+        let mut tip_ids = HashSet::new();
+        for p in &db.pro_tips {
+            assert!(tip_ids.insert(p.id.clone()), "Duplicate tip id: {}", p.id);
+            for lang in Language::all() {
+                assert!(!p.title.get(lang).trim().is_empty());
+                assert!(!p.text.get(lang).trim().is_empty());
+            }
+        }
     }
 }

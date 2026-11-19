@@ -1,22 +1,167 @@
 {
-  "default_version": "26.3",
-  "versions": [
-    {
-      "id": "26.3",
-      "label": "Java 26.3",
-      "subtitle": {
-        "es_mx": "Wilderness Bound",
-        "es_es": "Wilderness Bound",
-        "en_us": "Wilderness Bound"
-      },
-      "cubiomes_mc": "26.3",
-      "highlights": [
-        {
-          "es_mx": "Catálogo completo JEI (26.3), explorador Cubiomes nativo, Yunque God, granjas y mecánicas actualizadas a 26.3.",
-          "es_es": "Catálogo completo JEI (26.3), explorador Cubiomes nativo, Yunque God, granjas y mecánicas actualizadas a 26.3.",
-          "en_us": "Complete 26.3 JEI catalog, native Cubiomes seed map, God Anvil optimizer, farms, and verified 26.3 mechanics."
-        }
-      ]
-    }
-  ]
+    "default_version":  "26.3",
+    "versions":  [
+                     {
+                         "id":  "1.18.2",
+                         "label":  "Java 1.18.2",
+                         "subtitle":  {
+                                          "es_mx":  "Caves \u0026 Cliffs II",
+                                          "es_es":  "Caves \u0026 Cliffs II",
+                                          "en_us":  "Caves \u0026 Cliffs II"
+                                      },
+                         "cubiomes_mc":  "1.18.2",
+                         "highlights":  [
+                                            {
+                                                "es_mx":  "Mapa de Semilla 1.18.2 fiel: montañas 3D, Lush/Dripstone Caves, SIN Ancient City ni Deep Dark.",
+                                                "es_es":  "Mapa de Semilla 1.18.2 fiel: biomas 3D sin Ciudad Antigua ni Oscuridad Profunda.",
+                                                "en_us":  "Accurate 1.18.2 3D multi-noise worldgen (pre-Deep Dark, Ancient City \u0026 Trial Chambers)."
+                                            },
+                                            {
+                                                "es_mx":  "Herrería Netherita clásica de 2 slots (1 lingote directo sin Plantilla de Mejora) y Magnetita con Netherita.",
+                                                "es_es":  "Herrería Netherita clásica sin Plantilla de Mejora; sin Swift Sneak ni Mace.",
+                                                "en_us":  "Legacy 2-slot Netherite smithing (no template needed), no Swift Sneak / Mace / Brush."
+                                            },
+                                            {
+                                                "es_mx":  "Glitches activos: Supresión nativa por StackOverflow, Apilado x5 de curación aldeanos, Void Trading y String Duper.",
+                                                "es_es":  "Glitches activos: Supresor StackOverflow nativo, Apilado x5 de curación, Void Trading y String Duper.",
+                                                "en_us":  "Active glitches: native StackOverflow suppression, 5x villager cure stacking, Void Trading, String Duper."
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "1.19.4",
+                         "label":  "Java 1.19.4",
+                         "subtitle":  {
+                                          "es_mx":  "The Wild Update",
+                                          "es_es":  "The Wild Update",
+                                          "en_us":  "The Wild Update"
+                                      },
+                         "cubiomes_mc":  "1.19.4",
+                         "highlights":  [
+                                            {
+                                                "es_mx":  "Suma Pantano de Manglar, Deep Dark, Ancient City, bloques de Lodo/Sculk, Bote con Cofre y Sigilo Rápido III.",
+                                                "es_es":  "Incorpora Manglar, Oscuridad Profunda, Ciudad Antigua, Lodo/Sculk, Barco con Cofre y Sigilo Rápido III.",
+                                                "en_us":  "Adds Mangrove Swamp, Deep Dark, Ancient Cities, Mud/Sculk farms, Chest Boats, Swift Sneak III."
+                                            },
+                                            {
+                                                "es_mx":  "Mantiene herrería Netherita de 2 slots SIN plantilla y Apilado x5 de curación Zombi + Void Trading + String Duper.",
+                                                "es_es":  "Mantiene Herrería Netherita sin plantilla, Apilado x5 de curación, Void Trading y String Duper.",
+                                                "en_us":  "Still uses 2-slot Netherite smithing without templates, 5x cure stacking, Void Trading, String Duper."
+                                            },
+                                            {
+                                                "es_mx":  "StackOverflow tradicional parcheado desde 1.19+: usar Supresión CCE o Light/Chunk Suppression.",
+                                                "es_es":  "Supresión por pila parcheada desde 1.19+: requiere Supresión CCE o Light Suppression.",
+                                                "en_us":  "Classic StackOverflow update suppression patched in 1.19+; requires CCE or Light Suppression."
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "1.20.6",
+                         "label":  "Java 1.20.6",
+                         "subtitle":  {
+                                          "es_mx":  "Trails \u0026 Tales",
+                                          "es_es":  "Trails \u0026 Tales",
+                                          "en_us":  "Trails \u0026 Tales"
+                                      },
+                         "cubiomes_mc":  "1.20.6",
+                         "highlights":  [
+                                            {
+                                                "es_mx":  "Suma Arboleda de Cerezos, Ruinas de Sendero, Armadura de Lobo (Armadillo), Brocha, Calibrated Sculk y Trims.",
+                                                "es_es":  "Suma Cerezos, Ruinas de Sendero, Armadura de Lobo, Pincel, Sculk Calibrado y Plantillas de Armadura.",
+                                                "en_us":  "Adds Cherry Grove, Trail Ruins, Wolf Armor / Armadillo Scute, Brush archaeology \u0026 Armor Trims."
+                                            },
+                                            {
+                                                "es_mx":  "Mejora de Netherita ahora exige Plantilla de Herrería (Bastiones). Stacking Raid Farm y Void Trading siguen activos.",
+                                                "es_es":  "Herrería Netherita pasa a 3 slots con Plantilla. Incursiones apilables y Void Trading siguen activos.",
+                                                "en_us":  "Netherite upgrade now requires Smithing Templates; Stacking Raid Farm \u0026 Void Trading remain active."
+                                            },
+                                            {
+                                                "es_mx":  "Nota 1.20.2+: Curación Zombi limitada a 1 descuento (sin apilado x5); String y Tripwire Hook Duper aún funcionan.",
+                                                "es_es":  "Nota 1.20.2+: Curación Zombi limitada a 1 uso (sin x5). String Duper sigue operativo.",
+                                                "en_us":  "1.20.2+ note: Villager curing capped at 1x discount; String Duper \u0026 Tripwire Hook Duper still work."
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "1.21.1",
+                         "label":  "Java 1.21.1",
+                         "subtitle":  {
+                                          "es_mx":  "Tricky Trials",
+                                          "es_es":  "Tricky Trials",
+                                          "en_us":  "Tricky Trials"
+                                      },
+                         "cubiomes_mc":  "1.21.1",
+                         "highlights":  [
+                                            {
+                                                "es_mx":  "Suma Trial Chambers, Crafter automático, Mace (Densidad/Fisura/Aeroimpulso), Breeze, Bogged y 4 Pociones nuevas.",
+                                                "es_es":  "Suma Cámaras de Juicio, Fabricador automático, Maza, Breeze, Bogged y pociones Oozing/Infested.",
+                                                "en_us":  "Adds Trial Chambers, Crafter auto-crafting, Mace enchantments, Breeze, Bogged, and 4 Trial potions."
+                                            },
+                                            {
+                                                "es_mx":  "Raid Farms cambian a Botellas Siniestras (30s cooldown) y Brujas sueltan 4-8 Redstone. Void Trading queda parcheado.",
+                                                "es_es":  "Granjas de Asalto pasan a Frascos Ominosos; Brujas sueltan 4-8 Redstone. Void Trading parcheado.",
+                                                "en_us":  "Raid farms switch to Ominous Bottles; Witches drop 4-8 Redstone; Void Trading is patched."
+                                            },
+                                            {
+                                                "es_mx":  "Última versión principal con el String Duper clásico activo en Vanilla (antes del parche 1.21.2).",
+                                                "es_es":  "Última gran versión con el duplicador clásico de Hilo activo en Vanilla.",
+                                                "en_us":  "Last major SMP version where classic water/shears String Duper works natively in Vanilla."
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "1.21.4",
+                         "label":  "Java 1.21.4",
+                         "subtitle":  {
+                                          "es_mx":  "The Garden Awakens",
+                                          "es_es":  "The Garden Awakens",
+                                          "en_us":  "The Garden Awakens"
+                                      },
+                         "cubiomes_mc":  "1.21.4",
+                         "highlights":  [
+                                            {
+                                                "es_mx":  "Suma Jardín Pálido (Pale Garden), Resina y Corazón de Creaking, madera Pale Oak, Bultos (Bundles) y Eyeris.",
+                                                "es_es":  "Suma Jardín Pálido, Resina con Creaking Heart, Roble Pálido y Zurrones (Bundles) crafteables.",
+                                                "en_us":  "Adds Pale Garden, Creaking Heart Resin farms, Pale Oak woodset, craftable Bundles \u0026 Eyeblossom."
+                                            },
+                                            {
+                                                "es_mx":  "Perlas de Ender ahora cargan su propio chunk nativamente desde 1.21.2+ (nuevos Pearl Chunk Loaders y Stasis).",
+                                                "es_es":  "Las Perlas de Ender auto-cargan su chunk desde 1.21.2+ permitiendo Chunk Loaders sin portal.",
+                                                "en_us":  "Ender Pearls self-load chunks since 1.21.2+, unlocking portal-free Pearl Chunk Loaders \u0026 Stasis."
+                                            },
+                                            {
+                                                "es_mx":  "String Duper clásico (MC-59471) parcheado desde 1.21.2; Magnetita y Rienda aún usan receta clásica pre-26.3.",
+                                                "es_es":  "String Duper clásico parcheado (MC-59471); Magnetita y Rienda conservan crafteo clásico.",
+                                                "en_us":  "Classic String Duper patched (MC-59471); Lodestone (netherite) \u0026 Lead (slimeball) use pre-26.3 recipes."
+                                            }
+                                        ]
+                     },
+                     {
+                         "id":  "26.3",
+                         "label":  "Java 26.3",
+                         "subtitle":  {
+                                          "es_mx":  "Wilderness Bound",
+                                          "es_es":  "Wilderness Bound",
+                                          "en_us":  "Wilderness Bound"
+                                      },
+                         "cubiomes_mc":  "26.3",
+                         "highlights":  [
+                                            {
+                                                "es_mx":  "Catálogo JEI completo 26.3: herramientas/armadura/bloques de Cobre, Lanzas (Spears/Lunge), Sillas crafteables y Poplar.",
+                                                "es_es":  "Catálogo completo 26.3: set de Cobre, Lanzas (Lunge), Montura crafteable, Álamo y Nautilus.",
+                                                "en_us":  "Complete 26.3 catalog: Copper tool/armor/block tier, Spears (Lunge), craftable Saddles \u0026 Poplar."
+                                            },
+                                            {
+                                                "es_mx":  "Recetas actualizadas 26.3: Magnetita cuesta Hierro (ya no Netherita) y Rienda usa solo Hilo (sin Slime).",
+                                                "es_es":  "Recetas 26.3: Magnetita usa Lingote de Hierro y Rienda se fabrica solo con Cuerda.",
+                                                "en_us":  "Updated 26.3 recipes: Lodestone uses Iron Ingot (no longer Netherite) \u0026 Lead uses String only."
+                                            },
+                                            {
+                                                "es_mx":  "Granjas, libros (43), mapa Cubiomes 3D, Yunque God y sintaxis de comandos [enchantments={...}] al día.",
+                                                "es_es":  "Granjas, 43 libros encantados, mapa Cubiomes y sintaxis moderna [enchantments={...}] completos.",
+                                                "en_us":  "All farms, 43 enchant books, Cubiomes worldgen \u0026 modern [enchantments={...}] command syntax."
+                                            }
+                                        ]
+                     }
+                 ]
 }

@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+pub mod crypto_sha256;
 pub mod updater;
 
 mod anim;
@@ -18,18 +19,21 @@ use std::time::Duration;
 use anim::{ParticleSystem, ToastQueue};
 use assets::backgrounds::ThemeBackgrounds;
 use assets::{install_fonts, ItemAtlas};
-use audio::AudioEngine;
+use audio::{AudioEngine, SoundCue};
 use data::loader::{load_database, load_recipes, load_versions};
 use data::models::{Database, VersionRegistry};
 use data::recipes::RecipeDatabase;
-use data::seed_engine::{parse_seed_input, SeedMapEngine};
-use data::worlds_nbt::find_minecraft_sound_paths;
-use state::{AppState, AppTab, UserPrefs};
-use ui::chrome::{
-    render_borderless_window_frame, render_favorites_rail, render_search_palette, render_top_chrome,
+use data::seed_engine::{
+    cubiomes_version_code, parse_seed_input, NearestSearchState, SeedMapEngine,
 };
+use data::worlds_nbt::find_minecraft_sound_paths;
+use i18n::{t, UiKey};
+use state::{AppState, AppTab, UserPrefs};
+use ui::chrome::{render_borderless_window_frame, render_search_palette, render_top_chrome};
+use ui::right_rail::render_favorites_rail;
 use ui::tabs;
 use ui::theme::McPalette;
+use ui::updater_modal::render_updater_modal;
 use ui::RenderContext;
 
 const APP_ICON_PNG: &[u8] = include_bytes!("../assets/custom_app_icon.png");
@@ -61,8 +65,12 @@ impl CraftAtlasApp {
         prefs.selected_version = versions
             .resolve_valid_id(&prefs.selected_version)
             .to_string();
+        let initial_mc_ver = versions
+            .find(&prefs.selected_version)
+            .map(|v| cubiomes_version_code(&v.cubiomes_mc))
+            .unwrap_or(0);
         let initial_seed = parse_seed_input(&prefs.last_seed);
-        let seed_engine = SeedMapEngine::new(initial_seed, prefs.large_biomes);
+        let seed_engine = SeedMapEngine::new(initial_seed, initial_mc_ver, prefs.large_biomes);
         let sound_paths = find_minecraft_sound_paths();
         let audio = AudioEngine::new(prefs.audio_enabled, prefs.audio_volume, sound_paths.clone());
 
@@ -111,6 +119,94 @@ impl eframe::App for CraftAtlasApp {
         self.audio.enabled = self.state.prefs.audio_enabled;
         self.audio.volume = self.state.prefs.audio_volume;
         self.state.updater.poll();
+        if self.seed_engine.poll_nearest_search() {
+            ctx.request_repaint();
+        }
+
+        // Keep Cubiomes worldgen version synced with the active top-bar Minecraft version
+        let active_ver_id = self
+            .versions
+            .resolve_valid_id(&self.state.prefs.selected_version);
+        let active_mc_ver = self
+            .versions
+            .find(active_ver_id)
+            .map(|v| cubiomes_version_code(&v.cubiomes_mc))
+            .unwrap_or(0);
+        self.seed_engine.set_mc_version(active_mc_ver);
+
+        // Global drag-and-drop handler for .litematic schematics anywhere on the window
+        let dropped_litematic = ctx.input(|i| {
+            i.raw.dropped_files.iter().find_map(|f| {
+                let p = f.path.as_ref()?;
+                let ext = p.extension()?.to_string_lossy().to_ascii_lowercase();
+                if ext == "litematic" {
+                    Some(p.clone())
+                } else {
+                    None
+                }
+            })
+        });
+        if let Some(path) = dropped_litematic {
+            let lang = self.state.prefs.language;
+            match self.state.load_litematic_path(&path) {
+                Ok(()) => {
+                    self.state.switch_tab(AppTab::Farms);
+                    self.audio.play(SoundCue::LevelUp);
+                    let name = self
+                        .state
+                        .active_litematic
+                        .as_ref()
+                        .map(|l| l.name.clone())
+                        .unwrap_or_default();
+                    self.toasts.push(
+                        "structure_block",
+                        t(lang, UiKey::LitematicLoadedToastTitle),
+                        &name,
+                        McPalette::from_theme(self.state.prefs.theme).accent_xp,
+                    );
+                }
+                Err(err) => {
+                    self.toasts.push(
+                        "barrier",
+                        t(lang, UiKey::LitematicErrorToastTitle),
+                        &err,
+                        McPalette::from_theme(self.state.prefs.theme).accent_danger,
+                    );
+                }
+            }
+        }
+
+        if let Some(res) = self.state.video_importer.poll() {
+            let lang = self.state.prefs.language;
+            let pal = McPalette::from_theme(self.state.prefs.theme);
+            match res {
+                Ok(dest) => {
+                    self.backgrounds.reload_custom_video();
+                    self.state.prefs.theme = state::ThemeId::CustomVideo;
+                    self.state.prefs.save();
+                    self.audio.play(SoundCue::LevelUp);
+                    let title = if matches!(lang, crate::data::models::Language::EnUs) {
+                        "Custom Video Theme Ready"
+                    } else {
+                        "Video de Fondo Cargado"
+                    };
+                    let name = dest
+                        .file_name()
+                        .map(|n| n.to_string_lossy().into_owned())
+                        .unwrap_or_default();
+                    self.toasts.push("ender_eye", title, &name, pal.accent_xp);
+                }
+                Err(err) => {
+                    self.audio.play(SoundCue::Toast);
+                    let title = if matches!(lang, crate::data::models::Language::EnUs) {
+                        "Video Import Failed"
+                    } else {
+                        "Error al Importar Video"
+                    };
+                    self.toasts.push("barrier", title, &err, pal.accent_danger);
+                }
+            }
+        }
 
         let palette = McPalette::from_theme(self.state.prefs.theme);
         palette.apply_to_egui(ctx);
@@ -121,7 +217,7 @@ impl eframe::App for CraftAtlasApp {
             screen_rect,
             self.state.prefs.theme,
             palette,
-            time,
+            (time, dt, active),
         );
         self.particles.update_and_paint_ambient(
             ctx,
@@ -131,14 +227,25 @@ impl eframe::App for CraftAtlasApp {
             dt,
         );
 
+        let bg_work_active = matches!(self.state.updater.status(), updater::UpdateStatus::Checking)
+            || matches!(
+                self.state.updater.install_state(),
+                updater::InstallState::Downloading { .. }
+            )
+            || matches!(
+                self.seed_engine.nearest_state(),
+                NearestSearchState::Searching
+            )
+            || self.state.video_importer.is_importing();
+
         if !active {
             // Pause background panorama/particles cleanly when unfocused or minimized (~0% idle CPU).
-            if matches!(self.state.updater.status(), updater::UpdateStatus::Checking) {
-                ctx.request_repaint_after(Duration::from_millis(500));
+            if bg_work_active {
+                ctx.request_repaint_after(Duration::from_millis(250));
             }
-        } else if self.state.tab_anim_t < 1.0 {
+        } else if self.state.tab_anim_t < 1.0 || bg_work_active {
             self.state.tab_anim_t = (self.state.tab_anim_t + dt * 4.5).min(1.0);
-            ctx.request_repaint();
+            ctx.request_repaint_after(Duration::from_millis(33));
         } else {
             // Smooth 30 FPS scenic panorama / ambient particle refresh while window is active
             ctx.request_repaint_after(Duration::from_millis(33));
@@ -217,6 +324,7 @@ impl eframe::App for CraftAtlasApp {
             });
 
         render_search_palette(ctx, &mut self.state, &rcx);
+        render_updater_modal(ctx, &mut self.state, palette, &self.audio);
         self.particles.update_and_paint(ctx, dt);
         self.toasts.update_and_paint(ctx, &self.atlas, dt);
         render_borderless_window_frame(ctx, palette);
@@ -235,6 +343,7 @@ fn load_app_icon() -> Option<Arc<egui::IconData>> {
 }
 
 fn main() -> eframe::Result<()> {
+    updater::cleanup_stale_update_backup();
     let mut viewport = egui::ViewportBuilder::default()
         .with_title("CraftAtlas")
         .with_app_id("craft-atlas")

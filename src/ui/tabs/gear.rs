@@ -9,7 +9,7 @@ use crate::audio::{AudioEngine, SoundCue};
 use crate::data::anvil_calc::compute_optimal_anvil_plan;
 use crate::data::models::{GearItem, Language};
 use crate::i18n::{t, UiKey};
-use crate::state::{AppState, RecipeViewMode};
+use crate::state::{AppState, GearSubView, RecipeViewMode};
 use crate::ui::chrome::render_inline_tab_search;
 use crate::ui::theme::{adaptive_sidebar_width, filter_chip, paint_mc_frame, paint_mc_slot, McPalette, SlotStyle};
 use crate::ui::RenderContext;
@@ -32,21 +32,29 @@ pub fn render(
     } = *rcx;
     state.anvil_anim.tick(dt);
     let lang = state.prefs.language;
-    crate::ui::tabs::enchant_books::render_view_switcher(
-        ui, state, db, palette, atlas, audio, lang,
-    );
-    if state.gear_books_view {
-        crate::ui::tabs::enchant_books::render(ui, state, db, palette, atlas, audio, lang);
-        return;
+    let active_ver = versions
+        .resolve_valid_id(&state.prefs.selected_version)
+        .to_string();
+    crate::ui::tabs::enchant_books::render_view_switcher(ui, state, rcx, &active_ver, lang);
+    match state.gear_view {
+        GearSubView::Books => {
+            crate::ui::tabs::enchant_books::render(ui, state, rcx, &active_ver, lang);
+            return;
+        }
+        GearSubView::IllegalGod => {
+            crate::ui::tabs::god_armor::render(ui, state, rcx, toasts, &active_ver);
+            return;
+        }
+        GearSubView::Standard => {}
     }
-    let active_ver = versions.resolve_valid_id(&state.prefs.selected_version);
+    let active_ver = active_ver.as_str();
     let q_lower = state.search_query.trim().to_lowercase();
 
     let resolved_all: Vec<Cow<'_, GearItem>> = db
         .gear
         .iter()
         .filter(|g| versions.is_active(g.since_version.as_deref(), g.until_version.as_deref(), active_ver))
-        .map(|g| g.resolved(active_ver))
+        .map(|g| g.resolved_for(versions, active_ver))
         .collect();
 
     let filtered: Vec<&GearItem> = resolved_all

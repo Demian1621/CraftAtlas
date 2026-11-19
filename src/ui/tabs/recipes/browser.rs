@@ -3,9 +3,9 @@ use std::collections::BTreeMap;
 
 use crate::anim::ToastQueue;
 use crate::audio::SoundCue;
-use crate::data::models::{format_stack_breakdown, Language};
+use crate::data::models::Language;
 use crate::data::recipes::{
-    translate_brewing_note, CraftTreeNode, CraftingStation, RecipeCategory, RecipeEntry,
+    translate_brewing_note, CraftingStation, RecipeCategory, RecipeEntry,
 };
 use crate::i18n::{t, UiKey};
 use crate::state::{AppState, RecipeViewMode};
@@ -15,197 +15,9 @@ use crate::ui::theme::{
 };
 use crate::ui::RenderContext;
 
-pub fn render(
-    ui: &mut egui::Ui,
-    state: &mut AppState,
-    rcx: &RenderContext<'_>,
-    toasts: &mut ToastQueue,
-) {
-    let RenderContext {
-        recipes,
-        versions,
-        palette,
-        atlas,
-        audio,
-        ..
-    } = *rcx;
-    let lang = state.prefs.language;
-    let active_ver = versions
-        .resolve_valid_id(&state.prefs.selected_version)
-        .to_string();
-    let time = ui.ctx().input(|i| i.time);
-    let tag_step = (time / 0.95) as usize;
-    state.hovered_tooltip_id = None;
-
-    // 1. Crafting Station Tabs + Nav History Bar
-    ui.horizontal_wrapped(|ui| {
-        ui.spacing_mut().item_spacing = Vec2::new(5.0, 5.0);
-
-        if ui
-            .add_enabled(state.recipe_history_pos > 0, egui::Button::new(t(lang, UiKey::NavBack)))
-            .clicked()
-            && state.recipe_nav_back()
-        {
-            audio.play(SoundCue::Click);
-        }
-        if ui
-            .add_enabled(
-                state.recipe_history_pos + 1 < state.recipe_history.len(),
-                egui::Button::new(t(lang, UiKey::NavForward)),
-            )
-            .clicked()
-            && state.recipe_nav_forward()
-        {
-            audio.play(SoundCue::Click);
-        }
-
-        ui.separator();
-
-        if filter_chip(
-            ui,
-            palette,
-            atlas,
-            Some("knowledge_book"),
-            t(lang, UiKey::FilterAll),
-            state.recipe_station_filter.is_none(),
-        )
-        .clicked()
-        {
-            state.recipe_station_filter = None;
-            state.recipe_catalog_page = 0;
-            audio.play(SoundCue::Click);
-        }
-
-        for station in CraftingStation::all() {
-            if filter_chip(
-                ui,
-                palette,
-                atlas,
-                Some(station.icon_id()),
-                station.label(lang),
-                state.recipe_station_filter == Some(station),
-            )
-            .clicked()
-            {
-                state.recipe_station_filter = Some(station);
-                state.recipe_catalog_page = 0;
-                audio.play(SoundCue::Click);
-            }
-        }
-    });
-
-    ui.add_space(4.0);
-
-    // 2. Logical Category Filter Strip
-    ui.horizontal_wrapped(|ui| {
-        ui.spacing_mut().item_spacing = Vec2::new(4.0, 4.0);
-        for cat in RecipeCategory::all() {
-            if filter_chip(
-                ui,
-                palette,
-                atlas,
-                Some(cat.icon_id()),
-                cat.label(lang),
-                state.recipe_category_filter == cat,
-            )
-            .clicked()
-            {
-                state.recipe_category_filter = cat;
-                state.recipe_catalog_page = 0;
-                audio.play(SoundCue::Click);
-            }
-        }
-    });
-
-    ui.add_space(8.0);
-
-    // 3. Build Filtered Catalog strictly matching version + query + station + category
-    let q_lower = state.search_query.trim().to_lowercase();
-    let filtered_items: Vec<&str> = recipes
-        .catalog_items
-        .iter()
-        .filter(|id| recipes.item_active_in(id, versions, &active_ver))
-        .filter(|id| {
-            let item_recipes = recipes.recipes_for(id);
-            let station_ok = state.recipe_station_filter.is_none_or(|st| {
-                item_recipes.iter().any(|&idx| {
-                    recipes.recipes[idx].is_active_in(versions, &active_ver)
-                        && recipes.recipes[idx].station == st
-                })
-            });
-            let cat_ok = state.recipe_category_filter == RecipeCategory::All
-                || item_recipes.iter().any(|&idx| {
-                    recipes.recipes[idx].is_active_in(versions, &active_ver)
-                        && recipes.recipes[idx].category == state.recipe_category_filter
-                });
-            station_ok && cat_ok && recipes.matches_item_query(id, &q_lower)
-        })
-        .map(|s| s.as_str())
-        .collect();
-
-    // Keyboard shortcuts when typing isn't capturing focus (R = Recipe, U = Uses, A = Favorite)
-    let want_kb = !ui.ctx().wants_keyboard_input();
-
-    // 4. Adaptive Split: Side-by-side at >= 720px so narrow windows show both Crafting + JEI Grid!
-    let total_w = ui.available_width();
-    if total_w >= 720.0 {
-        let left_w = (total_w * 0.43).clamp(290.0, 480.0);
-        ui.horizontal_top(|ui| {
-            ui.allocate_ui_with_layout(
-                Vec2::new(left_w, ui.available_height()),
-                egui::Layout::top_down(egui::Align::Min),
-                |ui| {
-                    render_jei_inspector(ui, state, rcx, &active_ver, toasts, tag_step);
-                },
-            );
-            ui.add_space(10.0);
-            ui.allocate_ui_with_layout(
-                Vec2::new(ui.available_width(), ui.available_height()),
-                egui::Layout::top_down(egui::Align::Min),
-                |ui| {
-                    render_jei_catalog_grid(
-                        ui,
-                        state,
-                        rcx,
-                        &active_ver,
-                        &filtered_items,
-                        toasts,
-                        want_kb,
-                    );
-                },
-            );
-        });
-    } else {
-        egui::ScrollArea::vertical()
-            .id_salt("recipes_compact_scroll")
-            .auto_shrink([false, false])
-            .show(ui, |ui| {
-                render_jei_inspector(ui, state, rcx, &active_ver, toasts, tag_step);
-                ui.add_space(10.0);
-                render_jei_catalog_grid(
-                    ui,
-                    state,
-                    rcx,
-                    &active_ver,
-                    &filtered_items,
-                    toasts,
-                    want_kb,
-                );
-            });
-    }
-
-    // Repaint periodically if active recipe contains animated #tag slots
-    let has_tags = recipes
-        .recipes_for(&state.selected_recipe_item)
-        .get(state.recipe_variant_idx)
-        .and_then(|&idx| recipes.recipes.get(idx))
-        .is_some_and(|r| r.slots.iter().any(|s| s.starts_with('#')));
-    if has_tags && crate::ui::chrome::is_window_active(ui.ctx()) {
-        ui.ctx().request_repaint_after(std::time::Duration::from_millis(250));
-    }
-}
-
-fn render_jei_inspector(
+use super::alchemy::render_alchemy_guide;
+use super::tree::render_craft_tree_section;
+pub(super) fn render_jei_inspector(
     ui: &mut egui::Ui,
     state: &mut AppState,
     rcx: &RenderContext<'_>,
@@ -223,7 +35,7 @@ fn render_jei_inspector(
     } = *rcx;
     let lang = state.prefs.language;
     let target_id = state.selected_recipe_item.clone();
-    let display_name = recipes.item_name(&target_id, lang);
+    let display_name = recipes.item_name_in(&target_id, versions, active_ver, lang);
 
     egui::ScrollArea::vertical()
         .id_salt("jei_inspector_scroll")
@@ -294,11 +106,7 @@ fn render_jei_inspector(
                             &format!(
                                 "{} ({})",
                                 t(lang, UiKey::UsesForTitle),
-                                recipes
-                                    .uses_for(&target_id)
-                                    .iter()
-                                    .filter(|&&idx| recipes.recipes[idx].is_active_in(versions, active_ver))
-                                    .count()
+                                recipes.uses_for_in(&target_id, versions, active_ver).len()
                             ),
                             state.recipe_view_mode == RecipeViewMode::UsesFor,
                         )
@@ -363,7 +171,7 @@ fn render_jei_inspector(
                                 .recipes_for(&target_id)
                                 .iter()
                                 .copied()
-                                .filter(|&idx| recipes.recipes[idx].is_active_in(versions, active_ver))
+                                .filter(|&idx| recipes.is_recipe_active(idx, versions, active_ver))
                                 .collect();
                             let recipe_indices: Vec<usize> = active_for_item
                                 .iter()
@@ -453,6 +261,7 @@ fn render_jei_inspector(
                                     ui,
                                     &entry,
                                     rcx,
+                                    active_ver,
                                     tag_step,
                                     lang,
                                     &mut pending_nav,
@@ -505,11 +314,16 @@ fn render_jei_inspector(
                                     ui.horizontal_wrapped(|ui| {
                                         ui.spacing_mut().item_spacing = Vec2::new(6.0, 4.0);
                                         for (tok, qty) in counts {
-                                            let vis = recipes.resolve_slot_icon(&tok, tag_step);
+                                            let vis = recipes.resolve_slot_icon_in(
+                                                &tok,
+                                                tag_step,
+                                                versions,
+                                                active_ver,
+                                            );
                                             let label = format!(
                                                 "{}x {}",
                                                 qty,
-                                                recipes.item_name(&tok, lang)
+                                                recipes.item_name_in(&tok, versions, active_ver, lang)
                                             );
                                             if filter_chip(
                                                 ui,
@@ -536,12 +350,7 @@ fn render_jei_inspector(
                         }
 
                         RecipeViewMode::UsesFor => {
-                            let uses: Vec<usize> = recipes
-                                .uses_for(&target_id)
-                                .iter()
-                                .copied()
-                                .filter(|&idx| recipes.recipes[idx].is_active_in(versions, active_ver))
-                                .collect();
+                            let uses = recipes.uses_for_in(&target_id, versions, active_ver);
                             if uses.is_empty() {
                                 ui.label(
                                     RichText::new(t(lang, UiKey::NoUsesFound))
@@ -607,76 +416,10 @@ fn render_jei_inspector(
                         }
                     }
 
-                    // EMI Recursive Craft Tree & Raw Base Bill of Materials
+
+                    // EMI Recursive Craft Tree & Raw Base Bill of Materials (+ Shopping List)
                     if state.show_craft_tree {
-                        ui.add_space(10.0);
-                        ui.separator();
-                        ui.horizontal_wrapped(|ui| {
-                            ui.add(atlas.ui_image("oak_sapling", 16.0));
-                            ui.label(
-                                RichText::new(t(lang, UiKey::CraftTreeTitle))
-                                    .size(12.5)
-                                    .strong()
-                                    .color(palette.accent_xp),
-                            );
-                            for q in [1u32, 8, 16, 64] {
-                                if filter_chip(
-                                    ui,
-                                    palette,
-                                    atlas,
-                                    None,
-                                    &format!("{}x", q),
-                                    state.craft_tree_qty == q,
-                                )
-                                .clicked()
-                                {
-                                    state.craft_tree_qty = q;
-                                    audio.play(SoundCue::Click);
-                                }
-                            }
-                        });
-                        ui.add_space(6.0);
-
-                        let (tree, raw_totals) =
-                            recipes.build_craft_tree(&target_id, state.craft_tree_qty);
-                        let mut nav_target: Option<String> = None;
-                        render_tree_node(ui, &tree, 0, rcx, lang, &mut nav_target);
-
-                        if !raw_totals.is_empty() {
-                            ui.add_space(8.0);
-                            ui.label(
-                                RichText::new(t(lang, UiKey::RawMaterialsTitle))
-                                    .size(12.0)
-                                    .strong()
-                                    .color(palette.accent_gold),
-                            );
-                            ui.horizontal_wrapped(|ui| {
-                                for (mat_id, total_qty) in raw_totals {
-                                    let lbl = format!(
-                                        "{}: {}",
-                                        recipes.item_name(&mat_id, lang),
-                                        format_stack_breakdown(total_qty, 64, lang)
-                                    );
-                                    if filter_chip(
-                                        ui,
-                                        palette,
-                                        atlas,
-                                        Some(&mat_id),
-                                        &lbl,
-                                        false,
-                                    )
-                                    .clicked()
-                                    {
-                                        nav_target = Some(mat_id);
-                                    }
-                                }
-                            });
-                        }
-
-                        if let Some(id) = nav_target {
-                            state.open_recipe_item(&id, RecipeViewMode::RecipesFor);
-                            audio.play(SoundCue::Click);
-                        }
+                        render_craft_tree_section(ui, state, rcx, active_ver, toasts, &target_id);
                     }
 
                     let brewing_filter_active =
@@ -697,6 +440,7 @@ fn render_jei_inspector(
                         render_alchemy_guide(
                             ui,
                             rcx,
+                            active_ver,
                             lang,
                             &state.search_query.trim().to_lowercase(),
                             &mut guide_nav,
@@ -714,12 +458,14 @@ fn render_station_gui(
     ui: &mut egui::Ui,
     entry: &RecipeEntry,
     rcx: &RenderContext<'_>,
+    active_ver: &str,
     tag_step: usize,
     lang: Language,
     pending_nav: &mut Option<(String, RecipeViewMode)>,
 ) {
     let RenderContext {
         recipes,
+        versions,
         palette,
         atlas,
         ..
@@ -761,6 +507,7 @@ fn render_station_gui(
                                     token,
                                     count: 1,
                                     tag_step,
+                                    active_ver,
                                 },
                                 rcx,
                                 lang,
@@ -793,6 +540,7 @@ fn render_station_gui(
                                     token: &entry.result_id,
                                     count: entry.result_count,
                                     tag_step,
+                                    active_ver,
                                 },
                                 rcx,
                                 lang,
@@ -818,6 +566,7 @@ fn render_station_gui(
                                     token: tok,
                                     count: 1,
                                     tag_step,
+                                    active_ver,
                                 },
                                 rcx,
                                 lang,
@@ -833,6 +582,7 @@ fn render_station_gui(
                                     token: "coal",
                                     count: 1,
                                     tag_step,
+                                    active_ver,
                                 },
                                 rcx,
                                 lang,
@@ -866,6 +616,7 @@ fn render_station_gui(
                                 token: &entry.result_id,
                                 count: entry.result_count,
                                 tag_step,
+                                active_ver,
                             },
                             rcx,
                             lang,
@@ -875,15 +626,13 @@ fn render_station_gui(
                 }
 
                 CraftingStation::Smithing => {
+                    let legacy_2slot = entry.slots.first().is_some_and(|s| s.is_empty());
                     ui.horizontal_wrapped(|ui| {
-                        for (i, fallback) in [
-                            (0, ""),
-                            (1, ""),
-                            (2, ""),
-                        ] {
+                        let start_idx = if legacy_2slot { 1 } else { 0 };
+                        for i in start_idx..3 {
                             let (sr, _) =
                                 ui.allocate_exact_size(Vec2::splat(slot_sz), egui::Sense::hover());
-                            let tok = entry.slots.get(i).map(|s| s.as_str()).unwrap_or(fallback);
+                            let tok = entry.slots.get(i).map(|s| s.as_str()).unwrap_or("");
                             handle_recipe_slot(
                                 ui,
                                 sr,
@@ -891,6 +640,7 @@ fn render_station_gui(
                                     token: tok,
                                     count: 1,
                                     tag_step,
+                                    active_ver,
                                 },
                                 rcx,
                                 lang,
@@ -913,12 +663,21 @@ fn render_station_gui(
                                 token: &entry.result_id,
                                 count: entry.result_count,
                                 tag_step,
+                                active_ver,
                             },
                             rcx,
                             lang,
                             pending_nav,
                         );
                     });
+                    if legacy_2slot {
+                        ui.add_space(4.0);
+                        let hint = match lang {
+                            Language::EnUs => "Legacy Smithing Table (no Upgrade Template required in <=1.19.4)",
+                            _ => "Mesa de Herrería clásica (sin Plantilla de Mejora en <=1.19.4)",
+                        };
+                        ui.label(RichText::new(hint).size(10.5).color(palette.accent_xp));
+                    }
                 }
 
                 CraftingStation::Stonecutting => {
@@ -936,6 +695,7 @@ fn render_station_gui(
                                     token: tok,
                                     count: 1,
                                     tag_step,
+                                    active_ver,
                                 },
                                 rcx,
                                 lang,
@@ -960,6 +720,7 @@ fn render_station_gui(
                                 token: &entry.result_id,
                                 count: entry.result_count,
                                 tag_step,
+                                active_ver,
                             },
                             rcx,
                             lang,
@@ -981,6 +742,7 @@ fn render_station_gui(
                                     token: "blaze_powder",
                                     count: 1,
                                     tag_step,
+                                    active_ver,
                                 },
                                 rcx,
                                 lang,
@@ -1010,13 +772,16 @@ fn render_station_gui(
                                         token: ing_tok,
                                         count: 1,
                                         tag_step,
+                                        active_ver,
                                     },
                                     rcx,
                                     lang,
                                     pending_nav,
                                 );
                                 ui.label(
-                                    RichText::new(recipes.item_name(ing_tok, lang))
+                                    RichText::new(
+                                        recipes.item_name_in(ing_tok, versions, active_ver, lang),
+                                    )
                                         .size(11.5)
                                         .strong()
                                         .color(palette.accent_primary),
@@ -1045,6 +810,7 @@ fn render_station_gui(
                                         token: base_tok,
                                         count: 1,
                                         tag_step,
+                                        active_ver,
                                     },
                                     rcx,
                                     lang,
@@ -1070,6 +836,7 @@ fn render_station_gui(
                                         token: &entry.result_id,
                                         count: entry.result_count,
                                         tag_step,
+                                        active_ver,
                                     },
                                     rcx,
                                     lang,
@@ -1087,6 +854,7 @@ struct RecipeSlotSpec<'a> {
     token: &'a str,
     count: u32,
     tag_step: usize,
+    active_ver: &'a str,
 }
 
 fn handle_recipe_slot(
@@ -1101,9 +869,11 @@ fn handle_recipe_slot(
         token,
         count,
         tag_step,
+        active_ver,
     } = spec;
     let RenderContext {
         recipes,
+        versions,
         palette,
         atlas,
         ..
@@ -1111,7 +881,7 @@ fn handle_recipe_slot(
     let resolved = if token.is_empty() {
         String::new()
     } else {
-        recipes.resolve_slot_icon(token, tag_step)
+        recipes.resolve_slot_icon_in(token, tag_step, versions, active_ver)
     };
     let resp = ui.interact(rect, ui.make_persistent_id(rect.min.x as i32 ^ ((rect.min.y as i32) << 12)), egui::Sense::click());
     let hovered = resp.hovered() && !resolved.is_empty();
@@ -1136,7 +906,7 @@ fn handle_recipe_slot(
         }
         if hovered {
             if let Some(pointer) = ui.ctx().pointer_latest_pos() {
-                let title = recipes.item_name(&resolved, lang);
+                let title = recipes.item_name_in(&resolved, versions, active_ver, lang);
                 let mut lines: Vec<(&str, Color32)> = Vec::new();
                 if token.starts_with('#') {
                     lines.push((t(lang, UiKey::AnyTagCycleHint), palette.accent_gold));
@@ -1149,56 +919,8 @@ fn handle_recipe_slot(
     }
 }
 
-fn render_tree_node(
-    ui: &mut egui::Ui,
-    node: &CraftTreeNode,
-    depth: usize,
-    rcx: &RenderContext<'_>,
-    lang: Language,
-    nav_target: &mut Option<String>,
-) {
-    let RenderContext {
-        recipes,
-        palette,
-        atlas,
-        ..
-    } = *rcx;
-    let indent = (depth as f32) * 16.0;
-    ui.horizontal(|ui| {
-        ui.add_space(indent);
-        ui.add(atlas.ui_image(&node.item_id, 18.0));
-        let lbl = if node.children.is_empty() {
-            format!("{}x {}", node.total_needed, recipes.item_name(&node.item_id, lang))
-        } else {
-            format!(
-                "{}x {} ({}x batch)",
-                node.total_needed,
-                recipes.item_name(&node.item_id, lang),
-                node.batches
-            )
-        };
-        if ui
-            .add(
-                egui::Button::new(
-                    RichText::new(lbl).size(12.0).color(if node.children.is_empty() {
-                        palette.text_primary
-                    } else {
-                        palette.accent_primary
-                    }),
-                )
-                .frame(false),
-            )
-            .clicked()
-        {
-            *nav_target = Some(node.item_id.clone());
-        }
-    });
-    for child in &node.children {
-        render_tree_node(ui, child, depth + 1, rcx, lang, nav_target);
-    }
-}
 
-fn render_jei_catalog_grid(
+pub(super) fn render_jei_catalog_grid(
     ui: &mut egui::Ui,
     state: &mut AppState,
     rcx: &RenderContext<'_>,
@@ -1209,6 +931,7 @@ fn render_jei_catalog_grid(
 ) {
     let RenderContext {
         recipes,
+        versions,
         palette,
         atlas,
         audio,
@@ -1314,7 +1037,7 @@ fn render_jei_catalog_grid(
                         let selected = state.selected_recipe_item == item_id;
                         let hovered = sresp.hovered();
                         let count = recipes
-                            .primary_recipe_for(item_id)
+                            .primary_recipe_for_in(item_id, versions, active_ver)
                             .map(|i| recipes.recipes[i].result_count)
                             .unwrap_or(1);
 
@@ -1341,9 +1064,15 @@ fn render_jei_catalog_grid(
                         if hovered {
                             hovered_item = Some(item_id.to_string());
                             if let Some(ptr) = ui.ctx().pointer_latest_pos() {
-                                let name = recipes.item_name(item_id, lang);
-                                let uses_n = recipes.uses_for(item_id).len();
-                                let rec_n = recipes.recipes_for(item_id).len();
+                                let name = recipes.item_name_in(item_id, versions, active_ver, lang);
+                                let uses_n = recipes.uses_for_in(item_id, versions, active_ver).len();
+                                let rec_n = recipes
+                                    .recipes_for(item_id)
+                                    .iter()
+                                    .filter(|&&idx| {
+                                        recipes.is_recipe_active(idx, versions, active_ver)
+                                    })
+                                    .count();
                                 let sub = format!("{} recipe(s) | {} use(s)", rec_n, uses_n);
                                 show_mc_tooltip_at(
                                     ui.ctx(),
@@ -1379,7 +1108,7 @@ fn render_jei_catalog_grid(
                     .id_salt("brewing_guide_catalog_scroll")
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
-                        render_alchemy_guide(ui, rcx, lang, &q_lower, &mut guide_nav);
+                        render_alchemy_guide(ui, rcx, active_ver, lang, &q_lower, &mut guide_nav);
                     });
                 if let Some(id) = guide_nav {
                     state.open_recipe_item(&id, RecipeViewMode::RecipesFor);
@@ -1412,412 +1141,3 @@ fn render_jei_catalog_grid(
         });
 }
 
-fn alchemy_slot_button(
-    ui: &mut egui::Ui,
-    item_id: &str,
-    size: f32,
-    rcx: &RenderContext<'_>,
-    lang: Language,
-    pending_nav: &mut Option<String>,
-) {
-    let RenderContext {
-        recipes,
-        palette,
-        atlas,
-        ..
-    } = *rcx;
-    let (r, resp) = ui.allocate_exact_size(Vec2::splat(size), egui::Sense::click());
-    paint_mc_slot(
-        ui.painter(),
-        r,
-        palette,
-        atlas,
-        Some(item_id),
-        SlotStyle::hovered(resp.hovered()),
-    );
-    let tip = format!(
-        "{}\n{}",
-        recipes.item_name(item_id, lang),
-        t(lang, UiKey::LeftClickRecipeHint)
-    );
-    if resp.on_hover_text(tip).clicked() {
-        *pending_nav = Some(item_id.to_string());
-    }
-}
-
-fn render_alchemy_guide(
-    ui: &mut egui::Ui,
-    rcx: &RenderContext<'_>,
-    lang: Language,
-    q_lower: &str,
-    pending_nav: &mut Option<String>,
-) {
-    let RenderContext {
-        recipes, palette, ..
-    } = *rcx;
-    let pick_lang = |mx: &'static str, es: &'static str, en: &'static str| -> &'static str {
-        match lang {
-            Language::EsMx => mx,
-            Language::EsEs => es,
-            Language::EnUs => en,
-        }
-    };
-
-    egui::Frame::new()
-        .fill(palette.bg_card)
-        .stroke(Stroke::new(1.5_f32, palette.accent_enchant))
-        .corner_radius(CornerRadius::same(6))
-        .inner_margin(Margin::same(10))
-        .show(ui, |ui| {
-            ui.set_width(ui.available_width());
-            ui.horizontal_wrapped(|ui| {
-                alchemy_slot_button(ui, "brewing_stand", 28.0, rcx, lang, pending_nav);
-                ui.vertical(|ui| {
-                    ui.label(
-                        RichText::new(t(lang, UiKey::AlchemyGuideTitle))
-                            .size(14.0)
-                            .strong()
-                            .color(palette.accent_enchant),
-                    );
-                    ui.add(
-                        egui::Label::new(
-                            RichText::new(t(lang, UiKey::AlchemyGuideSubtitle))
-                                .size(11.0)
-                                .color(palette.text_muted),
-                        )
-                        .wrap(),
-                    );
-                });
-            });
-
-            ui.add_space(8.0);
-
-            // Step 1: Awkward Base + Blaze Fuel
-            egui::Frame::new()
-                .fill(palette.bg_panel)
-                .stroke(Stroke::new(1.0_f32, palette.border_subtle))
-                .corner_radius(CornerRadius::same(5))
-                .inner_margin(Margin::same(8))
-                .show(ui, |ui| {
-                    ui.set_width(ui.available_width());
-                    ui.label(
-                        RichText::new(t(lang, UiKey::AlchemyStep1Title))
-                            .size(12.0)
-                            .strong()
-                            .color(palette.accent_gold),
-                    );
-                    ui.add_space(4.0);
-                    ui.horizontal_wrapped(|ui| {
-                        alchemy_slot_button(ui, "glass_bottle", 28.0, rcx, lang, pending_nav);
-                        ui.label(RichText::new("+").strong().color(palette.text_muted));
-                        alchemy_slot_button(ui, "nether_wart", 28.0, rcx, lang, pending_nav);
-                        ui.label(RichText::new("===>").monospace().strong().color(palette.accent_gold));
-                        alchemy_slot_button(ui, "potion", 28.0, rcx, lang, pending_nav);
-                        ui.add_space(8.0);
-                        alchemy_slot_button(ui, "blaze_powder", 26.0, rcx, lang, pending_nav);
-                        ui.label(
-                            RichText::new(t(lang, UiKey::BrewingFuelHint))
-                                .size(11.0)
-                                .color(palette.accent_primary),
-                        );
-                    });
-                    ui.add_space(3.0);
-                    ui.add(
-                        egui::Label::new(
-                            RichText::new(t(lang, UiKey::AlchemyStep1Desc))
-                                .size(11.0)
-                                .color(palette.text_primary),
-                        )
-                        .wrap(),
-                    );
-                });
-
-            ui.add_space(8.0);
-
-            // Step 2: 5 Potion Modifiers (Time, Power II, Splash, Lingering, Invert)
-            ui.label(
-                RichText::new(t(lang, UiKey::AlchemyModifiersTitle))
-                    .size(12.5)
-                    .strong()
-                    .color(palette.accent_gold),
-            );
-            ui.add_space(4.0);
-
-            let modifiers = [
-                (
-                    "redstone",
-                    palette.accent_danger,
-                    "+ Tiempo / Duración Larga",
-                    "+ Duración (Poción Larga)",
-                    "+ Duration (Extended)",
-                    "Duplica/extiende la duración (3:00 -> 8:00, 0:45 -> 1:30). Incompatible con Glowstone (Nivel II) y con pociones Trials 26.3.",
-                    "Aumenta la duración (3:00 -> 8:00, 0:45 -> 1:30). Incompatible con Piedra Luminosa y con pociones de Pruebas 26.3.",
-                    "Extends duration (3:00 -> 8:00, 0:45 -> 1:30). Mutually exclusive with Glowstone II and 26.3 Trial potions.",
-                ),
-                (
-                    "glowstone_dust",
-                    palette.accent_gold,
-                    "+ Potencia (Nivel II)",
-                    "+ Potencia (Nivel II)",
-                    "+ Potency (Level II)",
-                    "Sube el efecto al Nivel II (Fuerza II, Curación II, Velocidad II) y reduce duración a la mitad (3:00 -> 1:30). Incompatible con Redstone.",
-                    "Mejora la potencia al Nivel II reduciendo duración a la mitad (3:00 -> 1:30). Incompatible con Redstone.",
-                    "Amplifies potency to Level II (halves duration: 3:00 -> 1:30). Mutually exclusive with Redstone.",
-                ),
-                (
-                    "gunpowder",
-                    palette.accent_primary,
-                    "Hacerla Lanzadora / Arrojadiza",
-                    "Hacerla Arrojadiza (Lanzadora)",
-                    "Make Splash (Throwable)",
-                    "Transforma cualquier poción en Arrojadiza (Splash Potion) para lanzar a mano o desde dispensadores.",
-                    "Convierte una poción bebible en Arrojadiza (Splash Potion) para lanzar o usar con dispensadores.",
-                    "Turns any drinkable potion into a throwable Splash Potion for combat or dispenser farms.",
-                ),
-                (
-                    "dragon_breath",
-                    palette.accent_enchant,
-                    "Hacerla Persistente + Flechas",
-                    "Hacerla Persistente + Flechas",
-                    "Make Lingering + Tipped Arrows",
-                    "Aplícalo a una Lanzadora -> nube persistente en el suelo. Rodea 1 Persistente con 8 Flechas en mesa -> 8 Flechas con Efecto.",
-                    "Aplícalo sobre una Arrojadiza -> nube persistente. Combina 1 Persistente + 8 Flechas en mesa -> 8 Flechas con Efecto.",
-                    "Apply on a Splash Potion -> lingering area cloud. Surround 1 Lingering with 8 Arrows in Crafting Table -> 8 Tipped Arrows.",
-                ),
-                (
-                    "fermented_spider_eye",
-                    palette.accent_xp,
-                    "Invertir / Corromper Efecto",
-                    "Invertir / Corromper Efecto",
-                    "Invert / Corrupt Effect",
-                    "Visión Nocturna -> Invisibilidad | Velocidad o Salto -> Lentitud | Curación o Veneno -> Daño Instantáneo | Agua -> Debilidad.",
-                    "Visión Nocturna -> Invisibilidad | Rapidez o Salto -> Lentitud | Curación o Veneno -> Daño | Agua -> Debilidad.",
-                    "Night Vision -> Invisibility | Speed or Leaping -> Slowness | Healing or Poison -> Harming | Water -> Weakness.",
-                ),
-            ];
-
-            let avail_w = ui.available_width();
-            let mod_cols = if avail_w >= 600.0 { 2 } else { 1 };
-            let mod_w = if mod_cols == 2 {
-                (avail_w - 8.0) * 0.5
-            } else {
-                avail_w
-            };
-            for row in modifiers.chunks(mod_cols) {
-                ui.horizontal_top(|ui| {
-                    ui.spacing_mut().item_spacing.x = 8.0;
-                    for &(icon, accent, t_mx, t_es, t_en, d_mx, d_es, d_en) in row {
-                        ui.allocate_ui_with_layout(
-                            Vec2::new(mod_w, 0.0),
-                            egui::Layout::top_down(egui::Align::Min),
-                            |ui| {
-                                egui::Frame::new()
-                                    .fill(palette.bg_panel)
-                                    .stroke(Stroke::new(1.0_f32, accent))
-                                    .corner_radius(CornerRadius::same(5))
-                                    .inner_margin(Margin::same(7))
-                                    .show(ui, |ui| {
-                                        ui.set_width(ui.available_width());
-                                        ui.horizontal(|ui| {
-                                            alchemy_slot_button(
-                                                ui,
-                                                icon,
-                                                28.0,
-                                                rcx,
-                                                lang,
-                                                pending_nav,
-                                            );
-                                            ui.vertical(|ui| {
-                                                ui.label(
-                                                    RichText::new(pick_lang(t_mx, t_es, t_en))
-                                                        .size(12.0)
-                                                        .strong()
-                                                        .color(accent),
-                                                );
-                                                ui.add(
-                                                    egui::Label::new(
-                                                        RichText::new(pick_lang(d_mx, d_es, d_en))
-                                                            .size(10.5)
-                                                            .color(palette.text_primary),
-                                                    )
-                                                    .wrap(),
-                                                );
-                                            });
-                                        });
-                                    });
-                            },
-                        );
-                    }
-                });
-                ui.add_space(5.0);
-            }
-
-            // Order Tip + Tipped Arrows Quick Visual
-            egui::Frame::new()
-                .fill(palette.slot_bg)
-                .stroke(Stroke::new(1.0_f32, palette.border_subtle))
-                .corner_radius(CornerRadius::same(4))
-                .inner_margin(Margin::symmetric(8, 6))
-                .show(ui, |ui| {
-                    ui.set_width(ui.available_width());
-                    ui.horizontal_wrapped(|ui| {
-                        alchemy_slot_button(
-                            ui,
-                            "lingering_potion",
-                            24.0,
-                            rcx,
-                            lang,
-                            pending_nav,
-                        );
-                        ui.label(RichText::new("+ 8x").size(11.0).color(palette.text_muted));
-                        alchemy_slot_button(
-                            ui,
-                            "arrow",
-                            24.0,
-                            rcx,
-                            lang,
-                            pending_nav,
-                        );
-                        ui.label(RichText::new("=> 8x").monospace().strong().color(palette.accent_gold));
-                        alchemy_slot_button(
-                            ui,
-                            "tipped_arrow",
-                            24.0,
-                            rcx,
-                            lang,
-                            pending_nav,
-                        );
-                    });
-                    ui.add_space(3.0);
-                    ui.add(
-                        egui::Label::new(
-                            RichText::new(t(lang, UiKey::AlchemyOrderTip))
-                                .size(11.0)
-                                .color(palette.accent_primary),
-                        )
-                        .wrap(),
-                    );
-                });
-
-            ui.add_space(8.0);
-
-            // Step 3: Complete Base Potions Table (19 rows covering all Java 26.3 potions)
-            ui.label(
-                RichText::new(t(lang, UiKey::AlchemyBaseRecipesTitle))
-                    .size(12.5)
-                    .strong()
-                    .color(palette.accent_gold),
-            );
-            ui.add_space(4.0);
-
-            let potion_rows = [
-                ("blaze_powder", "Fuerza (+3 / +6 daño)", "Fuerza (+3 / +6 daño)", "Strength (+3 / +6 dmg)", "3:00", "8:00", "II (1:30)"),
-                ("golden_carrot", "Visión Nocturna", "Visión Nocturna", "Night Vision", "3:00", "8:00", "—"),
-                ("fermented_spider_eye", "Invisibilidad (en Visión Noct.)", "Invisibilidad (en Visión Noct.)", "Invisibility (on Night Vis.)", "3:00", "8:00", "—"),
-                ("glistering_melon_slice", "Curación (+4 / +8 HP)", "Curación (+4 / +8 HP)", "Healing (+4 / +8 HP)", "Instant.", "—", "II (Instant.)"),
-                ("ghast_tear", "Regeneración", "Regeneración", "Regeneration", "0:45", "1:30", "II (0:22)"),
-                ("magma_cream", "Resistencia al Fuego", "Resistencia al Fuego", "Fire Resistance", "3:00", "8:00", "—"),
-                ("sugar", "Velocidad (+20% / +40%)", "Rapidez (+20% / +40%)", "Swiftness (+20% / +40%)", "3:00", "8:00", "II (1:30)"),
-                ("rabbit_foot", "Salto", "Salto", "Jump Boost (Leaping)", "3:00", "8:00", "II (1:30)"),
-                ("pufferfish", "Respiración Acuática", "Respiración Acuática", "Water Breathing", "3:00", "8:00", "—"),
-                ("phantom_membrane", "Caída Lenta (0 daño caída)", "Caída Lenta (0 daño caída)", "Slow Falling (0 fall dmg)", "1:30", "4:00", "—"),
-                ("turtle_helmet", "Maestro Tortuga (Res. III-IV)", "Maestro Tortuga (Res. III-IV)", "Turtle Master (Res. III-IV)", "0:20", "0:40", "IV (0:20)"),
-                ("spider_eye", "Veneno", "Veneno", "Poison", "0:45", "1:30", "II (0:21)"),
-                ("fermented_spider_eye", "Lentitud (en Veloc./Salto)", "Lentitud (en Rapidez/Salto)", "Slowness (on Speed/Leap)", "1:30", "4:00", "IV (0:20)"),
-                ("fermented_spider_eye", "Daño Inst. (en Curación/Ven.)", "Daño Inst. (en Curac./Ven.)", "Harming (on Heal/Poison)", "Instant.", "—", "II (Instant.)"),
-                ("fermented_spider_eye", "Debilidad (directo en Agua)", "Debilidad (directo en Agua)", "Weakness (direct on Water)", "1:30", "4:00", "—"),
-                ("breeze_rod", "Carga de Viento (26.3)", "Carga de Viento (26.3)", "Wind Charged (26.3)", "3:00", "—", "—"),
-                ("cobweb", "Tejido / Telarañas (26.3)", "Tejido / Telarañas (26.3)", "Weaving (26.3)", "3:00", "—", "—"),
-                ("slime_block", "Viscosidad / Slimes (26.3)", "Viscosidad / Limos (26.3)", "Oozing (26.3)", "3:00", "—", "—"),
-                ("stone", "Infestación / Silverfish (26.3)", "Infestación / Lepismas (26.3)", "Infested (26.3)", "3:00", "—", "—"),
-            ];
-
-            let any_row_matches = !q_lower.is_empty()
-                && potion_rows.iter().any(|&(ing, e_mx, e_es, e_en, ..)| {
-                    ing.contains(q_lower)
-                        || e_mx.to_lowercase().contains(q_lower)
-                        || e_es.to_lowercase().contains(q_lower)
-                        || e_en.to_lowercase().contains(q_lower)
-                        || recipes.item_name(ing, lang).to_lowercase().contains(q_lower)
-                });
-
-            let row_cols = if avail_w >= 620.0 { 2 } else { 1 };
-            let card_w = if row_cols == 2 {
-                (avail_w - 8.0) * 0.5
-            } else {
-                avail_w
-            };
-
-            let visible_rows: Vec<_> = potion_rows
-                .iter()
-                .copied()
-                .filter(|&(ing, e_mx, e_es, e_en, ..)| {
-                    if !any_row_matches {
-                        return true;
-                    }
-                    ing.contains(q_lower)
-                        || e_mx.to_lowercase().contains(q_lower)
-                        || e_es.to_lowercase().contains(q_lower)
-                        || e_en.to_lowercase().contains(q_lower)
-                        || recipes.item_name(ing, lang).to_lowercase().contains(q_lower)
-                })
-                .collect();
-
-            for chunk in visible_rows.chunks(row_cols) {
-                ui.horizontal_top(|ui| {
-                    ui.spacing_mut().item_spacing.x = 8.0;
-                    for &(ing, e_mx, e_es, e_en, d_base, d_red, d_glow) in chunk {
-                        ui.allocate_ui_with_layout(
-                            Vec2::new(card_w, 0.0),
-                            egui::Layout::top_down(egui::Align::Min),
-                            |ui| {
-                                egui::Frame::new()
-                                    .fill(palette.bg_panel)
-                                    .stroke(Stroke::new(1.0_f32, palette.border_subtle))
-                                    .corner_radius(CornerRadius::same(4))
-                                    .inner_margin(Margin::symmetric(7, 5))
-                                    .show(ui, |ui| {
-                                        ui.set_width(ui.available_width());
-                                        ui.horizontal(|ui| {
-                                            alchemy_slot_button(
-                                                ui,
-                                                ing,
-                                                26.0,
-                                                rcx,
-                                                lang,
-                                                pending_nav,
-                                            );
-                                            ui.vertical(|ui| {
-                                                ui.add(
-                                                    egui::Label::new(
-                                                        RichText::new(pick_lang(e_mx, e_es, e_en))
-                                                            .size(11.5)
-                                                            .strong()
-                                                            .color(palette.text_primary),
-                                                    )
-                                                    .wrap(),
-                                                );
-                                                ui.label(
-                                                    RichText::new(format!(
-                                                        "{}: {} | {}: {} | {}: {}",
-                                                        t(lang, UiKey::AlchemyColBase),
-                                                        d_base,
-                                                        t(lang, UiKey::AlchemyColExtended),
-                                                        d_red,
-                                                        t(lang, UiKey::AlchemyColStrong),
-                                                        d_glow
-                                                    ))
-                                                    .size(10.0)
-                                                    .color(palette.text_muted),
-                                                );
-                                            });
-                                        });
-                                    });
-                            },
-                        );
-                    }
-                });
-                ui.add_space(4.0);
-            }
-        });
-}
