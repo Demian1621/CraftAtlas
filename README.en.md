@@ -6,8 +6,16 @@
 
 [![CI](https://github.com/Demian1621/CraftAtlas/actions/workflows/ci.yml/badge.svg)](https://github.com/Demian1621/CraftAtlas/actions/workflows/ci.yml)
 [![Release](https://github.com/Demian1621/CraftAtlas/actions/workflows/release.yml/badge.svg)](https://github.com/Demian1621/CraftAtlas/actions/workflows/release.yml)
+[![Version](https://img.shields.io/badge/release-v1.2.0-22c55e?style=flat-square)](https://github.com/Demian1621/CraftAtlas/releases/tag/v1.2.0)
+[![Stack](https://img.shields.io/badge/Rust%20%2B%20C-eframe%20%7C%20cubiomes-f97316?style=flat-square)](#-building-from-source)
+[![Platforms](https://img.shields.io/badge/OS-Windows%20%7C%20macOS%20%7C%20Linux-3b82f6?style=flat-square)](#-download--install-windows--macos--linux)
+[![License](https://img.shields.io/badge/license-MIT-a855f7?style=flat-square)](Cargo.toml)
 
 [English](#-built-for-players-tired-of-14-browser-tabs) · [Versión en Español](README.md) · [Security](SECURITY.md) · [Releases](https://github.com/Demian1621/CraftAtlas/releases) · [Feedback](https://github.com/Demian1621/CraftAtlas/issues/new/choose) · [Support on Ko-fi](https://ko-fi.com/titusdb)
+
+<br/>
+
+<img src="docs/media/craftatlas-demo.gif" alt="CraftAtlas v1.2.0 Live Demo" width="860"/>
 
 </div>
 
@@ -18,6 +26,47 @@
 If you play technical survival or min-max a long-term Java world, you know the drill: one browser tab open for Chunkbase to find a Woodland Mansion, another tab for the wiki's anvil order so your boots don't lock behind *"Too Expensive!"*, another calculator for 8:1 Nether portal coordinates, JEI open in-game just to check a recipe chain, and scattered notes for farm block counts.
 
 **CraftAtlas** *(originally released as Minecraft Companion in `v1.0.0`–`v1.0.2`)* puts all of that into a **single native desktop binary** written in **Rust (`eframe`/`egui`)** powered by the native **C `cubiomes` engine**. No Electron bloat, no ads, instant launch, and automatic detection of your local `.minecraft/saves` worlds.
+
+---
+
+## 📸 Visual Gallery (`v1.2.0`)
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/media/seed-map.png" alt="Native Cubiomes Seed Map" width="100%"/><br/>
+      <sub><b>Native Seed Map (`cubiomes` C)</b> — Biomes, rare structures, waypoints &amp; radial finder (`1.18.2` – `26.3`)</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/media/god-armor.png" alt="Illegal God Armor and Glitches View" width="100%"/><br/>
+      <sub><b>God Armor (Illegal / Glitches)</b> — All-4-Protections (20 EPF / 80%), `1.14.2` guide, `/give` &amp; Datapacks</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/media/anvil-gear.png" alt="God Gear and Living Anvil Optimizer" width="100%"/><br/>
+      <sub><b>God Gear + Living Anvil Optimizer</b> — Optimal binary merge tree (&lt; 39 cap) &amp; Shopping List</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/media/recipes-jei.png" alt="JEI Recipes and EMI Craft Tree" width="100%"/><br/>
+      <sub><b>JEI / EMI Recipes + Alchemy</b> — Version-filtered `2,034` recipes &amp; recursive resource tree</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="docs/media/farms-dupes.png" alt="Technical Farms, Litematic Reader and Shopping List" width="75%"/><br/>
+      <sub><b>Technical Farms, `.litematic` Parser &amp; Shopping List</b> — Shulkers (`x1,728`), checklists &amp; creators</sub>
+    </td>
+  </tr>
+</table>
+
+<div align="center">
+
+#### 🎬 4 Embedded Animated Video Themes (`.cavf`) + `.mp4` / `.webm` / `.gif` Importer
+<img src="docs/media/video-themes.gif" alt="CraftAtlas Animated Video Themes (.cavf)" width="720"/><br/>
+<sub><i>Deep Dark · Trial Chambers · Pale Garden · Ocean Monument — native Rust streaming (`0%` idle CPU)</i></sub>
+
+</div>
 
 ---
 

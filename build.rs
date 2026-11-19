@@ -1,7 +1,11 @@
 use std::env;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+#[cfg(target_os = "windows")]
+use std::path::PathBuf;
+#[cfg(target_os = "windows")]
 use std::process::Command;
 
+#[cfg(target_os = "windows")]
 fn find_windres() -> Option<PathBuf> {
     if let Ok(path_var) = env::var("PATH") {
         for dir in env::split_paths(&path_var) {

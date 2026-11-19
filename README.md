@@ -6,8 +6,16 @@
 
 [![CI](https://github.com/Demian1621/CraftAtlas/actions/workflows/ci.yml/badge.svg)](https://github.com/Demian1621/CraftAtlas/actions/workflows/ci.yml)
 [![Release](https://github.com/Demian1621/CraftAtlas/actions/workflows/release.yml/badge.svg)](https://github.com/Demian1621/CraftAtlas/actions/workflows/release.yml)
+[![Version](https://img.shields.io/badge/release-v1.2.0-22c55e?style=flat-square)](https://github.com/Demian1621/CraftAtlas/releases/tag/v1.2.0)
+[![Stack](https://img.shields.io/badge/Rust%20%2B%20C-eframe%20%7C%20cubiomes-f97316?style=flat-square)](#-compilar-desde-el-c%C3%B3digo-fuente)
+[![Platforms](https://img.shields.io/badge/OS-Windows%20%7C%20macOS%20%7C%20Linux-3b82f6?style=flat-square)](#-descarga-e-instalaci%C3%B3n-windows--macos--linux)
+[![License](https://img.shields.io/badge/license-MIT-a855f7?style=flat-square)](Cargo.toml)
 
 [Español](#-por-qué-existe-craftatlas) · [English Version](README.en.md) · [Seguridad](SECURITY.md) · [Releases](https://github.com/Demian1621/CraftAtlas/releases) · [Feedback](https://github.com/Demian1621/CraftAtlas/issues/new/choose) · [Apoyar en Ko-fi](https://ko-fi.com/titusdb)
+
+<br/>
+
+<img src="docs/media/craftatlas-demo.gif" alt="CraftAtlas v1.2.0 Demo en vivo" width="860"/>
 
 </div>
 
@@ -18,6 +26,47 @@
 Cualquiera que juegue Minecraft técnico o survival avanzado conoce la rutina de tener **14 pestañas abiertas en el navegador** mientras juega: Chunkbase para buscar una Mansión o un Stronghold, la wiki para recordar el orden de encantamientos sin que el yunque te tire *"Demasiado caro"*, JEI o una tabla de alquimia en otra ventana, calculadora de portales 8:1 del Nether en otra, y un bloc de notas con los materiales de la próxima granja.
 
 **CraftAtlas** *(antes llamado Minecraft Companion en `v1.0.0`–`v1.0.2`)* junta todo eso en **una sola app nativa, ligera y sin navegador de por medio**, compilada directamente en **Rust (`eframe`/`egui`)** junto al motor nativo **C (`cubiomes`)**. Abre instantáneamente, no consume RAM como Electron, detecta tus mundos locales de `.minecraft/saves` y te acompaña sin anuncios ni pantallas de carga eternas.
+
+---
+
+## 📸 Galería Visual (`v1.2.0`)
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/media/seed-map.png" alt="Mapa de Semilla Nativo Cubiomes" width="100%"/><br/>
+      <sub><b>Mapa de Semilla (`cubiomes` C)</b> — Biomas, estructuras, marcadores y búsqueda radial (`1.18.2` – `26.3`)</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/media/god-armor.png" alt="Vista God Armor Ilegal y Glitches" width="100%"/><br/>
+      <sub><b>God Armor (Ilegal / Glitches)</b> — 4 Protecciones IV (EPF 20 / 80%), guía `1.14.2`, `/give` y Datapacks</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/media/anvil-gear.png" alt="Equipamiento God y Yunque Binario Vivo" width="100%"/><br/>
+      <sub><b>Equipamiento God + Yunque Vivo</b> — Orden binario óptimo (&lt; 39 niveles) y Lista de Compras</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/media/recipes-jei.png" alt="Crafteos JEI y Árbol EMI" width="100%"/><br/>
+      <sub><b>Crafteos JEI / EMI + Alquimia</b> — `2,034` recetas filtradas por versión y árbol recursivo</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="docs/media/farms-dupes.png" alt="Granjas Técnicas, Litematic y Compras" width="75%"/><br/>
+      <sub><b>Granjas Técnicas, Lector `.litematic` y Compras</b> — Shulkers (`x1,728`), checklists y creadores</sub>
+    </td>
+  </tr>
+</table>
+
+<div align="center">
+
+#### 🎬 4 Temas de Video Animados Integrados (`.cavf`) + Importador `.mp4` / `.webm` / `.gif`
+<img src="docs/media/video-themes.gif" alt="CraftAtlas Temas de Video Animados (.cavf)" width="720"/><br/>
+<sub><i>Deep Dark · Trial Chambers · Pale Garden · Ocean Monument — streaming nativo en Rust (`0%` CPU en segundo plano)</i></sub>
+
+</div>
 
 ---
 
