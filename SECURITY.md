@@ -10,7 +10,7 @@
   - En Windows, las consultas y descargas de Releases invocan exclusivamente `%SystemRoot%\System32\curl.exe` para evitar secuestro de binario desde `PATH` o carpeta de descargas.
   - **Auto-updater *fail-closed* con SHA-256 nativo (FIPS 180-4)**: el actualizador in-app verifica cabeceras mágicas del ejecutable (`MZ` / `ELF`), compara el digest SHA-256 en tiempo constante contra el digest oficial de GitHub / `SHA256SUMS.txt` (tope 64 MiB) y descarta el archivo inmediatamente si falta el checksum o no coincide.
   - Lectura de `level.dat` (máx. 16 MiB comprimidos / 32 MiB descomprimidos) y de esquemáticos `.litematic` (máx. 32 MiB comprimidos / 64 MiB descomprimidos, máx. 64M bloques con aritmética `checked_mul`) acotada contra *decompression bombs* y *integer overflows*.
-  - **Temas de video personalizados (`.cavf` / `ffmpeg`)**: tope estricto de `250 MiB` en el archivo origen, máximo `12 s` (`854×480` a `12 FPS`, máximo `360` frames / `24 MiB` cacheados), validación estricta de extensión (`.mp4`, `.webm`, `.mov`, `.mkv`, `.gif`, `.cavf`), invocación directa sin *shell* resolviendo `ffmpeg` exclusivamente desde rutas absolutas del sistema (`PATH`, nunca desde la carpeta actual), escritura atómica en `%APPDATA%\craft-atlas\video_themes\custom.cavf` y decodificación segura *fail-closed* de cabeceras y offsets.
+  - **Fondo personalizado nativo (`.png` / `.jpg` / `.jpeg`, cero binarios externos)**: validación estricta de extensión y archivo regular (tope `16 MiB`), verificación previa de cabecera contra *decompression bombs* (mínimo `64×64`, máximo `64M` píxeles antes de decodificar), reescalado seguro a `≤ 1920×1080` y escritura atómica (`custom_backdrop.png.tmp` → `custom_backdrop.png`, permisos `0600` en Unix).
   - Guardado atómico de preferencias (`prefs.json.tmp` → `prefs.json`, permisos `0600` en Unix).
 - **Cadena de suministro (CI/CD)**:
   - Todos los workflows de GitHub Actions usan permisos mínimos (`contents: read`, elevando `contents: write`, `id-token: write` y `attestations: write` solo en el job de Release), Actions fijadas por commit SHA exacto, `cargo clippy --all-targets -- -D warnings` en los 3 sistemas operativos, verificación SHA-256 de `appimagetool 1.9.1` y atestaciones criptográficas **SLSA / Sigstore Build Provenance** (`actions/attest-build-provenance`).
@@ -23,11 +23,11 @@ Cada Release incluye `SHA256SUMS.txt` y atestaciones criptográficas de GitHub. 
 
 - **Windows (PowerShell)**:
   ```powershell
-  Get-FileHash .\craft-atlas-v1.2.0-windows-x86_64.exe -Algorithm SHA256
+  Get-FileHash .\craft-atlas-v1.2.1-windows-x86_64.exe -Algorithm SHA256
   ```
 - **macOS**:
   ```bash
-  shasum -a 256 craft-atlas-v1.2.0-macos-universal.dmg
+  shasum -a 256 craft-atlas-v1.2.1-macos-universal.dmg
   ```
 - **Linux**:
   ```bash
@@ -35,7 +35,7 @@ Cada Release incluye `SHA256SUMS.txt` y atestaciones criptográficas de GitHub. 
   ```
 - **Verificar procedencia oficial de GitHub Actions (`gh` CLI)**:
   ```bash
-  gh attestation verify craft-atlas-v1.2.0-windows-x86_64.exe --repo Demian1621/CraftAtlas
+  gh attestation verify craft-atlas-v1.2.1-windows-x86_64.exe --repo Demian1621/CraftAtlas
   ```
 
 ---

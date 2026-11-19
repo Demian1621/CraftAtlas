@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use crate::data::models::Language;
 use crate::data::seed_engine::Dimension;
 
-/// Switchable Minecraft visual themes backed by scenic wallpapers, 360° panoramas, or `.cavf` video loops.
+/// Switchable Minecraft visual themes backed by HD scenic scenes, 360° panoramas, or a custom wallpaper.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum ThemeId {
     #[default]
@@ -20,10 +20,27 @@ pub enum ThemeId {
     EndVoidAurora,
     CherryBlossom,
     StarryOverworld,
-    CustomVideo,
+    #[serde(alias = "CustomVideo")]
+    CustomImage,
 }
 
 impl ThemeId {
+    pub fn builtin() -> [ThemeId; 10] {
+        [
+            ThemeId::DeepDarkSculk,
+            ThemeId::TrialChambers,
+            ThemeId::PaleGarden,
+            ThemeId::OceanMonument,
+            ThemeId::DeepslateOre,
+            ThemeId::ClassicJavaStone,
+            ThemeId::NetherCrimsonEnd,
+            ThemeId::EndVoidAurora,
+            ThemeId::CherryBlossom,
+            ThemeId::StarryOverworld,
+        ]
+    }
+
+    #[cfg(test)]
     pub fn all() -> [ThemeId; 11] {
         [
             ThemeId::DeepDarkSculk,
@@ -36,32 +53,28 @@ impl ThemeId {
             ThemeId::EndVoidAurora,
             ThemeId::CherryBlossom,
             ThemeId::StarryOverworld,
-            ThemeId::CustomVideo,
+            ThemeId::CustomImage,
         ]
     }
 
-    pub fn is_video(self) -> bool {
+    pub fn is_panorama(self) -> bool {
         matches!(
             self,
-            ThemeId::DeepDarkSculk
-                | ThemeId::TrialChambers
-                | ThemeId::PaleGarden
-                | ThemeId::OceanMonument
-                | ThemeId::CustomVideo
+            ThemeId::ClassicJavaStone | ThemeId::NetherCrimsonEnd
         )
     }
 
     pub fn label(self, lang: Language) -> &'static str {
         match (self, lang) {
-            (ThemeId::DeepDarkSculk, Language::EnUs) => "Deep Dark [Video]",
-            (ThemeId::DeepDarkSculk, _) => "Ciudad Antigua [Video]",
-            (ThemeId::TrialChambers, Language::EnUs) => "Trial Chambers [Video]",
-            (ThemeId::TrialChambers, Language::EsEs) => "Cámaras de Juicio [Video]",
-            (ThemeId::TrialChambers, _) => "Trial Chambers [Video]",
-            (ThemeId::PaleGarden, Language::EnUs) => "Pale Garden [Video]",
-            (ThemeId::PaleGarden, _) => "Jardín Pálido [Video]",
-            (ThemeId::OceanMonument, Language::EnUs) => "Ocean Monument [Video]",
-            (ThemeId::OceanMonument, _) => "Monumento Oceánico [Video]",
+            (ThemeId::DeepDarkSculk, Language::EnUs) => "Deep Dark",
+            (ThemeId::DeepDarkSculk, _) => "Ciudad Antigua",
+            (ThemeId::TrialChambers, Language::EnUs) => "Trial Chambers",
+            (ThemeId::TrialChambers, Language::EsEs) => "Cámaras de Juicio",
+            (ThemeId::TrialChambers, _) => "Trial Chambers",
+            (ThemeId::PaleGarden, Language::EnUs) => "Pale Garden",
+            (ThemeId::PaleGarden, _) => "Jardín Pálido",
+            (ThemeId::OceanMonument, Language::EnUs) => "Ocean Monument",
+            (ThemeId::OceanMonument, _) => "Monumento Oceánico",
             (ThemeId::DeepslateOre, Language::EnUs) => "Deep Cave Glow",
             (ThemeId::DeepslateOre, _) => "Cueva Profunda",
             (ThemeId::ClassicJavaStone, Language::EnUs) => "Wilderness Panorama",
@@ -74,8 +87,35 @@ impl ThemeId {
             (ThemeId::CherryBlossom, _) => "Cerezo Atardecer",
             (ThemeId::StarryOverworld, Language::EnUs) => "Starry Ruin",
             (ThemeId::StarryOverworld, _) => "Noche Estrellada",
-            (ThemeId::CustomVideo, Language::EnUs) => "Custom Video [Video]",
-            (ThemeId::CustomVideo, _) => "Mi Video [Video]",
+            (ThemeId::CustomImage, Language::EnUs) => "Custom Wallpaper",
+            (ThemeId::CustomImage, _) => "Mi Fondo",
+        }
+    }
+
+    pub fn fx_badge(self, lang: Language) -> &'static str {
+        match (self, lang) {
+            (ThemeId::DeepDarkSculk, Language::EnUs) => "Sculk Sonic Pulse",
+            (ThemeId::DeepDarkSculk, _) => "Onda Sculk",
+            (ThemeId::TrialChambers, Language::EnUs) => "Sunbeams + Fire",
+            (ThemeId::TrialChambers, _) => "Rayos + Forja",
+            (ThemeId::PaleGarden, Language::EnUs) => "Mist + Creaking",
+            (ThemeId::PaleGarden, _) => "Niebla + Creaking",
+            (ThemeId::OceanMonument, Language::EnUs) => "Caustics + Bubbles",
+            (ThemeId::OceanMonument, _) => "Cáusticas + Burbujas",
+            (ThemeId::ClassicJavaStone, Language::EnUs) => "360 Panorama + Light",
+            (ThemeId::ClassicJavaStone, _) => "Panorama 360 + Luz",
+            (ThemeId::NetherCrimsonEnd, Language::EnUs) => "360 Panorama + Embers",
+            (ThemeId::NetherCrimsonEnd, _) => "Panorama 360 + Brasas",
+            (ThemeId::EndVoidAurora, Language::EnUs) => "Live Aurora",
+            (ThemeId::EndVoidAurora, _) => "Aurora Viva",
+            (ThemeId::CherryBlossom, Language::EnUs) => "Drifting Petals",
+            (ThemeId::CherryBlossom, _) => "Pétalos al Viento",
+            (ThemeId::StarryOverworld, Language::EnUs) => "Shooting Stars",
+            (ThemeId::StarryOverworld, _) => "Estrellas Fugaces",
+            (ThemeId::DeepslateOre, Language::EnUs) => "Ore Shimmer",
+            (ThemeId::DeepslateOre, _) => "Brillo Subterráneo",
+            (ThemeId::CustomImage, Language::EnUs) => "Custom Photo",
+            (ThemeId::CustomImage, _) => "Imagen Propia",
         }
     }
 }
@@ -171,10 +211,16 @@ pub struct UserPrefs {
     pub shopping_list: Vec<ShoppingListItem>,
     #[serde(default = "default_true")]
     pub shopping_shulker_mode: bool,
+    #[serde(default = "default_bg_intensity")]
+    pub bg_intensity: f32,
 }
 
 fn default_true() -> bool {
     true
+}
+
+fn default_bg_intensity() -> f32 {
+    0.62
 }
 
 impl Default for UserPrefs {
@@ -202,6 +248,7 @@ impl Default for UserPrefs {
             seed_history: Vec::new(),
             shopping_list: Vec::new(),
             shopping_shulker_mode: true,
+            bg_intensity: default_bg_intensity(),
         }
     }
 }
@@ -610,5 +657,12 @@ mod tests {
         assert_eq!(p.shopping_list.len(), 2);
         let hopper = p.shopping_list.iter().find(|i| i.item_id == "hopper").unwrap();
         assert_eq!(hopper.count, 96);
+
+        let v120_json = r#"{"theme":"CustomVideo","language":"EnUs"}"#;
+        let migrated: UserPrefs = serde_json::from_str(v120_json).expect("v1.2.0 CustomVideo alias");
+        assert_eq!(migrated.theme, ThemeId::CustomImage);
+        assert!((migrated.bg_intensity - 0.62).abs() < 0.001);
+        assert_eq!(ThemeId::builtin().len(), 10);
+        assert_eq!(ThemeId::all().len(), 11);
     }
 }

@@ -1,8 +1,8 @@
 1 ICON "app.ico"
 
 1 VERSIONINFO
-FILEVERSION 1,2,0,0
-PRODUCTVERSION 1,2,0,0
+FILEVERSION 1,2,1,0
+PRODUCTVERSION 1,2,1,0
 FILEFLAGSMASK 0x3fL
 FILEFLAGS 0x0L
 FILEOS 0x40004L
@@ -15,12 +15,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Demian1621"
             VALUE "FileDescription", "CraftAtlas"
-            VALUE "FileVersion", "1.2.0.0"
+            VALUE "FileVersion", "1.2.1.0"
             VALUE "InternalName", "craft-atlas"
             VALUE "LegalCopyright", "MIT License"
             VALUE "OriginalFilename", "craft-atlas.exe"
             VALUE "ProductName", "CraftAtlas"
-            VALUE "ProductVersion", "1.2.0.0"
+            VALUE "ProductVersion", "1.2.1.0"
         END
     END
     BLOCK "VarFileInfo"

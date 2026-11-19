@@ -7,7 +7,7 @@ use crate::assets::ItemAtlas;
 use crate::audio::{AudioEngine, SoundCue};
 use crate::data::models::{Language, VersionRegistry};
 use crate::i18n::{t, UiKey};
-use crate::state::{AppState, AppTab, GearSubView, RecipeViewMode, ThemeId};
+use crate::state::{AppState, AppTab, GearSubView, RecipeViewMode};
 use crate::ui::theme::{filter_chip, McPalette};
 use crate::ui::RenderContext;
 
@@ -371,51 +371,56 @@ pub fn render_top_chrome(
                     state.prefs.save();
                 }
 
-                // Theme switcher (10 built-in static/video themes + Custom Video importer)
+                // Theme Gallery Pill (opens Visual Theme Gallery Modal)
                 let cur_theme = state.prefs.theme;
-                egui::ComboBox::from_id_salt("theme_selector")
-                    .selected_text(cur_theme.label(lang))
-                    .width(172.0)
-                    .show_ui(ui, |ui| {
-                        for th in ThemeId::all() {
-                            if ui
-                                .selectable_value(&mut state.prefs.theme, th, th.label(lang))
-                                .changed()
-                            {
-                                state.prefs.save();
-                                audio.play(SoundCue::Click);
-                            }
-                        }
-                        ui.separator();
-                        let import_lbl = if state.video_importer.is_importing() {
-                            match lang {
-                                Language::EnUs => "Importing video...",
-                                _ => "Importando video...",
-                            }
-                        } else {
-                            match lang {
-                                Language::EnUs => "Import Video (.mp4/.webm/.gif)...",
-                                _ => "Importar Video (.mp4/.webm/.gif)...",
-                            }
-                        };
-                        if ui
-                            .add_enabled(
-                                !state.video_importer.is_importing(),
-                                egui::Button::new(import_lbl),
-                            )
-                            .clicked()
-                        {
-                            if let Some(path) = rfd::FileDialog::new()
-                                .add_filter("Video / GIF / CAVF", &["mp4", "webm", "mov", "mkv", "gif", "cavf"])
-                                .pick_file()
-                            {
-                                state.video_importer.start_import(path);
-                                audio.play(SoundCue::Click);
-                            }
-                        }
-                    });
-                if state.video_importer.is_importing() {
-                    ui.spinner();
+                let theme_tip = match lang {
+                    Language::EnUs => "Open Visual Theme Gallery (10 HD live scenes + custom wallpaper)",
+                    _ => "Abrir Galería Visual de Temas (10 escenas HD + fondo propio)",
+                };
+                let (pill_w, pill_h) = (174.0_f32, 24.0_f32);
+                let (rect, resp) = ui.allocate_exact_size(Vec2::new(pill_w, pill_h), Sense::click());
+                let active_pill = state.theme_modal_open;
+                let fill = if active_pill || resp.hovered() {
+                    palette.bg_card_hover
+                } else {
+                    palette.bg_card
+                };
+                let stroke_col = if active_pill || resp.hovered() {
+                    palette.accent_primary
+                } else {
+                    palette.border_subtle
+                };
+                ui.painter().rect(
+                    rect,
+                    CornerRadius::same(5),
+                    fill,
+                    Stroke::new(1.0_f32, stroke_col),
+                    egui::StrokeKind::Inside,
+                );
+                let cy = rect.center().y;
+                ui.painter().circle_filled(Pos2::new(rect.left() + 11.0, cy), 4.0, palette.accent_primary);
+                ui.painter().circle_filled(Pos2::new(rect.left() + 20.0, cy), 4.0, palette.accent_gold);
+                let mut label_text = cur_theme.label(lang).to_string();
+                if label_text.chars().count() > 18 {
+                    label_text = format!("{}...", label_text.chars().take(16).collect::<String>());
+                }
+                ui.painter().text(
+                    Pos2::new(rect.left() + 29.0, cy),
+                    egui::Align2::LEFT_CENTER,
+                    label_text,
+                    egui::FontId::proportional(11.5),
+                    palette.text_primary,
+                );
+                ui.painter().text(
+                    Pos2::new(rect.right() - 10.0, cy),
+                    egui::Align2::RIGHT_CENTER,
+                    if state.theme_modal_open { "^" } else { "v" },
+                    egui::FontId::monospace(10.5),
+                    palette.text_muted,
+                );
+                if resp.on_hover_text(theme_tip).clicked() {
+                    state.theme_modal_open = !state.theme_modal_open;
+                    audio.play(SoundCue::Click);
                 }
 
                 // Language switcher

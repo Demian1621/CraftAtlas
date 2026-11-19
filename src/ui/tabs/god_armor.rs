@@ -634,25 +634,65 @@ fn render_piece_detail(
                     });
 
                     ui.add_space(8.0);
-                    ui.horizontal_wrapped(|ui| {
-                        ui.spacing_mut().item_spacing = Vec2::new(5.0, 5.0);
-                        for &(eid, lvl) in &piece.enchants {
-                            let label = enchant_display_name(eid, lvl, lang);
-                            egui::Frame::new()
-                                .fill(Color32::from_rgba_unmultiplied(
-                                    palette.accent_enchant.r(),
-                                    palette.accent_enchant.g(),
-                                    palette.accent_enchant.b(),
-                                    28,
-                                ))
-                                .stroke(Stroke::new(1.0_f32, palette.accent_enchant))
-                                .corner_radius(CornerRadius::same(4))
-                                .inner_margin(Margin::symmetric(7, 3))
-                                .show(ui, |ui| {
-                                    ui.label(RichText::new(label).size(11.0).strong().color(Color32::WHITE));
-                                });
+                    let row_max_w = (ui.available_width() - 8.0).max(200.0);
+                    let chip_gap = 5.0_f32;
+                    let mut rows: Vec<Vec<String>> = vec![Vec::new()];
+                    let mut row_w = 0.0_f32;
+                    for &(eid, lvl) in &piece.enchants {
+                        let label = enchant_display_name(eid, lvl, lang);
+                        let chip_w = ui
+                            .painter()
+                            .layout_no_wrap(
+                                label.clone(),
+                                egui::FontId::proportional(11.0),
+                                Color32::WHITE,
+                            )
+                            .size()
+                            .x
+                            + 20.0;
+                        let next_w = if row_w > 0.0 {
+                            row_w + chip_gap + chip_w
+                        } else {
+                            chip_w
+                        };
+                        if next_w > row_max_w && !rows.last().is_none_or(|r| r.is_empty()) {
+                            rows.push(vec![label]);
+                            row_w = chip_w;
+                        } else {
+                            if let Some(cur) = rows.last_mut() {
+                                cur.push(label);
+                            }
+                            row_w = next_w;
                         }
-                    });
+                    }
+                    for row in rows {
+                        ui.horizontal(|ui| {
+                            ui.spacing_mut().item_spacing = Vec2::new(chip_gap, 4.0);
+                            for label in row {
+                                egui::Frame::new()
+                                    .fill(Color32::from_rgba_unmultiplied(
+                                        palette.accent_enchant.r(),
+                                        palette.accent_enchant.g(),
+                                        palette.accent_enchant.b(),
+                                        28,
+                                    ))
+                                    .stroke(Stroke::new(1.0_f32, palette.accent_enchant))
+                                    .corner_radius(CornerRadius::same(4))
+                                    .inner_margin(Margin::symmetric(7, 3))
+                                    .show(ui, |ui| {
+                                        ui.add(
+                                            egui::Label::new(
+                                                RichText::new(label)
+                                                    .size(11.0)
+                                                    .strong()
+                                                    .color(Color32::WHITE),
+                                            )
+                                            .wrap_mode(egui::TextWrapMode::Extend),
+                                        );
+                                    });
+                            }
+                        });
+                    }
                 });
 
             ui.add_space(8.0);

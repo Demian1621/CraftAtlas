@@ -1,17 +1,20 @@
 use std::collections::HashMap;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 use eframe::egui::{
     self, Color32, ColorImage, Pos2, Rect, TextureFilter, TextureHandle, TextureOptions,
     TextureWrapMode,
 };
+use image::imageops::FilterType;
+use image::ImageFormat;
 
+use crate::state::prefs::UserPrefs;
 use crate::state::ThemeId;
 use crate::ui::theme::McPalette;
 
-use super::video_bg::{
-    load_custom_cavf_bytes, CavfSource, VideoBackdropPlayer, VID_DEEP_DARK, VID_OCEAN_MONUMENT,
-    VID_PALE_GARDEN, VID_TRIAL_CHAMBERS,
-};
+pub const MAX_CUSTOM_BG_BYTES: u64 = 16 * 1024 * 1024;
+pub const MAX_CUSTOM_BG_PIXELS: u64 = 64_000_000;
 
 struct LoadedBackdrop {
     tex: TextureHandle,
@@ -19,12 +22,10 @@ struct LoadedBackdrop {
     is_panorama: bool,
 }
 
-/// Manages embedded theme wallpapers, 360° panoramas, built-in `.cavf` loops, and custom video walls.
+/// Manages embedded HD Minecraft theme wallpapers, 360° panoramas, thumbnails, and custom user wallpaper.
 pub struct ThemeBackgrounds {
     cache: HashMap<ThemeId, LoadedBackdrop>,
-    video_player: VideoBackdropPlayer,
-    custom_video_src: Option<CavfSource>,
-    custom_checked: bool,
+    thumbs: HashMap<ThemeId, TextureHandle>,
 }
 
 impl Default for ThemeBackgrounds {
@@ -37,29 +38,58 @@ impl ThemeBackgrounds {
     pub fn new() -> Self {
         Self {
             cache: HashMap::new(),
-            video_player: VideoBackdropPlayer::new(),
-            custom_video_src: None,
-            custom_checked: false,
+            thumbs: HashMap::new(),
         }
     }
 
-    /// Forces reload of `%APPDATA%\craft-atlas\video_themes\custom.cavf` right after user import.
-    pub fn reload_custom_video(&mut self) {
-        self.custom_checked = false;
-        self.custom_video_src = None;
-        self.video_player.invalidate_key("custom_video");
+    /// Clears cached custom wallpaper textures so a newly selected user image displays immediately.
+    pub fn reload_custom_backdrop(&mut self) {
+        self.cache.remove(&ThemeId::CustomImage);
+        self.thumbs.remove(&ThemeId::CustomImage);
     }
 
-    /// Ensures the active theme's wallpaper or video frame is displayed + dark readability scrim.
+    /// Returns a lazily built `260×146` preview texture for the Visual Theme Gallery Modal.
+    pub fn thumbnail_for(&mut self, ctx: &egui::Context, theme: ThemeId) -> Option<egui::TextureId> {
+        if let Some(tex) = self.thumbs.get(&theme) {
+            return Some(tex.id());
+        }
+        let img = load_theme_rgba(theme)?;
+        let (w, h) = img.dimensions();
+        if w == 0 || h == 0 {
+            return None;
+        }
+        let thumb_img = if theme.is_panorama() {
+            // Crop crisp centered 16:9 slice from 2048x640 panorama for clean gallery card preview
+            let cw = ((h as f32) * (16.0 / 9.0)).round().min(w as f32) as u32;
+            let cx = (w.saturating_sub(cw)) / 2;
+            let view = image::imageops::crop_imm(&img, cx, 0, cw.max(1), h).to_image();
+            image::imageops::resize(&view, 260, 146, FilterType::Triangle)
+        } else {
+            image::imageops::resize(&img, 260, 146, FilterType::Triangle)
+        };
+        let color_img = ColorImage::from_rgba_unmultiplied([260, 146], thumb_img.as_raw());
+        let opts = TextureOptions {
+            magnification: TextureFilter::Linear,
+            minification: TextureFilter::Linear,
+            mipmap_mode: Some(TextureFilter::Linear),
+            wrap_mode: TextureWrapMode::ClampToEdge,
+        };
+        let tex = ctx.load_texture(format!("mc_theme_thumb_{:?}", theme), color_img, opts);
+        let id = tex.id();
+        self.thumbs.insert(theme, tex);
+        Some(id)
+    }
+
+    /// Paints the active steady HD scene (or smooth 360° panorama) plus readability scrim.
     pub fn paint_viewport_backdrop(
         &mut self,
         ctx: &egui::Context,
         rect: Rect,
         theme: ThemeId,
         palette: McPalette,
-        timing: (f64, f32, bool),
+        bg_intensity: f32,
+        time: f64,
     ) {
-        let (time, dt, active) = timing;
         let painter = ctx.layer_painter(egui::LayerId::background());
         painter.rect_filled(
             rect,
@@ -71,72 +101,33 @@ impl ThemeBackgrounds {
         let vh = rect.height().max(1.0);
         let view_aspect = vw / vh;
 
-        let mut painted_video = false;
-        if let Some((clip_key, src)) = self.video_source_for_theme(theme) {
-            if self.video_player.ensure_clip(ctx, clip_key, src) {
-                if let Some((tex_id, aspect)) = self.video_player.tick_and_texture(dt, active) {
-                    let uv = cover_uv(view_aspect, aspect);
-                    painter.image(tex_id, rect, uv, Color32::WHITE);
-                    painted_video = true;
-                }
+        if let std::collections::hash_map::Entry::Vacant(slot) = self.cache.entry(theme) {
+            if let Some(loaded) = load_theme_backdrop(ctx, theme) {
+                slot.insert(loaded);
             }
         }
 
-        if !painted_video {
-            let static_theme = if theme.is_video() {
-                ThemeId::DeepslateOre
+        if let Some(bg) = self.cache.get(&theme) {
+            let t = time as f32;
+            let uv = if bg.is_panorama {
+                let uv_h = 0.88_f32;
+                let uv_w = ((view_aspect / bg.aspect) * uv_h).clamp(0.18, 0.72);
+                let v0 = 0.5 * (1.0 - uv_h);
+                let u0 = (t * 0.008).fract();
+                Rect::from_min_max(Pos2::new(u0, v0), Pos2::new(u0 + uv_w, v0 + uv_h))
             } else {
-                theme
+                cover_uv(view_aspect, bg.aspect)
             };
-            if let std::collections::hash_map::Entry::Vacant(slot) =
-                self.cache.entry(static_theme)
-            {
-                if let Some(loaded) = load_theme_backdrop(ctx, static_theme) {
-                    slot.insert(loaded);
-                }
-            }
-            if let Some(bg) = self.cache.get(&static_theme) {
-                let t = time as f32;
-                let uv = if bg.is_panorama {
-                    let zoom = 0.78_f32;
-                    let uv_w = ((view_aspect / bg.aspect) * zoom).clamp(0.18, 0.72);
-                    let uv_h = zoom.clamp(0.55, 0.96);
-                    let v_drift = 0.5 * (1.0 - uv_h) + ((1.0 - uv_h) * 0.35) * (t * 0.11).sin();
-                    let u0 = (t * 0.008).fract();
-                    Rect::from_min_max(
-                        Pos2::new(u0, v_drift.clamp(0.0, 1.0 - uv_h)),
-                        Pos2::new(u0 + uv_w, (v_drift + uv_h).clamp(uv_h, 1.0)),
-                    )
-                } else {
-                    let base_scale = 1.06 + 0.025 * (t * 0.18).sin();
-                    let (mut uv_w, mut uv_h) = if view_aspect > bg.aspect {
-                        (1.0 / base_scale, (bg.aspect / view_aspect) / base_scale)
-                    } else {
-                        ((view_aspect / bg.aspect) / base_scale, 1.0 / base_scale)
-                    };
-                    uv_w = uv_w.clamp(0.25, 1.0);
-                    uv_h = uv_h.clamp(0.25, 1.0);
-                    let max_dx = (1.0 - uv_w) * 0.5;
-                    let max_dy = (1.0 - uv_h) * 0.5;
-                    let cx = 0.5 + max_dx * 0.72 * (t * 0.13).sin();
-                    let cy = 0.5 + max_dy * 0.72 * (t * 0.09 + 1.1).cos();
-                    Rect::from_center_size(Pos2::new(cx, cy), egui::vec2(uv_w, uv_h))
-                };
-                painter.image(bg.tex.id(), rect, uv, Color32::WHITE);
-            }
+            painter.image(bg.tex.id(), rect, uv, Color32::WHITE);
         }
 
-        // Dark-glass readability scrim keeping crisp foreground cards readable over animated video
-        let scrim_alpha = match theme {
-            ThemeId::ClassicJavaStone | ThemeId::CherryBlossom => 138,
-            ThemeId::DeepslateOre | ThemeId::StarryOverworld => 112,
-            ThemeId::NetherCrimsonEnd | ThemeId::EndVoidAurora => 104,
-            ThemeId::DeepDarkSculk
-            | ThemeId::TrialChambers
-            | ThemeId::PaleGarden
-            | ThemeId::OceanMonument
-            | ThemeId::CustomVideo => 108,
+        // Smooth intensity-driven dark scrim keeping cards crisp while letting biome scenes breathe
+        let intensity = bg_intensity.clamp(0.15, 1.0);
+        let bias = match theme {
+            ThemeId::ClassicJavaStone | ThemeId::CherryBlossom => 16.0_f32,
+            _ => 0.0_f32,
         };
+        let scrim_alpha = (208.0 - intensity * 160.0 + bias).clamp(24.0, 224.0).round() as u8;
         painter.rect_filled(
             rect,
             0.0,
@@ -147,29 +138,6 @@ impl ThemeBackgrounds {
                 scrim_alpha,
             ),
         );
-    }
-
-    fn video_source_for_theme(&mut self, theme: ThemeId) -> Option<(&'static str, CavfSource)> {
-        match theme {
-            ThemeId::DeepDarkSculk => Some(("deep_dark", CavfSource::Embedded(VID_DEEP_DARK))),
-            ThemeId::TrialChambers => {
-                Some(("trial_chambers", CavfSource::Embedded(VID_TRIAL_CHAMBERS)))
-            }
-            ThemeId::PaleGarden => Some(("pale_garden", CavfSource::Embedded(VID_PALE_GARDEN))),
-            ThemeId::OceanMonument => {
-                Some(("ocean_monument", CavfSource::Embedded(VID_OCEAN_MONUMENT)))
-            }
-            ThemeId::CustomVideo => {
-                if !self.custom_checked {
-                    self.custom_checked = true;
-                    self.custom_video_src = load_custom_cavf_bytes();
-                }
-                self.custom_video_src
-                    .clone()
-                    .map(|src| ("custom_video", src))
-            }
-            _ => None,
-        }
     }
 }
 
@@ -184,12 +152,27 @@ fn cover_uv(view_aspect: f32, media_aspect: f32) -> Rect {
 
 fn backdrop_spec(theme: ThemeId) -> (&'static str, &'static [u8], bool) {
     match theme {
-        ThemeId::DeepslateOre
-        | ThemeId::DeepDarkSculk
-        | ThemeId::TrialChambers
-        | ThemeId::PaleGarden
-        | ThemeId::OceanMonument
-        | ThemeId::CustomVideo => (
+        ThemeId::DeepDarkSculk | ThemeId::CustomImage => (
+            "bg_deep_dark",
+            include_bytes!("../../assets/backgrounds/bg_deep_dark.jpg"),
+            false,
+        ),
+        ThemeId::TrialChambers => (
+            "bg_trial_chambers",
+            include_bytes!("../../assets/backgrounds/bg_trial_chambers.jpg"),
+            false,
+        ),
+        ThemeId::PaleGarden => (
+            "bg_pale_garden",
+            include_bytes!("../../assets/backgrounds/bg_pale_garden.jpg"),
+            false,
+        ),
+        ThemeId::OceanMonument => (
+            "bg_ocean_monument",
+            include_bytes!("../../assets/backgrounds/bg_ocean_monument.jpg"),
+            false,
+        ),
+        ThemeId::DeepslateOre => (
             "bg_deep_cave",
             include_bytes!("../../assets/backgrounds/bg_deep_cave.jpg"),
             false,
@@ -222,11 +205,36 @@ fn backdrop_spec(theme: ThemeId) -> (&'static str, &'static [u8], bool) {
     }
 }
 
+fn load_theme_rgba(theme: ThemeId) -> Option<image::RgbaImage> {
+    if theme == ThemeId::CustomImage {
+        if let Some(path) = custom_backdrop_path() {
+            if let Ok(meta) = fs::metadata(&path) {
+                if meta.is_file() && meta.len() > 0 && meta.len() <= MAX_CUSTOM_BG_BYTES {
+                    if let Ok((w, h)) = image::image_dimensions(&path) {
+                        if (w as u64).saturating_mul(h as u64) <= MAX_CUSTOM_BG_PIXELS {
+                            if let Ok(bytes) = fs::read(&path) {
+                                if let Ok(img) = image::load_from_memory(&bytes) {
+                                    return Some(img.to_rgba8());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    let (_name, bytes, _) = backdrop_spec(theme);
+    Some(image::load_from_memory(bytes).ok()?.to_rgba8())
+}
+
 fn load_theme_backdrop(ctx: &egui::Context, theme: ThemeId) -> Option<LoadedBackdrop> {
-    let (name, bytes, is_panorama) = backdrop_spec(theme);
-    let img = image::load_from_memory(bytes).ok()?.to_rgba8();
+    let img = load_theme_rgba(theme)?;
     let (w, h) = img.dimensions();
-    let aspect = (w as f32) / (h.max(1) as f32);
+    if w == 0 || h == 0 {
+        return None;
+    }
+    let aspect = (w as f32) / (h as f32);
+    let is_panorama = theme.is_panorama();
     let color_img = ColorImage::from_rgba_unmultiplied([w as usize, h as usize], img.as_raw());
     let opts = TextureOptions {
         magnification: TextureFilter::Linear,
@@ -238,7 +246,7 @@ fn load_theme_backdrop(ctx: &egui::Context, theme: ThemeId) -> Option<LoadedBack
             TextureWrapMode::ClampToEdge
         },
     };
-    let tex = ctx.load_texture(format!("mc_backdrop_{}", name), color_img, opts);
+    let tex = ctx.load_texture(format!("mc_backdrop_{:?}", theme), color_img, opts);
     Some(LoadedBackdrop {
         tex,
         aspect,
@@ -246,37 +254,143 @@ fn load_theme_backdrop(ctx: &egui::Context, theme: ThemeId) -> Option<LoadedBack
     })
 }
 
+/// Returns `%APPDATA%\craft-atlas\custom_backdrop.png` (or XDG/macOS equivalent).
+pub fn custom_backdrop_path() -> Option<PathBuf> {
+    Some(UserPrefs::app_data_dir()?.join("custom_backdrop.png"))
+}
+
+pub fn has_custom_backdrop() -> bool {
+    custom_backdrop_path().is_some_and(|p| p.is_file())
+}
+
+/// Validates and stores a user `.png`/`.jpg` screenshot natively as `custom_backdrop.png` (no FFmpeg).
+pub fn import_custom_backdrop(src: &Path) -> Result<PathBuf, String> {
+    let dest = custom_backdrop_path()
+        .ok_or_else(|| "Unable to resolve user config directory".to_string())?;
+    import_custom_backdrop_to(src, &dest)
+}
+
+fn import_custom_backdrop_to(src: &Path, dest: &Path) -> Result<PathBuf, String> {
+    let meta = fs::metadata(src).map_err(|e| format!("Cannot inspect image file: {e}"))?;
+    if !meta.is_file() || meta.len() == 0 {
+        return Err("Selected path is empty or not a regular file".to_string());
+    }
+    if meta.len() > MAX_CUSTOM_BG_BYTES {
+        return Err("Image exceeds 16 MiB safety limit".to_string());
+    }
+
+    let ext = src
+        .extension()
+        .and_then(|s| s.to_str())
+        .map(|s| s.to_ascii_lowercase())
+        .unwrap_or_default();
+    if !matches!(ext.as_str(), "png" | "jpg" | "jpeg") {
+        return Err(format!(
+            "Unsupported image format '.{ext}' (use .png or .jpg)"
+        ));
+    }
+
+    let canonical =
+        fs::canonicalize(src).map_err(|e| format!("Image path validation failed: {e}"))?;
+    let (w, h) = image::image_dimensions(&canonical)
+        .map_err(|e| format!("Invalid or corrupt image header: {e}"))?;
+    if w < 64 || h < 64 {
+        return Err("Image resolution too small (minimum 64x64)".to_string());
+    }
+    if (w as u64).saturating_mul(h as u64) > MAX_CUSTOM_BG_PIXELS {
+        return Err("Image exceeds 64 megapixel safety limit".to_string());
+    }
+
+    let bytes = fs::read(&canonical).map_err(|e| format!("Failed reading image bytes: {e}"))?;
+    let decoded = image::load_from_memory(&bytes)
+        .map_err(|e| format!("Could not decode image: {e}"))?;
+    let final_img = if w > 1920 || h > 1080 {
+        decoded.resize(1920, 1080, FilterType::Triangle)
+    } else {
+        decoded
+    };
+
+    if let Some(parent) = dest.parent() {
+        fs::create_dir_all(parent).map_err(|e| format!("Create config dir failed: {e}"))?;
+    }
+    let tmp = dest.with_extension("png.tmp");
+    final_img
+        .to_rgba8()
+        .save_with_format(&tmp, ImageFormat::Png)
+        .map_err(|e| format!("Failed writing wallpaper PNG: {e}"))?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = fs::set_permissions(&tmp, fs::Permissions::from_mode(0o600));
+    }
+    if dest.exists() {
+        let _ = fs::remove_file(dest);
+    }
+    fs::rename(&tmp, dest).map_err(|e| {
+        let _ = fs::remove_file(&tmp);
+        format!("Failed activating custom wallpaper: {e}")
+    })?;
+    Ok(dest.to_path_buf())
+}
+
+pub fn remove_custom_backdrop() -> bool {
+    custom_backdrop_path().is_some_and(|p| p.is_file() && fs::remove_file(p).is_ok())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::assets::video_bg::parse_cavf;
 
     #[test]
-    fn all_eleven_theme_backdrops_and_videos_decode_cleanly() {
-        for theme in ThemeId::all() {
-            match theme {
-                ThemeId::DeepDarkSculk => {
-                    assert!(parse_cavf(VID_DEEP_DARK).is_ok());
-                }
-                ThemeId::TrialChambers => {
-                    assert!(parse_cavf(VID_TRIAL_CHAMBERS).is_ok());
-                }
-                ThemeId::PaleGarden => {
-                    assert!(parse_cavf(VID_PALE_GARDEN).is_ok());
-                }
-                ThemeId::OceanMonument => {
-                    assert!(parse_cavf(VID_OCEAN_MONUMENT).is_ok());
-                }
-                ThemeId::CustomVideo => {
-                    assert!(theme.is_video());
-                }
-                _ => {
-                    let (name, bytes, _) = backdrop_spec(theme);
-                    let decoded = image::load_from_memory(bytes)
-                        .unwrap_or_else(|e| panic!("failed to decode {}: {}", name, e));
-                    assert!(decoded.width() >= 1000 && decoded.height() >= 500, "{} too small", name);
-                }
-            }
+    fn all_ten_builtin_theme_backdrops_decode_at_hd() {
+        for theme in ThemeId::builtin() {
+            let (name, bytes, _) = backdrop_spec(theme);
+            let decoded = image::load_from_memory(bytes)
+                .unwrap_or_else(|e| panic!("failed to decode {}: {}", name, e));
+            assert!(
+                decoded.width() >= 1000 && decoded.height() >= 500,
+                "{} too small: {}x{}",
+                name,
+                decoded.width(),
+                decoded.height()
+            );
         }
+    }
+
+    #[test]
+    fn custom_backdrop_importer_enforces_safety_and_roundtrips() {
+        let tmp_dir = std::env::temp_dir().join("craft_atlas_custom_bg_test");
+        let _ = fs::create_dir_all(&tmp_dir);
+        let dest = tmp_dir.join("out_backdrop.png");
+
+        // Reject unsupported format
+        let bad_ext = tmp_dir.join("movie.mp4");
+        fs::write(&bad_ext, b"fake video data").unwrap();
+        assert!(import_custom_backdrop_to(&bad_ext, &dest).is_err());
+
+        // Reject empty file
+        let empty_png = tmp_dir.join("empty.png");
+        fs::write(&empty_png, b"").unwrap();
+        assert!(import_custom_backdrop_to(&empty_png, &dest).is_err());
+
+        // Reject undersized PNG (16x16 < 64x64)
+        let tiny_png = tmp_dir.join("tiny.png");
+        image::RgbaImage::new(16, 16)
+            .save_with_format(&tiny_png, ImageFormat::Png)
+            .unwrap();
+        assert!(import_custom_backdrop_to(&tiny_png, &dest).is_err());
+
+        // Accept valid 128x96 PNG cleanly
+        let ok_png = tmp_dir.join("valid.png");
+        image::RgbaImage::from_pixel(128, 96, image::Rgba([40, 180, 160, 255]))
+            .save_with_format(&ok_png, ImageFormat::Png)
+            .unwrap();
+        let saved = import_custom_backdrop_to(&ok_png, &dest).expect("valid PNG imports");
+        assert!(saved.is_file());
+        let (rw, rh) = image::image_dimensions(&saved).unwrap();
+        assert_eq!((rw, rh), (128, 96));
+
+        let _ = fs::remove_dir_all(&tmp_dir);
     }
 }

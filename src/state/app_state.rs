@@ -235,10 +235,11 @@ pub struct AppState {
     pub creators_specialty_filter: String,
     pub creators_region_filter: String,
 
-    // Export cache metadata, release updater & custom video backdrop importer
+    // Export cache metadata, release updater & Theme Gallery modal
     pub last_export_path: Option<PathBuf>,
     pub updater: crate::updater::UpdateChecker,
-    pub video_importer: crate::assets::video_bg::CustomVideoImporter,
+    pub theme_modal_open: bool,
+    pub custom_bg_error: Option<String>,
 }
 
 /// Active right-click floating menu to place a custom waypoint at exact clicked world coordinates.
@@ -382,7 +383,8 @@ impl AppState {
 
             last_export_path: None,
             updater: crate::updater::UpdateChecker::new(),
-            video_importer: crate::assets::video_bg::CustomVideoImporter::default(),
+            theme_modal_open: false,
+            custom_bg_error: None,
         }
     }
 

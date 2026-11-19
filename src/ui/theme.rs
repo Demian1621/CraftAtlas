@@ -4,7 +4,7 @@ use crate::anim::paint_enchant_glint;
 use crate::assets::ItemAtlas;
 use crate::state::ThemeId;
 
-/// Unified visual tokens for all 6 switchable scenic Minecraft themes.
+/// Unified visual tokens for all switchable Minecraft themes.
 #[derive(Debug, Clone, Copy)]
 pub struct McPalette {
     pub bg_canvas: Color32,
@@ -208,7 +208,7 @@ impl McPalette {
                 accent_xp: Color32::from_rgb(112, 246, 168),
                 accent_danger: Color32::from_rgb(246, 98, 96),
             },
-            ThemeId::CustomVideo => Self {
+            ThemeId::CustomImage => Self {
                 bg_canvas: Color32::from_rgba_unmultiplied(10, 12, 18, 92),
                 bg_panel: Color32::from_rgba_unmultiplied(15, 18, 26, 222),
                 bg_card: Color32::from_rgba_unmultiplied(22, 26, 36, 220),

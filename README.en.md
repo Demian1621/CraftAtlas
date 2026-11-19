@@ -1,12 +1,12 @@
 <div align="center">
 
-# CraftAtlas (`v1.2.0`)
+# CraftAtlas (`v1.2.1`)
 
 **The native desktop co-pilot for technical survival in Minecraft Java (`1.18.2` – `26.3`) — built in Rust + C, 100% offline-ready, cross-platform across Windows, macOS, and Linux.**
 
 [![CI](https://github.com/Demian1621/CraftAtlas/actions/workflows/ci.yml/badge.svg)](https://github.com/Demian1621/CraftAtlas/actions/workflows/ci.yml)
 [![Release](https://github.com/Demian1621/CraftAtlas/actions/workflows/release.yml/badge.svg)](https://github.com/Demian1621/CraftAtlas/actions/workflows/release.yml)
-[![Version](https://img.shields.io/badge/release-v1.2.0-22c55e?style=flat-square)](https://github.com/Demian1621/CraftAtlas/releases/tag/v1.2.0)
+[![Version](https://img.shields.io/badge/release-v1.2.1-22c55e?style=flat-square)](https://github.com/Demian1621/CraftAtlas/releases/tag/v1.2.1)
 [![Stack](https://img.shields.io/badge/Rust%20%2B%20C-eframe%20%7C%20cubiomes-f97316?style=flat-square)](#-building-from-source)
 [![Platforms](https://img.shields.io/badge/OS-Windows%20%7C%20macOS%20%7C%20Linux-3b82f6?style=flat-square)](#-download--install-windows--macos--linux)
 [![License](https://img.shields.io/badge/license-MIT-a855f7?style=flat-square)](Cargo.toml)
@@ -15,7 +15,7 @@
 
 <br/>
 
-<img src="docs/media/craftatlas-demo.gif" alt="CraftAtlas v1.2.0 Live Demo" width="860"/>
+<img src="docs/media/craftatlas-demo.gif" alt="CraftAtlas v1.2.1 Live Demo" width="860"/>
 
 </div>
 
@@ -29,7 +29,7 @@ If you play technical survival or min-max a long-term Java world, you know the d
 
 ---
 
-## 📸 Visual Gallery (`v1.2.0`)
+## 📸 Visual Gallery (`v1.2.1`)
 
 <table>
   <tr>
@@ -62,15 +62,15 @@ If you play technical survival or min-max a long-term Java world, you know the d
 
 <div align="center">
 
-#### 🎬 4 Embedded Animated Video Themes (`.cavf`) + `.mp4` / `.webm` / `.gif` Importer
-<img src="docs/media/video-themes.gif" alt="CraftAtlas Animated Video Themes (.cavf)" width="720"/><br/>
-<sub><i>Deep Dark · Trial Chambers · Pale Garden · Ocean Monument — native Rust streaming (`0%` idle CPU)</i></sub>
+#### 🎨 New Visual Theme Gallery + 10 HD Scenes with Living 30 FPS Biome FX
+<img src="docs/media/theme-gallery.png" alt="CraftAtlas Visual Theme Gallery" width="800"/><br/>
+<sub><i>Live 16:9 thumbnails, accent swatches, brightness slider &amp; native `.png`/`.jpg` custom wallpaper</i></sub>
 
 </div>
 
 ---
 
-## 🧭 What's inside v1.2.0
+## 🧭 What's inside v1.2.1
 
 ### 1. 🗺️ Multi-Version Native Seed Map Explorer (`cubiomes` Engine · `1.18.2` – `26.3`)
 - **True Multi-Version Support (`1.18.2`, `1.19.4`, `1.20.6`, `1.21.1`, `1.21.4`, `26.3`):** Switch Java versions in the top bar to match real biome, stronghold, and structure generation, automatically hiding future structures/biomes from Layers and Radial Search in older releases.
@@ -101,8 +101,8 @@ If you play technical survival or min-max a long-term Java world, you know the d
 ### 5. ⚡ Dupes, Glitches & Portal Sync Calculator (34 Entries)
 - Version-reactive status cards (*String Duper* working in `1.18.2–1.21.1` vs patched `1.21.4+`; *Void Trading* working pre-`1.21`; *StackOverflow Suppression* native in `1.18.2` vs CCE/Light in `1.19.4+`; *5x Zombie Cure* pre-`1.20.2` vs 1x cap), plus the **Overworld ↔ Nether Portal Sync Calculator**.
 
-### 6. 💡 Pro Tips & Animated Video Themes (17 Guides · 10 Themes + Custom Video · 3 Locales)
-- **2,308 pixel-crisp 32x32 item/mob icons**, procedural desktop-safe SFX audio, **10 built-in themes** including **4 embedded looping `.cavf` video backdrops** (*Deep Dark*, *Trial Chambers*, *Pale Garden*, *Ocean Monument*) + **Custom Video Importer (`.mp4`/`.webm`/`.gif`)** with low-RAM background decoding and `0%` idle CPU when unfocused, universal **`Ctrl + F` Command Palette**, pinned **Favorites rail**, **`EN-US` / `ES-MX` / `ES-ES`**, and **SHA-256 verified auto-updater**.
+### 6. 💡 Pro Tips & Visual Theme Gallery (17 Guides · 10 HD Themes + Custom Photo · 3 Locales)
+- **2,308 pixel-crisp 32x32 item/mob icons**, procedural desktop-safe SFX audio, **Visual Theme Gallery** with live `16:9` thumbnails, **Backdrop Intensity slider**, and **10 HD scenes with 30 FPS living biome FX** (*Deep Dark* sonic-boom rings, *Trial Chambers* skylight beams & flickering spawners, *Pale Garden* drifting mist & blinking Creaking eyes, *Ocean Monument* caustics & patrolling Guardians, plus *End Aurora*, *Starry Ruin*, *Cherry Sunset*, *Deep Cave*, and 360° panoramas) + native `.png`/`.jpg` **Custom Wallpaper** (`0%` idle CPU when unfocused), universal **`Ctrl + F` Command Palette**, **`EN-US` / `ES-MX` / `ES-ES`**, and **SHA-256 verified auto-updater**.
 
 ---
 
@@ -114,7 +114,7 @@ Grab the latest build for your platform on **[Releases](https://github.com/Demia
 - Download the portable **`.exe`** (single executable, run directly) or the **`.zip`** bundle.
 
 ### 🍎 macOS (Universal Binary: Apple Silicon M1–M4 + Intel)
-1. Download **`craft-atlas-v1.2.0-macos-universal.dmg`**.
+1. Download **`craft-atlas-v1.2.1-macos-universal.dmg`**.
 2. Drag **CraftAtlas.app** into **Applications**.
 3. **First launch note (Gatekeeper)**: Since this build uses an ad-hoc signature without a paid Apple Developer certificate, right-click (**Control + Click → Open → Open**) on the first launch, or run once in Terminal:
    ```bash
@@ -125,8 +125,8 @@ Grab the latest build for your platform on **[Releases](https://github.com/Demia
 | Package | Target Distros | Install / Run |
 | --- | --- | --- |
 | **`.AppImage`** *(Universal)* | Ubuntu, Fedora, Arch, Mint, Pop!_OS, openSUSE, SteamOS | `chmod +x craft-atlas*.AppImage && ./craft-atlas*.AppImage` |
-| **`.deb`** | Ubuntu, Debian, Linux Mint, Pop!_OS | `sudo apt install ./craft-atlas_1.2.0_amd64.deb` |
-| **`.rpm`** | Fedora, RHEL, Rocky Linux, openSUSE | `sudo dnf install ./craft-atlas-1.2.0-1.x86_64.rpm` |
+| **`.deb`** | Ubuntu, Debian, Linux Mint, Pop!_OS | `sudo apt install ./craft-atlas_1.2.1_amd64.deb` |
+| **`.rpm`** | Fedora, RHEL, Rocky Linux, openSUSE | `sudo dnf install ./craft-atlas-1.2.1-1.x86_64.rpm` |
 | **`.tar.gz`** *(Portable)* | Arch Linux, Manjaro, NixOS, generic | Extract and run `./craft-atlas` or `./install-user.sh` |
 
 > **Checksum & Build Provenance**: Every GitHub Release includes `SHA256SUMS.txt` and SLSA/Sigstore Build Provenance Attestations (see [SECURITY.md](SECURITY.md)).
@@ -149,12 +149,11 @@ cargo build --release --locked
 
 ---
 
-## ⚡ What's New in `v1.2.0`
+## ⚡ What's New in `v1.2.1`
 
-- **True App-Wide Version Accuracy (`1.18.2` → `26.3`):** Switching Java version now updates Seed Map worldgen & Radial Finder, JEI Crafting (2-slot legacy Netherite, Netherite Lodestone, Slimeball Lead), Brewing, Enchant Books, God Gear, Farms, Glitches, and version release notes.
-- **Illegal God Armor & Legacy Glitch Guide:** Step-by-step `1.14.2` forward-only Survival paths (80% EPF cap math), `/give` commands adapted per version syntax, and `1.21+` Datapack `exclusive_set` overrides.
-- **4 Embedded `.cavf` Animated Video Themes + Custom `.mp4` Importer:** Zero-new-crate streaming playback (`0%` idle CPU) for *Deep Dark*, *Trial Chambers*, *Pale Garden*, and *Ocean Monument*, plus custom user video wall support.
-- **`.litematic` Parser, Unified Shopping List & Fail-Closed SHA-256 Auto-Updater:** Full notes in [RELEASE_v1.2.0.md](docs/RELEASE_v1.2.0.md).
+- **Visual Theme Gallery + Brightness Slider + Native Custom Wallpaper (`.png` / `.jpg`):** live `16:9` preview grid with color swatches, real-time backdrop intensity control, and local screenshot wallpaper picker (zero external tools).
+- **HD (`1376×768`) Scenes + 30 FPS Living Biome FX (No Choppy Loops):** *Deep Dark*, *Trial Chambers*, *Pale Garden*, and *Ocean Monument* now render crisp HD scenes with bespoke 30 FPS lighting & atmospheric FX (*Sonic Boom* rings, skylight rays, drifting mist & Creaking eyes, underwater caustics & Guardians) plus ~2 MB smaller release binaries.
+- **Full Multi-Version Engine (`1.18.2` → `26.3`) + Illegal God Armor + `.litematic` + SHA-256 Updater:** see full notes in [RELEASE_v1.2.1.md](docs/RELEASE_v1.2.1.md) (and prior milestone in [RELEASE_v1.2.0.md](docs/RELEASE_v1.2.0.md)).
 
 ---
 
@@ -169,7 +168,7 @@ CraftAtlas is **100% free, ad-free, and has zero paywalled features**. Everythin
 
 ## 🚀 Verified Updates & Security
 
-`v1.2.0` ships with a **fail-closed in-app auto-updater verified with pure-Rust FIPS 180-4 SHA-256** over TLS 1.2+, paired with **GitHub Build Provenance Attestations** on every release artifact.
+`v1.2.1` ships with a **fail-closed in-app auto-updater verified with pure-Rust FIPS 180-4 SHA-256** over TLS 1.2+, paired with **GitHub Build Provenance Attestations** on every release artifact.
 
 ---
 

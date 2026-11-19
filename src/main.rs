@@ -176,38 +176,6 @@ impl eframe::App for CraftAtlasApp {
             }
         }
 
-        if let Some(res) = self.state.video_importer.poll() {
-            let lang = self.state.prefs.language;
-            let pal = McPalette::from_theme(self.state.prefs.theme);
-            match res {
-                Ok(dest) => {
-                    self.backgrounds.reload_custom_video();
-                    self.state.prefs.theme = state::ThemeId::CustomVideo;
-                    self.state.prefs.save();
-                    self.audio.play(SoundCue::LevelUp);
-                    let title = if matches!(lang, crate::data::models::Language::EnUs) {
-                        "Custom Video Theme Ready"
-                    } else {
-                        "Video de Fondo Cargado"
-                    };
-                    let name = dest
-                        .file_name()
-                        .map(|n| n.to_string_lossy().into_owned())
-                        .unwrap_or_default();
-                    self.toasts.push("ender_eye", title, &name, pal.accent_xp);
-                }
-                Err(err) => {
-                    self.audio.play(SoundCue::Toast);
-                    let title = if matches!(lang, crate::data::models::Language::EnUs) {
-                        "Video Import Failed"
-                    } else {
-                        "Error al Importar Video"
-                    };
-                    self.toasts.push("barrier", title, &err, pal.accent_danger);
-                }
-            }
-        }
-
         let palette = McPalette::from_theme(self.state.prefs.theme);
         palette.apply_to_egui(ctx);
 
@@ -217,12 +185,14 @@ impl eframe::App for CraftAtlasApp {
             screen_rect,
             self.state.prefs.theme,
             palette,
-            (time, dt, active),
+            self.state.prefs.bg_intensity,
+            time,
         );
         self.particles.update_and_paint_ambient(
             ctx,
             screen_rect,
             self.state.prefs.theme,
+            self.state.prefs.bg_intensity,
             time,
             dt,
         );
@@ -235,8 +205,7 @@ impl eframe::App for CraftAtlasApp {
             || matches!(
                 self.seed_engine.nearest_state(),
                 NearestSearchState::Searching
-            )
-            || self.state.video_importer.is_importing();
+            );
 
         if !active {
             // Pause background panorama/particles cleanly when unfocused or minimized (~0% idle CPU).
@@ -324,6 +293,15 @@ impl eframe::App for CraftAtlasApp {
             });
 
         render_search_palette(ctx, &mut self.state, &rcx);
+        ui::theme_modal::render_theme_modal(
+            ctx,
+            &mut self.state,
+            &mut self.backgrounds,
+            palette,
+            &self.atlas,
+            &self.audio,
+            &mut self.toasts,
+        );
         render_updater_modal(ctx, &mut self.state, palette, &self.audio);
         self.particles.update_and_paint(ctx, dt);
         self.toasts.update_and_paint(ctx, &self.atlas, dt);
