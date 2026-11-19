@@ -1,12 +1,12 @@
 <div align="center">
 
-# CraftAtlas (`v1.2.1`)
+# CraftAtlas (`v1.2.2`)
 
 **La navaja suiza de escritorio para sobrevivir, optimizar y romper límites en Minecraft Java (`1.18.2` – `26.3`) — nativa en Rust + C, 100% offline y multiplataforma.**
 
 [![CI](https://github.com/Demian1621/CraftAtlas/actions/workflows/ci.yml/badge.svg)](https://github.com/Demian1621/CraftAtlas/actions/workflows/ci.yml)
 [![Release](https://github.com/Demian1621/CraftAtlas/actions/workflows/release.yml/badge.svg)](https://github.com/Demian1621/CraftAtlas/actions/workflows/release.yml)
-[![Version](https://img.shields.io/badge/release-v1.2.1-22c55e?style=flat-square)](https://github.com/Demian1621/CraftAtlas/releases/tag/v1.2.1)
+[![Version](https://img.shields.io/badge/release-v1.2.2-22c55e?style=flat-square)](https://github.com/Demian1621/CraftAtlas/releases/tag/v1.2.2)
 [![Stack](https://img.shields.io/badge/Rust%20%2B%20C-eframe%20%7C%20cubiomes-f97316?style=flat-square)](#-compilar-desde-el-c%C3%B3digo-fuente)
 [![Platforms](https://img.shields.io/badge/OS-Windows%20%7C%20macOS%20%7C%20Linux-3b82f6?style=flat-square)](#-descarga-e-instalaci%C3%B3n-windows--macos--linux)
 [![License](https://img.shields.io/badge/license-MIT-a855f7?style=flat-square)](Cargo.toml)
@@ -15,7 +15,7 @@
 
 <br/>
 
-<img src="docs/media/craftatlas-demo.gif" alt="CraftAtlas v1.2.1 Demo en vivo" width="860"/>
+<img src="docs/media/craftatlas-demo.gif" alt="CraftAtlas v1.2.2 Demo en vivo" width="860"/>
 
 </div>
 
@@ -29,7 +29,7 @@ Cualquiera que juegue Minecraft técnico o survival avanzado conoce la rutina de
 
 ---
 
-## 📸 Galería Visual (`v1.2.1`)
+## 📸 Galería Visual (`v1.2.2`)
 
 <table>
   <tr>
@@ -62,15 +62,15 @@ Cualquiera que juegue Minecraft técnico o survival avanzado conoce la rutina de
 
 <div align="center">
 
-#### 🎨 Nueva Galería Visual de Temas + 10 Escenas HD con Efectos Vivos a 30 FPS
+#### 🎨 Galería Visual de Temas + 5 Panoramas 360° Infinitos y 5 Escenas HD
 <img src="docs/media/theme-gallery.png" alt="CraftAtlas Galería Visual de Temas" width="800"/><br/>
-<sub><i>Miniaturas 16:9 en vivo, paleta de acentos, slider de intensidad y fondo propio `.png`/`.jpg` 100% nativo</i></sub>
+<sub><i>Miniaturas 16:9 en vivo, paleta de acentos, intensidad del fondo y fondo propio `.png`/`.jpg` 100% nativo</i></sub>
 
 </div>
 
 ---
 
-## 🧭 Qué incluye la v1.2.1
+## 🧭 Qué incluye la v1.2.2
 
 ### 1. 🗺️ Mapa de Semilla Nativo Multi-Versión (`cubiomes` C Engine · `1.18.2` – `26.3`)
 - **Multi-versión real (`1.18.2`, `1.19.4`, `1.20.6`, `1.21.1`, `1.21.4`, `26.3`):** adaptá biomas, strongholds y estructuras a la versión exacta de tu mundo o servidor SMP desde el selector superior (incluyendo notas por versión, capas y objetivos filtrados para ocultar estructuras/biomas inexistentes en versiones previas).
@@ -102,8 +102,8 @@ Cualquiera que juegue Minecraft técnico o survival avanzado conoce la rutina de
 ### 5. ⚡ Dupes, Glitches y Calculadora de Portales (34 mecánicas por versión)
 - Fichas técnicas dinámicas por versión: muestra el estado real en cada versión (*String Duper* activo en `1.18.2–1.21.1` vs parcheado en `1.21.4+`; *Void Trading* activo hasta `1.20.6` vs parcheado en `1.21.1+`; *Supresor StackOverflow* nativo en `1.18.2` vs CCE/Light en `1.19.4+`; *Curación x5* hasta `1.19.4` vs límite `1x` desde `1.20.2+`), junto a la **calculadora instantánea de enlace de portales Overworld ↔ Nether**.
 
-### 6. 💡 Pro Tips y Galería Visual de Temas (17 guías · 10 temas HD + Fondo Propio · 3 idiomas)
-- **2,308 íconos** empaquetados en atlas de alta nitidez (sin borrosidad), audio sintetizado desactivable, **Galería Visual de Temas** con miniaturas `16:9` en vivo, control de **intensidad del fondo** y **10 temas HD con efectos vivos a 30 FPS** (*Ciudad Antigua* con pulsos Sonic Boom sculk, *Trial Chambers* con haces del tragaluz y forjas, *Jardín Pálido* con neblina y ojos de Creaking, *Monumento Oceánico* con cáusticas, burbujas y Guardianes, más *Aurora del End*, *Noche Estrellada*, *Cerezo Atardecer*, *Cueva Profunda*, *Panorama Salvaje* y *Nether Carmesí*) + **Fondo Propio (`.png`/`.jpg`)** 100% nativo en Rust con pausa automática (`0%` CPU) en segundo plano.
+### 6. 💡 Pro Tips y Galería Visual de Temas (17 guías · 10 temas + Fondo Propio · 3 idiomas)
+- **2,308 íconos** empaquetados en atlas de alta nitidez (sin borrosidad), audio sintetizado desactivable, **Galería Visual de Temas** con miniaturas `16:9` en vivo, control de **intensidad del fondo** y **10 temas integrados**: **5 panoramas 360° infinitos sin costura (`2048×640`)** (*Ciudad Antigua*, *Trial Chambers*, *Monumento Oceánico*, *Panorama Salvaje*, *Nether Carmesí*) y **5 escenas HD con partículas sutiles estilo Minecraft** (*Jardín Pálido* con hojas cayendo, *Cerezo Atardecer* con pétalos, *Cueva Profunda*, *Aurora del End*, *Noche Estrellada*), más **Fondo Propio (`.png`/`.jpg`)** 100% nativo en Rust con pausa automática (`0%` CPU) en segundo plano.
 - Buscador universal **`Ctrl + F`**, barra de **Favoritos**, idiomas **`ES-MX`**, **`ES-ES`** y **`EN-US`**, y **auto-updater verificado por SHA-256** desde GitHub Releases.
 
 ---
@@ -117,7 +117,7 @@ Descarga el instalador o ejecutable de tu sistema desde la sección de **[Releas
 - **`.zip`**: descomprime y ejecuta `craft-atlas.exe`.
 
 ### 🍎 macOS (Universal: Apple Silicon M1/M2/M3/M4 + Intel)
-1. Descarga **`craft-atlas-v1.2.1-macos-universal.dmg`** (o el `.zip`).
+1. Descarga **`craft-atlas-v1.2.2-macos-universal.dmg`** (o el `.zip`).
 2. Arrastra **CraftAtlas.app** a tu carpeta **Aplicaciones**.
 3. **Nota de primera apertura (Gatekeeper)**: como esta release aún no cuenta con firma paga de Apple Developer, haz **clic derecho (o Ctrl + clic) → Abrir → Abrir**, o ejecuta una sola vez en Terminal:
    ```bash
@@ -127,9 +127,9 @@ Descarga el instalador o ejecutable de tu sistema desde la sección de **[Releas
 ### 🐧 Linux (Todas las distros)
 | Formato | Distros recomendadas | Cómo usar |
 | --- | --- | --- |
-| **`.AppImage`** *(Universal)* | Ubuntu, Fedora, Arch, Mint, Pop!_OS, openSUSE, SteamOS | `chmod +x craft-atlas-v1.2.1-linux-x86_64.AppImage && ./craft-atlas-v1.2.1-linux-x86_64.AppImage` |
-| **`.deb`** | Ubuntu, Debian, Linux Mint, Pop!_OS, Zorin | `sudo apt install ./craft-atlas_1.2.1_amd64.deb` |
-| **`.rpm`** | Fedora, RHEL, Rocky, openSUSE | `sudo dnf install ./craft-atlas-1.2.1-1.x86_64.rpm` |
+| **`.AppImage`** *(Universal)* | Ubuntu, Fedora, Arch, Mint, Pop!_OS, openSUSE, SteamOS | `chmod +x craft-atlas-v1.2.2-linux-x86_64.AppImage && ./craft-atlas-v1.2.2-linux-x86_64.AppImage` |
+| **`.deb`** | Ubuntu, Debian, Linux Mint, Pop!_OS, Zorin | `sudo apt install ./craft-atlas_1.2.2_amd64.deb` |
+| **`.rpm`** | Fedora, RHEL, Rocky, openSUSE | `sudo dnf install ./craft-atlas-1.2.2-1.x86_64.rpm` |
 | **`.tar.gz`** *(Portable)* | Arch Linux, Manjaro, NixOS, genérico | Extrae y ejecuta `./craft-atlas` o `./install-user.sh` |
 
 > **Verificación SHA-256 y Build Provenance**: cada Release incluye `SHA256SUMS.txt` y atestación criptográfica oficial de GitHub Actions (ver [SECURITY.md](SECURITY.md)).
@@ -153,11 +153,11 @@ cargo build --release --locked
 
 ---
 
-## ⚡ Novedades de `v1.2.1`
+## ⚡ Novedades de `v1.2.2`
 
+- **5 Panoramas 360° Infinitos Sin Costura (`2048×640`) + Partículas Limpias:** *Ciudad Antigua*, *Trial Chambers* y *Monumento Oceánico* ahora giran suavemente en 360° como el menú principal de Minecraft (junto a *Panorama Salvaje* y *Nether Carmesí*), mientras *Jardín Pálido* incorpora hojas pálidas cayendo suavemente como *Cerezo Atardecer* — sin círculos parpadeantes ni haces falsos encima.
 - **Galería Visual de Temas + Intensidad + Fondo Propio (`.png` / `.jpg` nativo):** selector visual con miniaturas `16:9`, muestras de paleta, vista previa en vivo, slider de brillo del fondo y carga local de capturas propias (sin FFmpeg).
-- **Escenas HD (`1376×768`) + Efectos Biome Vivos a 30 FPS (sin loops repetitivos):** *Deep Dark*, *Trial Chambers*, *Pale Garden* y *Ocean Monument* ahora corren con iluminación atmosférica y animaciones dedicadas (`Sonic Boom`, rayos de luz, neblina con Creaking, cáusticas y Guardianes) más `~2 MB` menos en los binarios.
-- **Soporte Multi-Versión (`1.18.2` → `26.3`) + God Armor Ilegal + `.litematic` + Updater SHA-256:** ver notas completas en [RELEASE_v1.2.1.md](docs/RELEASE_v1.2.1.md) (y resumen previo en [RELEASE_v1.2.0.md](docs/RELEASE_v1.2.0.md)).
+- **Soporte Multi-Versión (`1.18.2` → `26.3`) + God Armor Ilegal + `.litematic` + Updater SHA-256:** ver notas completas en [RELEASE_v1.2.2.md](docs/RELEASE_v1.2.2.md) (y notas previas en [RELEASE_v1.2.2.md](docs/RELEASE_v1.2.2.md)).
 
 ---
 
@@ -172,7 +172,7 @@ CraftAtlas es **100% gratis, sin anuncios y sin funciones bloqueadas detrás de 
 
 ## 🚀 Actualizaciones automáticas y seguridad
 
-CraftAtlas `v1.2.1` incluye **comprobación y actualización in-app verificada por SHA-256 (FIPS 180-4)** vía HTTPS `TLS 1.2+` contra **GitHub Releases**, junto con **Build Provenance Attestations** firmadas por GitHub Actions en cada ejecutable publicado.
+CraftAtlas `v1.2.2` incluye **comprobación y actualización in-app verificada por SHA-256 (FIPS 180-4)** vía HTTPS `TLS 1.2+` contra **GitHub Releases**, junto con **Build Provenance Attestations** firmadas por GitHub Actions en cada ejecutable publicado.
 
 ---
 

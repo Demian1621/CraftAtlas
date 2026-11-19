@@ -60,7 +60,11 @@ impl ThemeId {
     pub fn is_panorama(self) -> bool {
         matches!(
             self,
-            ThemeId::ClassicJavaStone | ThemeId::NetherCrimsonEnd
+            ThemeId::DeepDarkSculk
+                | ThemeId::TrialChambers
+                | ThemeId::OceanMonument
+                | ThemeId::ClassicJavaStone
+                | ThemeId::NetherCrimsonEnd
         )
     }
 
@@ -94,26 +98,26 @@ impl ThemeId {
 
     pub fn fx_badge(self, lang: Language) -> &'static str {
         match (self, lang) {
-            (ThemeId::DeepDarkSculk, Language::EnUs) => "Sculk Sonic Pulse",
-            (ThemeId::DeepDarkSculk, _) => "Onda Sculk",
-            (ThemeId::TrialChambers, Language::EnUs) => "Sunbeams + Fire",
-            (ThemeId::TrialChambers, _) => "Rayos + Forja",
-            (ThemeId::PaleGarden, Language::EnUs) => "Mist + Creaking",
-            (ThemeId::PaleGarden, _) => "Niebla + Creaking",
-            (ThemeId::OceanMonument, Language::EnUs) => "Caustics + Bubbles",
-            (ThemeId::OceanMonument, _) => "Cáusticas + Burbujas",
-            (ThemeId::ClassicJavaStone, Language::EnUs) => "360 Panorama + Light",
-            (ThemeId::ClassicJavaStone, _) => "Panorama 360 + Luz",
-            (ThemeId::NetherCrimsonEnd, Language::EnUs) => "360 Panorama + Embers",
-            (ThemeId::NetherCrimsonEnd, _) => "Panorama 360 + Brasas",
-            (ThemeId::EndVoidAurora, Language::EnUs) => "Live Aurora",
-            (ThemeId::EndVoidAurora, _) => "Aurora Viva",
-            (ThemeId::CherryBlossom, Language::EnUs) => "Drifting Petals",
-            (ThemeId::CherryBlossom, _) => "Pétalos al Viento",
-            (ThemeId::StarryOverworld, Language::EnUs) => "Shooting Stars",
-            (ThemeId::StarryOverworld, _) => "Estrellas Fugaces",
-            (ThemeId::DeepslateOre, Language::EnUs) => "Ore Shimmer",
-            (ThemeId::DeepslateOre, _) => "Brillo Subterráneo",
+            (ThemeId::DeepDarkSculk, Language::EnUs) => "360 Panorama · Spores",
+            (ThemeId::DeepDarkSculk, _) => "Panorama 360 · Esporas",
+            (ThemeId::TrialChambers, Language::EnUs) => "360 Panorama · Embers",
+            (ThemeId::TrialChambers, _) => "Panorama 360 · Brasas",
+            (ThemeId::PaleGarden, Language::EnUs) => "Falling Pale Leaves",
+            (ThemeId::PaleGarden, _) => "Hojas Pálidas · Brisa",
+            (ThemeId::OceanMonument, Language::EnUs) => "360 Panorama · Bubbles",
+            (ThemeId::OceanMonument, _) => "Panorama 360 · Burbujas",
+            (ThemeId::ClassicJavaStone, Language::EnUs) => "360 Panorama · Breeze",
+            (ThemeId::ClassicJavaStone, _) => "Panorama 360 · Brisa",
+            (ThemeId::NetherCrimsonEnd, Language::EnUs) => "360 Panorama · Ash",
+            (ThemeId::NetherCrimsonEnd, _) => "Panorama 360 · Cenizas",
+            (ThemeId::EndVoidAurora, Language::EnUs) => "End Particles",
+            (ThemeId::EndVoidAurora, _) => "Partículas del End",
+            (ThemeId::CherryBlossom, Language::EnUs) => "Cherry Petals",
+            (ThemeId::CherryBlossom, _) => "Pétalos de Cerezo",
+            (ThemeId::StarryOverworld, Language::EnUs) => "Night Fireflies",
+            (ThemeId::StarryOverworld, _) => "Brisa Nocturna",
+            (ThemeId::DeepslateOre, Language::EnUs) => "Cave Motes",
+            (ThemeId::DeepslateOre, _) => "Polvo de Cueva",
             (ThemeId::CustomImage, Language::EnUs) => "Custom Photo",
             (ThemeId::CustomImage, _) => "Imagen Propia",
         }

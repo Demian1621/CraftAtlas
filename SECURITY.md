@@ -23,11 +23,11 @@ Cada Release incluye `SHA256SUMS.txt` y atestaciones criptográficas de GitHub. 
 
 - **Windows (PowerShell)**:
   ```powershell
-  Get-FileHash .\craft-atlas-v1.2.1-windows-x86_64.exe -Algorithm SHA256
+  Get-FileHash .\craft-atlas-v1.2.2-windows-x86_64.exe -Algorithm SHA256
   ```
 - **macOS**:
   ```bash
-  shasum -a 256 craft-atlas-v1.2.1-macos-universal.dmg
+  shasum -a 256 craft-atlas-v1.2.2-macos-universal.dmg
   ```
 - **Linux**:
   ```bash
@@ -35,7 +35,7 @@ Cada Release incluye `SHA256SUMS.txt` y atestaciones criptográficas de GitHub. 
   ```
 - **Verificar procedencia oficial de GitHub Actions (`gh` CLI)**:
   ```bash
-  gh attestation verify craft-atlas-v1.2.1-windows-x86_64.exe --repo Demian1621/CraftAtlas
+  gh attestation verify craft-atlas-v1.2.2-windows-x86_64.exe --repo Demian1621/CraftAtlas
   ```
 
 ---

@@ -59,10 +59,9 @@ impl ThemeBackgrounds {
             return None;
         }
         let thumb_img = if theme.is_panorama() {
-            // Crop crisp centered 16:9 slice from 2048x640 panorama for clean gallery card preview
+            // Frame the opening 16:9 hero slice of 2048x640 panoramas (matches initial u0=0.0 view)
             let cw = ((h as f32) * (16.0 / 9.0)).round().min(w as f32) as u32;
-            let cx = (w.saturating_sub(cw)) / 2;
-            let view = image::imageops::crop_imm(&img, cx, 0, cw.max(1), h).to_image();
+            let view = image::imageops::crop_imm(&img, 0, 0, cw.max(1), h).to_image();
             image::imageops::resize(&view, 260, 146, FilterType::Triangle)
         } else {
             image::imageops::resize(&img, 260, 146, FilterType::Triangle)
@@ -116,7 +115,18 @@ impl ThemeBackgrounds {
                 let u0 = (t * 0.008).fract();
                 Rect::from_min_max(Pos2::new(u0, v0), Pos2::new(u0 + uv_w, v0 + uv_h))
             } else {
-                cover_uv(view_aspect, bg.aspect)
+                // Calm, ultra-slow horizontal-only drift (no circular orbit or vertical wobble)
+                let base_scale = 1.04_f32;
+                let (mut uv_w, mut uv_h) = if view_aspect > bg.aspect {
+                    (1.0 / base_scale, (bg.aspect / view_aspect) / base_scale)
+                } else {
+                    ((view_aspect / bg.aspect) / base_scale, 1.0 / base_scale)
+                };
+                uv_w = uv_w.clamp(0.25, 1.0);
+                uv_h = uv_h.clamp(0.25, 1.0);
+                let max_dx = (1.0 - uv_w) * 0.5;
+                let cx = 0.5 + max_dx * 0.65 * (t * 0.065).sin();
+                Rect::from_center_size(Pos2::new(cx, 0.5), egui::vec2(uv_w, uv_h))
             };
             painter.image(bg.tex.id(), rect, uv, Color32::WHITE);
         }
@@ -141,26 +151,22 @@ impl ThemeBackgrounds {
     }
 }
 
-fn cover_uv(view_aspect: f32, media_aspect: f32) -> Rect {
-    let (uv_w, uv_h) = if view_aspect > media_aspect {
-        (1.0, (media_aspect / view_aspect).clamp(0.15, 1.0))
-    } else {
-        ((view_aspect / media_aspect).clamp(0.15, 1.0), 1.0)
-    };
-    Rect::from_center_size(Pos2::new(0.5, 0.5), egui::vec2(uv_w, uv_h))
-}
-
 fn backdrop_spec(theme: ThemeId) -> (&'static str, &'static [u8], bool) {
     match theme {
-        ThemeId::DeepDarkSculk | ThemeId::CustomImage => (
+        ThemeId::DeepDarkSculk => (
             "bg_deep_dark",
             include_bytes!("../../assets/backgrounds/bg_deep_dark.jpg"),
+            true,
+        ),
+        ThemeId::CustomImage => (
+            "bg_pale_garden",
+            include_bytes!("../../assets/backgrounds/bg_pale_garden.jpg"),
             false,
         ),
         ThemeId::TrialChambers => (
             "bg_trial_chambers",
             include_bytes!("../../assets/backgrounds/bg_trial_chambers.jpg"),
-            false,
+            true,
         ),
         ThemeId::PaleGarden => (
             "bg_pale_garden",
@@ -170,7 +176,7 @@ fn backdrop_spec(theme: ThemeId) -> (&'static str, &'static [u8], bool) {
         ThemeId::OceanMonument => (
             "bg_ocean_monument",
             include_bytes!("../../assets/backgrounds/bg_ocean_monument.jpg"),
-            false,
+            true,
         ),
         ThemeId::DeepslateOre => (
             "bg_deep_cave",
